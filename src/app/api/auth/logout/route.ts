@@ -1,0 +1,2 @@
+import {NextResponse} from "next/server";import {clearSessionCookie,currentUser} from "@/lib/auth";import {assertSameOrigin} from "@/lib/csrf";import {audit} from "@/lib/app-db";
+export async function POST(request:Request){const csrf=assertSameOrigin(request);if(csrf)return csrf;const user=await currentUser(request);const response=NextResponse.json({ok:true});response.cookies.set(clearSessionCookie());if(user)await audit("auth.logout",user.user_id,null);return response;}

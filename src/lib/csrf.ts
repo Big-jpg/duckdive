@@ -1,0 +1,2 @@
+import {NextResponse} from "next/server";
+export function assertSameOrigin(request:Request){const origin=request.headers.get("origin"),host=request.headers.get("host");if(!origin||!host)return NextResponse.json({error:"Forbidden: cross-origin request"},{status:403});try{if(new URL(origin).host===host)return null;}catch{}const trusted=new Set((process.env.AUTH_TRUSTED_ORIGINS||"").split(",").map(v=>v.trim()).filter(Boolean));return trusted.has(origin)?null:NextResponse.json({error:"Forbidden: cross-origin request"},{status:403});}

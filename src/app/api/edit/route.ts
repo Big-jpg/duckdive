@@ -1,0 +1,2 @@
+import {currentUser} from "@/lib/auth";import {assertSameOrigin} from "@/lib/csrf";import {ensureUserWorkspace} from "@/lib/dive-provisioning";
+export async function POST(request:Request){const csrf=assertSameOrigin(request);if(csrf)return csrf;const user=await currentUser(request);if(!user)return Response.json({error:"Authentication required"},{status:401});const workspace=await ensureUserWorkspace(user);return Response.json({workspaceId:workspace.workspace_id,diveIds:workspace.dive_ids});}

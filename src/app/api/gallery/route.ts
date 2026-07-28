@@ -1,0 +1,3 @@
+import {publicGallery,workspaceGallery} from "@/lib/dive-provisioning";import {currentUser} from "@/lib/auth";
+export const dynamic="force-dynamic";
+export async function GET(request:Request){try{const user=await currentUser(request),dives=user?await workspaceGallery(user):await publicGallery();return Response.json({viewer:user?{kind:"editor",email:user.email}:{kind:"public"},dives},{headers:{"Cache-Control":"no-store"}});}catch(error){console.error("gallery provisioning failed",error);return Response.json({error:"Live Dives are temporarily unavailable."},{status:503,headers:{"Retry-After":"60"}});}}

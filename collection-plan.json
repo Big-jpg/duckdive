@@ -1,0 +1,30 @@
+{
+  "runId": "perth-house-sample-2026-07",
+  "outputDirectory": "rea-collections",
+  "profileDirectory": ".rea-collector/chromium-profile",
+  "headless": false,
+  "delayBetweenPagesMs": 5000,
+  "slices": [
+    {
+      "name": "yokine-houses-2025",
+      "suburb": "Yokine",
+      "state": "WA",
+      "postcode": "6060",
+      "propertyType": "house",
+      "includeSurrounding": false,
+      "soldDateFrom": "2025-01-01",
+      "soldDateTo": "2025-12-31"
+    },
+    {
+      "name": "yokine-exactly-3-bed-houses-recent",
+      "suburb": "Yokine",
+      "state": "WA",
+      "postcode": "6060",
+      "propertyType": "house",
+      "bedroomsMin": 3,
+      "bedroomsMax": 3,
+      "maxSoldAge": "12-month",
+      "includeSurrounding": false
+    }
+  ]
+}
