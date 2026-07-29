@@ -1,4 +1,4 @@
-import { parseSourceCsv, sourceFileHash } from "@/lib/source";
+import { parseSourceCsv, sourceFileHash } from "../src/lib/source";
 
 export type IngestRequest = { fileName: string; objectUrl: string; expectedSha256?: string };
 
@@ -16,7 +16,7 @@ async function fetchAndRegister(input: IngestRequest) {
   const content=await readPrivateBlob(input.objectUrl);
   const sha256=sourceFileHash(content);
   if(input.expectedSha256 && input.expectedSha256!==sha256) throw new Error("Source checksum mismatch");
-  const { registerFile }=await import("@/lib/db");
+  const { registerFile }=await import("../src/lib/db");
   const file=await registerFile(input.fileName,input.objectUrl,sha256,content.byteLength);
   return { fileId:file.fileId, alreadyCurated:file.status==="curated" };
 }
@@ -24,13 +24,13 @@ async function fetchAndRegister(input: IngestRequest) {
 async function loadRaw(fileId: string, objectUrl: string) {
   "use step";
   const rows=parseSourceCsv(await readPrivateBlob(objectUrl));
-  const { loadObservations }=await import("@/lib/db");
+  const { loadObservations }=await import("../src/lib/db");
   return loadObservations(fileId,rows);
 }
 
 async function cleanAndCurate(fileId: string) {
   "use step";
-  const { curateFile }=await import("@/lib/db"); await curateFile(fileId);
+  const { curateFile }=await import("../src/lib/db"); await curateFile(fileId);
 }
 
 async function readPrivateBlob(url: string) {
