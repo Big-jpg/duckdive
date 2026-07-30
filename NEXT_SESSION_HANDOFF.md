@@ -4,10 +4,10 @@ Last verified: 2026-07-30 (Australia/Perth)
 
 ## Auth phase continuation update
 
-The allowlisted Neon Auth implementation is deployed to production at `https://duckdive.gold`. Production credential, trusted-origin, provider, and webhook configuration are complete. An initial GitHub approval created the Neon identity but did not persist an application session; the missing OAuth verifier exchange was fixed and redeployed. The remaining auth release work is one human retry plus authenticated/revoked-user smoke testing.
+The allowlisted Neon Auth implementation is deployed to production at `https://duckdive.gold`. Production credential, trusted-origin, provider, webhook, and OAuth verifier configuration are complete. GitHub login now persists and the owner reaches the private editor. The remaining auth release work is a controlled revoked-user smoke test.
 
 - Production Neon migrations `010_allowlisted_neon_auth.sql` and `011_auth_webhook_response.sql` are applied.
-- Post-migration state remains zero `app.app_user` rows and zero workspaces.
+- Production currently has one linked active `app.app_user` row and one workspace for `rossfarrell7@gmail.com`.
 - The main app, Dives, gallery, stats, analytics, chat, edit, personal embed/version/revert, and share-management routes now require an active allowlisted Neon Auth session.
 - `/share/*` remains public, no-index, view-only, and capability-based. `POST /api/ingest` remains protected only by `INGEST_SECRET`.
 - Magic-link requests are allowlist-gated and non-enumerating. A signed `user.before_create` webhook provides a second fail-closed signup gate.
@@ -20,13 +20,14 @@ The allowlisted Neon Auth implementation is deployed to production at `https://d
 - OAuth persistence fix: `src/proxy.ts` runs Neon Auth middleware only when `neon_auth_session_verifier` is present, cookies use `SameSite=Lax`, the catch-all handler exports GET and POST, and new/existing GitHub users share `/auth/complete`. Production initiation now sets a Secure, HttpOnly Lax challenge cookie.
 - The blocking Neon Auth webhook is enabled at `https://duckdive.gold/api/webhooks/neon-auth` for exactly `User Before Create` and `Send Magic Link`. A live allowlisted magic-link request returned 202 and its signed webhook returned 200 after Resend delivery.
 - `rossfarrell7@gmail.com` is the first active production allowlist administrator.
+- Vercel Functions are explicitly pinned to Sydney (`syd1`) through `vercel.json`, beside the Sydney Neon/Auth estate. Before/after warm measurements improved anonymous auth/API checks from about 0.5-1.0 seconds to 0.13-0.42 seconds and the unlisted magic-link authorization path from about 6.0 seconds to 0.10-0.38 seconds.
 
 Remaining production sequence:
 
-1. Ross retries GitHub login from `https://duckdive.gold/login` with `rossfarrell7@gmail.com` and confirms the private home loads. The first attempt already created the Neon identity; the retry should exchange the verifier and atomically link the existing allowlist row.
-2. Exercise an authenticated private API, then revoke/reactivate the owner once to prove fail-closed authorization without losing the stable `app_user.user_id`.
-3. Optionally execute a direct non-allowlisted signup attempt to exercise `User Before Create`; the public request-link endpoint already returns the same generic 202 for an unlisted address without contacting Neon.
-4. Remove legacy Vercel `AUTH_SECRET` only after the authenticated and revoked-user paths pass.
+1. Revoke/reactivate the owner once to prove fail-closed authorization without losing the stable `app_user.user_id`.
+2. Optionally execute a direct non-allowlisted signup attempt to exercise `User Before Create`; the public request-link endpoint already returns the same generic 202 for an unlisted address without contacting Neon.
+3. Remove legacy Vercel `AUTH_SECRET` only after the revoked-user path passes.
+4. Run the authenticated `/api/chat` smoke; standalone Vercel AI Gateway streaming is already verified through OIDC.
 
 The older objective notes below describe the design context and pre-implementation state; this continuation update is authoritative where they differ.
 
@@ -49,10 +50,10 @@ The older objective notes below describe the design context and pre-implementati
 - The auth and DuckDive changes are an intentionally uncommitted working tree.
 - Vercel project: `big-team/vic-house-data-lab`
 - Canonical production URL: `https://duckdive.gold`
-- Current production deployment: `dpl_JCvmwUXNLq1ux3Qy3RkguNvqYMt4` (READY and aliased to `duckdive.gold`).
+- Current production deployment: `dpl_537cPQ3boukDtYNZzJ83uurjbxwe` (READY, aliased to `duckdive.gold`, Functions verified in `syd1`).
 - Neon project shown by the user: `neon-vic-house-data`; keep it isolated from WA or unrelated estates.
 - Migration `009_dive_shares.sql` is applied in production Neon.
-- There were zero real rows in `app.app_user` and zero workspaces after the share smoke cleanup. Do not assume this remains true; query counts before an auth migration.
+- Production now has one linked owner row in `app.app_user` and one workspace. Query counts again before any future auth migration.
 
 ## What is genuinely live
 
@@ -115,8 +116,8 @@ Vercel Production and Preview contain the Neon integration variables, Neon Auth 
 
 Known missing capability variables:
 
-- No `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or `AI_GATEWAY_API_KEY` was configured. AI remixing is not a completed release gate even though model-name selectors exist.
-- Neon Auth is provisioned and GitHub plus Magic Link are enabled. Trusted-origin and blocking-webhook configuration still require release verification.
+- No static `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or `AI_GATEWAY_API_KEY` is configured. Vercel AI Gateway OIDC is active: `pnpm smoke:ai-gateway` successfully streamed through `openai/gpt-5.6-sol`. The application defaults to Gateway model `openai/gpt-5.4`; authenticated `/api/chat` remains the final AI release smoke.
+- Neon Auth is provisioned; GitHub, Magic Link, trusted origins, and the blocking webhook are configured and production-verified.
 - Resend is configured with a verified `duckdive.gold` domain and the application sender `DuckDive <noreply@duckdive.gold>`.
 
 Local credential posture:
@@ -161,7 +162,7 @@ Human handoff likely required:
 
 ### AI remixing
 
-Configure one supported provider key, copy it to Vercel as Sensitive, run `pnpm preflight`, then exercise `/api/chat` through an authenticated personal workspace. Model-name environment variables alone are not credentials.
+Vercel AI Gateway credits and OIDC are active. Refresh local authentication with `vercel env pull .env.ai-gateway.local --yes --environment=development`, then run `pnpm smoke:ai-gateway`. The verified standalone smoke uses `openai/gpt-5.6-sol`; the application defaults to `openai/gpt-5.4`. A static Gateway key is optional. Run `pnpm preflight` after supplying the separate missing MotherDuck share URL, then exercise `/api/chat` through the authenticated workspace.
 
 ### Vercel Blob archive
 
@@ -196,4 +197,4 @@ vercel env ls production
 vercel logs duckdive.gold --since 15m --no-follow
 ```
 
-Do not run `pnpm preflight` expecting success until an AI provider key and the future Neon Auth variables are intentionally reflected in its contract.
+Do not run `pnpm preflight` expecting success until the missing local `MOTHERDUCK_SHARE_URL` is supplied. AI preflight now accepts the verified Vercel OIDC token.

@@ -53,6 +53,24 @@ export async function getSetting(key:string){const sql=database();try{const [row
 export async function setSetting(key:string,value:string){const sql=database();try{await sql`INSERT INTO app.setting(key,value) VALUES(${key},${value}) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=now()`;}finally{await sql.end();}}
 export async function consumeAiQuota(userId:string,limit:number){const sql=database();try{return await sql.begin(async tx=>{await tx`DELETE FROM app.ai_request WHERE occurred_at<now()-INTERVAL '24 hours'`;const [{count}]=await tx<{count:number}[]>`SELECT count(*)::int count FROM app.ai_request WHERE user_id=${userId}::uuid AND occurred_at>=now()-INTERVAL '1 hour'`;if(Number(count)>=limit)return false;await tx`INSERT INTO app.ai_request(user_id) VALUES(${userId}::uuid)`;return true;});}finally{await sql.end();}}
 export async function consumeLoginQuota(keyHash:string,limit=10){const sql=database();try{return await sql.begin(async tx=>{await tx`DELETE FROM app.auth_attempt WHERE occurred_at<now()-INTERVAL '24 hours'`;const [{count}]=await tx<{count:number}[]>`SELECT count(*)::int count FROM app.auth_attempt WHERE key_hash=${keyHash} AND occurred_at>=now()-INTERVAL '15 minutes'`;if(Number(count)>=limit)return false;await tx`INSERT INTO app.auth_attempt(key_hash) VALUES(${keyHash})`;return true;});}finally{await sql.end();}}
+export async function authorizeMagicLinkRequest(email:string,keyHash:string,limit=10){
+  const sql=database();try{
+    const [result]=await sql<{quota_allowed:boolean;allowlisted:boolean}[]>`
+      WITH recent AS (
+        SELECT count(*)::int AS count FROM app.auth_attempt
+        WHERE key_hash=${keyHash} AND occurred_at>=now()-INTERVAL '15 minutes'
+      ), inserted AS (
+        INSERT INTO app.auth_attempt(key_hash)
+        SELECT ${keyHash} WHERE (SELECT count FROM recent)<${limit}
+        RETURNING 1
+      ), pruned AS (
+        DELETE FROM app.auth_attempt WHERE occurred_at<now()-INTERVAL '24 hours'
+      )
+      SELECT EXISTS(SELECT 1 FROM inserted) AS quota_allowed,
+        EXISTS(SELECT 1 FROM app.app_user WHERE lower(email)=lower(${email}) AND status='active') AS allowlisted`;
+    return {quotaAllowed:Boolean(result?.quota_allowed),allowlisted:Boolean(result?.allowlisted)};
+  }finally{await sql.end();}
+}
 export async function audit(eventType:string,userId:string|null,targetId:string|null|undefined,details:Record<string,unknown>={}){const sql=database();try{await sql`INSERT INTO app.audit_event(user_id,event_type,target_id,details) VALUES(${userId}::uuid,${eventType},${targetId??null},${sql.json(details as never)})`;}finally{await sql.end();}}
 export async function ensureChat(workspaceId:string,chatId:string|undefined,diveId:string,title:string){const sql=database();try{const id=chatId||randomUUID();const [row]=await sql<{chat_session_id:string}[]>`INSERT INTO app.chat_session(chat_session_id,workspace_id,active_dive_id,title) VALUES(${id}::uuid,${workspaceId}::uuid,${diveId},${title.slice(0,100)||"New chat"}) ON CONFLICT(chat_session_id) DO UPDATE SET updated_at=now() WHERE app.chat_session.workspace_id=${workspaceId}::uuid RETURNING chat_session_id`;if(!row)throw new Error("Chat session is not owned by this workspace");return row.chat_session_id;}finally{await sql.end();}}
 export async function saveMessage(chatId:string,id:string,role:"user"|"assistant",content:string,parts:unknown=null){const sql=database();try{await sql`INSERT INTO app.chat_message(message_id,chat_session_id,role,content,parts_json) VALUES(${id},${chatId}::uuid,${role},${content},${parts?sql.json(parts as never):null}) ON CONFLICT(message_id) DO NOTHING`;await sql`UPDATE app.chat_session SET updated_at=now() WHERE chat_session_id=${chatId}::uuid`;}finally{await sql.end();}}

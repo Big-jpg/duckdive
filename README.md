@@ -104,9 +104,20 @@ The immutable VIC archive contains 83 source files and 88,422 source rows dated 
 
 ## Production notes
 
-- Co-locate Vercel Functions, Neon, and MotherDuck as closely as available.
+- Vercel Functions are pinned to Sydney (`syd1`) in `vercel.json`, beside the Sydney Neon/Auth estate. Preserve this unless the data estate moves.
 - Use `DATABASE_URL_UNPOOLED` for migrations/ingestion, `DATABASE_URL` for pooled application traffic, and optionally `DATABASE_READ_URL` for read-only publication and stats queries.
 - The historical archive is intentionally supported by the idempotent local bulk driver; incremental files can use Vercel Workflow.
 - Keep the raw CSV archive immutable. Do not use Neon raw tables as the only recovery source.
+
+## AI Gateway smoke test
+
+The application accepts Vercel OIDC or `AI_GATEWAY_API_KEY` authentication. Refresh a short-lived local OIDC token without overwriting `.env.local`, then stream a response through AI Gateway:
+
+```powershell
+vercel env pull .env.ai-gateway.local --yes --environment=development
+pnpm smoke:ai-gateway
+```
+
+The smoke script deliberately uses `openai/gpt-5.6-sol`. The ignored `.env.ai-gateway.local` file must never be committed.
 - Embedded Dives website sessions require the appropriate MotherDuck Business or Enterprise entitlement. Keep admin, service-account, and Neon direct credentials server-only.
 - Run `pnpm preflight` against the production environment before deploying. A successful code build does not provision the isolated Neon project, MotherDuck share, service account, or Embedded Dives entitlement.

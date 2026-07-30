@@ -14,7 +14,7 @@ try{const site=new URL(process.env.NEXT_PUBLIC_SITE_URL||"");if(site.protocol!==
 for(const key of ["DATABASE_URL","DATABASE_URL_UNPOOLED"] as const){try{const url=new URL(process.env[key]||"");if(!url.hostname)throw new Error();}catch{errors.push(`${key} must be a valid absolute PostgreSQL URL`);}}
 if(!process.env.DATABASE_READ_URL)warnings.push("DATABASE_READ_URL is unset; application reads will use DATABASE_URL");
 if(process.env.DATABASE_URL&&process.env.DATABASE_URL===process.env.DATABASE_URL_UNPOOLED)warnings.push("DATABASE_URL and DATABASE_URL_UNPOOLED are identical; confirm application traffic uses Neon's pooled endpoint");
-if(!process.env.OPENAI_API_KEY&&!process.env.ANTHROPIC_API_KEY&&!process.env.AI_GATEWAY_API_KEY)errors.push("Configure at least one AI provider key");
+if(!process.env.OPENAI_API_KEY&&!process.env.ANTHROPIC_API_KEY&&!process.env.AI_GATEWAY_API_KEY&&!process.env.VERCEL_OIDC_TOKEN)errors.push("Configure an AI provider key or a Vercel OIDC token");
 if(process.env.NEXT_PUBLIC_SITE_URL?.includes("localhost"))warnings.push("NEXT_PUBLIC_SITE_URL still points to localhost");
 if(warnings.length)console.warn(warnings.map(value=>`WARN: ${value}`).join("\n"));
 if(errors.length){console.error(errors.map(value=>`ERROR: ${value}`).join("\n"));process.exitCode=1;}else console.log(`Preflight passed for ${estate.name} (${estate.state}, ${estate.motherduckDatabase})`);
