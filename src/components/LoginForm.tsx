@@ -1,7 +1,8 @@
-"use client";/* eslint-disable @next/next/no-html-link-for-pages */
+"use client";
 import {FormEvent,useState} from "react";
 import {useSearchParams} from "next/navigation";
 import {safeNextPath} from "@/lib/auth-policy";
+import AppBrand from "@/components/AppBrand";
 
 const errors:Record<string,string>={access_denied:"This verified email does not have active access.",link_failed:"That sign-in link is invalid or expired. Request a fresh link.",github_failed:"GitHub sign-in could not be completed."};
 export default function LoginForm(){
@@ -20,5 +21,5 @@ export default function LoginForm(){
     if(!response.ok||typeof body.url!=="string"){setError(body.error||"Could not start GitHub sign-in.");setGithubLoading(false);return;}
     location.assign(body.url);
   }
-  return <main className="login-page"><a href="/" className="lab-brand"><span className="lab-duck">D</span><span>DUCKDIVE <i>GOLD</i></span></a><form onSubmit={submit}><p>Private access</p><h1>Enter DuckDive.</h1><span>Access is allowlist-only. Continue with GitHub or request a short-lived, single-use email link.</span><button type="button" className="github-login" disabled={githubLoading||loading} onClick={github}>{githubLoading?"Opening GitHub…":"Continue with GitHub"}</button><div className="login-divider"><span>or use email</span></div><label>Email<input type="email" value={email} onChange={event=>setEmail(event.target.value)} required autoComplete="email" maxLength={254}/></label>{error&&<div className="lab-error" role="alert">{error}</div>}{message&&<div className="lab-success" role="status">{message}</div>}<button disabled={loading||githubLoading||Boolean(message)}>{loading?"Sending…":message?"Link requested":"Email sign-in link →"}</button><span className="login-help">Unlisted shared Dives remain available through their direct links.</span></form></main>;
+  return <main id="main-content" className="login-page"><AppBrand/><form onSubmit={submit}><p>Private Access</p><h1>Sign in to DuckDive</h1><span>Access is allowlist-only. Continue with GitHub or request a short-lived, single-use email link.</span><button type="button" className="github-login" disabled={githubLoading||loading} onClick={github}>{githubLoading?"Opening GitHub…":"Continue with GitHub"}</button><div className="login-divider"><span>or use email</span></div><label>Email<input name="email" type="email" value={email} onChange={event=>setEmail(event.target.value)} required autoComplete="email" maxLength={254} spellCheck={false}/></label>{error&&<div className="lab-error" role="alert">{error}</div>}{message&&<div className="lab-success" role="status" aria-live="polite">{message}</div>}<button disabled={loading||githubLoading||Boolean(message)}>{loading?"Sending…":message?"Link Requested":"Email Sign-In Link"}</button><span className="login-help">Unlisted shared Dives remain available through their direct links.</span></form></main>;
 }

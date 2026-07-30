@@ -6,6 +6,7 @@ import {getAdminDashboard} from "@/lib/admin-db";
 import {aiLimits} from "@/lib/ai-limits";
 import {publicShareLimits} from "@/lib/share-limits";
 import AdminUserManager from "@/components/AdminUserManager";
+import AppBrand from "@/components/AppBrand";
 
 export const dynamic="force-dynamic";
 export const metadata:Metadata={title:"Admin",robots:{index:false,follow:false}};
@@ -24,9 +25,9 @@ export default async function AdminPage(){
     ["New chats · 24h",overview.chats_day,`${overview.audit_events_day} audited actions`],
     ["Revoked people",overview.revoked_users,"History retained"],
   ] as const;
-  return <main className="admin-page">
-    <header className="lab-header"><Link href="/" className="lab-brand"><span className="lab-duck">D</span><span>DUCKDIVE <i>GOLD</i></span></Link><nav><Link href="/">Dives</Link><Link href="/edit">Editor</Link><span>Admin · {user.email}</span></nav></header>
-    <section className="admin-hero"><div><p className="admin-kicker">Private operations</p><h1>Keep it open.<br/><em>Keep it bounded.</em></h1><p>Manage dogfood access and watch the activity that can create cost. No clickstream, no surveillance—just identities, AI usage, chats, shares and security events.</p></div><aside><span>Hard cost limits</span><strong>{limits.perUserHourly}<small> AI / user / hour</small></strong><strong>{limits.globalHourly}<small> AI / all users / hour</small></strong><p>Public shares: {shareLimits.perVisitorHourly} loads per visitor/link and {shareLimits.globalHourly} loads globally per hour. Admission is serialized through Neon before paid services are called.</p></aside></section>
+  return <main id="main-content" className="admin-page">
+    <header className="lab-header"><AppBrand/><nav aria-label="Administration navigation"><Link href="/">Dives</Link><Link href="/edit">Editor</Link><span className="admin-identity">{user.email}</span></nav></header>
+    <section className="admin-intro"><div><p className="admin-kicker">Administration</p><h1>Operations overview</h1><p>Manage access and review the activity that can create cost. Counts cover identities, AI requests, chats, shares and security events—not a behavioural clickstream.</p></div><dl className="admin-limits"><div><dt>User AI limit</dt><dd>{limits.perUserHourly}<small>/ hour</small></dd></div><div><dt>Global AI limit</dt><dd>{limits.globalHourly}<small>/ hour</small></dd></div><div><dt>Public share limit</dt><dd>{shareLimits.globalHourly}<small>/ hour</small></dd></div></dl></section>
     <section className="admin-metrics">{cards.map(([label,value,detail])=><article key={label}><span>{label}</span><strong>{number.format(value)}</strong><small>{detail}</small></article>)}</section>
     <AdminUserManager users={users} currentUserId={user.user_id}/>
     <section className="admin-audit"><header><div><p className="admin-kicker">Recent audit</p><h2>Meaningful actions</h2></div><p>The latest 40 durable events. Routine page views are deliberately excluded.</p></header><div>{audit.length?audit.map(event=><article key={event.event_id}><time>{new Intl.DateTimeFormat("en-AU",{dateStyle:"medium",timeStyle:"short"}).format(new Date(event.occurred_at))}</time><strong>{labels[event.event_type]||event.event_type.replaceAll("."," ")}</strong><span>{event.actor_email||"System"}{event.target_email?` → ${event.target_email}`:""}</span></article>):<p className="admin-empty">No audited activity yet.</p>}</div></section>

@@ -8,19 +8,20 @@ function date(value:string|null){return value?new Intl.DateTimeFormat("en-AU",{d
 export default function AdminUserManager({users,currentUserId}:{users:AdminUser[];currentUserId:string}){
   const router=useRouter(),formRef=useRef<HTMLFormElement>(null),[busy,setBusy]=useState<string|null>(null),[notice,setNotice]=useState<{kind:"ok"|"error";text:string}|null>(null);
   async function request(method:"POST"|"DELETE",body:Record<string,string>,key:string){
+    if(method==="DELETE"&&!window.confirm("Revoke this user’s access? Their identity and history will be preserved."))return false;
     setBusy(key);setNotice(null);
     try{const response=await fetch("/api/admin/users",{method,headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),result=await response.json();if(!response.ok)throw new Error(result.error||"Access update failed");setNotice({kind:"ok",text:method==="DELETE"?"Access revoked. Existing history was preserved.":"Allowlist access is active."});router.refresh();return true;}
     catch(error){setNotice({kind:"error",text:error instanceof Error?error.message:"Access update failed"});return false;}finally{setBusy(null);}
   }
   async function submit(event:React.FormEvent<HTMLFormElement>){event.preventDefault();const data=new FormData(event.currentTarget),email=String(data.get("email")||""),role=String(data.get("role")||"member");if(await request("POST",{email,role},"new"))formRef.current?.reset();}
   return <section className="admin-users">
-    <header><div><p className="admin-kicker">Allowlist</p><h2>Dogfood crew</h2></div><p>Add a real email, then they can sign in with GitHub or a magic link. Revoke access without deleting their history.</p></header>
+    <header><div><p className="admin-kicker">Access</p><h2>Users</h2></div><p>Add an email for GitHub or magic-link access. Revoking access preserves the user’s identity and history.</p></header>
     <form ref={formRef} onSubmit={submit} className="admin-invite">
-      <label>Email<input name="email" type="email" required maxLength={254} placeholder="tester@example.com" autoComplete="off"/></label>
+      <label>Email<input name="email" type="email" required maxLength={254} placeholder="tester@example.com" autoComplete="off" spellCheck={false}/></label>
       <label>Role<select name="role" defaultValue="member"><option value="member">Member</option><option value="admin">Admin</option></select></label>
-      <button disabled={busy!==null}>{busy==="new"?"Saving…":"Add or reactivate"}</button>
+      <button disabled={busy!==null}>{busy==="new"?"Saving…":"Add or Reactivate"}</button>
     </form>
-    {notice?<p className={`admin-notice ${notice.kind}`} role="status">{notice.text}</p>:null}
+    {notice?<p className={`admin-notice ${notice.kind}`} role={notice.kind==="error"?"alert":"status"} aria-live="polite">{notice.text}</p>:null}
     <div className="admin-table-wrap"><table><thead><tr><th>User</th><th>Status</th><th>AI</th><th>Activity</th><th>Shares</th><th>Access</th></tr></thead><tbody>{users.map(user=><tr key={user.user_id}>
       <td><strong>{user.email}</strong><span>{user.role} · {user.auth_subject?"linked":"not signed in"}</span><small>Last login: {date(user.last_login_at)}</small></td>
       <td><span className={`admin-status ${user.status}`}>{user.status}</span></td>
