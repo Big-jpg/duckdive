@@ -29,7 +29,10 @@ Personal Dives may be deliberately published as unlisted capability links. `app.
 | `MOTHERDUCK_DATABASE` | Repository contract | Must be `vic_house_data`. |
 | `MOTHERDUCK_SHARE_URL` | MotherDuck publication output | Must be an actual `md:_share/...` organization-share URL. |
 | `MOTHERDUCK_SHARED_SERVICE_ACCOUNT_USERNAME` | Repository contract | Default `vic_house_lab`; public read boundary. |
-| `AUTH_SECRET` | Operator-generated | At least 32 random characters. |
+| `NEON_AUTH_BASE_URL` | Neon Auth production branch | Server-only branch Auth endpoint. |
+| `NEON_AUTH_COOKIE_SECRET` | Operator-generated | Stable, at least 32 characters; changing it invalidates sessions. |
+| `RESEND_API_KEY` | Resend | Server-only magic-link delivery credential. |
+| `AUTH_EMAIL_FROM` | Verified Resend domain | Non-secret sender identity. |
 | `INGEST_SECRET` | Operator-generated | Protects `POST /api/ingest`. |
 | AI provider keys | Selected provider | Configure at least one for remixing. |
 | `NEXT_PUBLIC_SITE_URL` | Production deployment | Absolute HTTPS canonical URL. |
@@ -48,7 +51,7 @@ Model-name variables are selectors, not credentials.
 ## Isolation and connection posture
 
 - Keep this public VIC estate in its own Neon project and MotherDuck database.
-- Public readers use a controlled service-account identity and read-only organization share.
+- Unlisted `/share/*` readers use a controlled service-account identity and read-only organization share; the main app and analytics APIs require active allowlisted membership.
 - Each editor gets isolated Dive IDs and chat history; the backend enforces ownership.
 - Only an authenticated owner may publish or revoke a personal Dive link. Public slug resolution never accepts an arbitrary Dive ID.
 - For future unrelated customers, prefer per-customer databases or service-account/workload boundaries over shared `tenant_id` filtering.

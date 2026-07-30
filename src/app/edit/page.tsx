@@ -2,6 +2,7 @@ import {Suspense} from "react";
 import {redirect} from "next/navigation";
 import EditLab from "@/components/EditLab";
 import {currentUser} from "@/lib/auth";
+export const dynamic="force-dynamic";
 
 export default async function EditPage(){
   if(!await currentUser())redirect("/login?next=%2Fedit");

@@ -1,9 +1,11 @@
 import {motherduck} from "@/lib/motherduck";
 import {jsonNumbers} from "@/lib/analytics-contract";
 import {estateConfig} from "@/lib/estate";
+import {currentUser} from "@/lib/auth";
 
 export const dynamic="force-dynamic";
-export async function GET(){
+export async function GET(request:Request){
+  if(!await currentUser(request))return Response.json({error:"Authentication required"},{status:401});
   const estate=estateConfig(),sql=motherduck();
   try{
     const rows=await sql`SELECT suburb_key,state,suburb,canonical_postcode,observed_postcodes,sale_count,postcode_confidence

@@ -1,4 +1,4 @@
-# VIC House Data Lab
+# DuckDive — VIC House Data Lab
 
 An experimental, open analytical experience for Victorian detached-house sales. Immutable CSV sources flow through Neon Postgres canonical records into MotherDuck OLAP tables and three embedded, AI-remixable Dives.
 
@@ -29,8 +29,22 @@ pnpm db:reconcile
 pnpm publish:motherduck
 pnpm smoke:motherduck
 pnpm preflight
-EDITOR_PASSWORD='a-long-one-time-password' pnpm editor:create -- editor@example.com
+pnpm access:add -- editor@example.com admin
 ```
+
+## Allowlisted authentication
+
+The main application is private and uses Neon Auth magic links. Neon proves the email identity; `app.app_user` remains the authorization boundary and never auto-enrols a new identity. Add, revoke, and inspect access without handling passwords:
+
+```bash
+pnpm access:add -- member@example.com member
+pnpm access:revoke -- member@example.com
+pnpm access:list
+```
+
+Enable Neon Auth and the Magic Link plugin on the isolated production branch. Configure `NEON_AUTH_BASE_URL`, one stable 32+ character `NEON_AUTH_COOKIE_SECRET`, `RESEND_API_KEY`, and `AUTH_EMAIL_FROM`. The canonical application is `https://duckdive.gold`; configure the branch webhook URL as `https://duckdive.gold/api/webhooks/neon-auth` with blocking events `send.magic_link` and `user.before_create`.
+
+The webhook verifies Neon's rotating Ed25519 signatures against the branch JWKS, rejects stale or mismatched events, delivers links through Resend, blocks non-allowlisted user creation, and persists exact responses for idempotent retries. `/share/*` remains the only deliberate public read-only application capability; `POST /api/ingest` remains independently protected by `INGEST_SECRET`.
 
 Archive the historical CSV source with a separate ignored environment file so Neon credentials in `.env.local` are not overwritten. Locally minted Vercel OIDC tokens carry a `development` environment claim even when Production variables are pulled, so the Blob store must allow the Development connection (or `.env.blob` must contain a dedicated read/write token):
 
@@ -64,7 +78,7 @@ REA's sold-search result window is treated as deliberately bounded: page 80 / 2,
 
 `GET /api/analytics/suburb-insights` accepts `suburb_key`, `from`, and `to`. It queries the curated MotherDuck sale fact table for rolling 12-month and prior-year medians, explicit sample sizes, land-to-price correlation, plausible median land size, and bedroom-segment medians over the visitor's selected period.
 
-The public gallery provisions secure, read-only Embedded Dives. Pre-provisioned editors receive isolated Dive IDs and chat history while a controlled MotherDuck service account supplies compute and read-only access to the automatic organization share.
+Authenticated members receive isolated Dive IDs and chat history while a controlled MotherDuck service account supplies compute and read-only access to the automatic organization share.
 
 Editors can publish an individual personal Dive as an unlisted, view-only `/share/<slug>` link. The 80-bit capability slug resolves through `app.dive_share`; the server verifies ownership, active/revoked state, and optional expiry before minting a fresh short-lived MotherDuck embed session. Durable links never contain MotherDuck tokens or expose arbitrary Dive IDs. Revocation takes effect immediately and returns HTTP 404 for the old slug.
 

@@ -42,7 +42,7 @@ Retrieve the `vic_house_data_app` `md:_share/...` URL and configure `MOTHERDUCK_
 
 ## Deploy and verify
 
-Configure at least one AI provider credential, then run `pnpm preflight`, deploy with `vercel deploy --prod`, and inspect `vercel logs vic-house-data-lab.vercel.app --since 10m --no-follow`.
+Configure Neon Auth, its Magic Link plugin, the signed `send.magic_link` + `user.before_create` webhook, Resend delivery, and at least one AI provider credential. Add at least one owner with `pnpm access:add`, then run `pnpm preflight`, deploy with `vercel deploy --prod`, and inspect `vercel logs vic-house-data-lab.vercel.app --since 10m --no-follow`.
 
 The release gate requires non-zero `/api/stats`, populated analytics routes, three gallery Dives with embed sessions, passing tests/lint/typecheck/build/reconcile/MotherDuck smoke/preflight, and a clean Git status without secrets or generated datasets.
 

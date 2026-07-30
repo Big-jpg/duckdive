@@ -1,10 +1,12 @@
 import {motherduck} from "@/lib/motherduck";
 import {analyticsDefinitions,analyticsPolicy,jsonDate,jsonNumbers,salesQuerySchema} from "@/lib/analytics-contract";
 import {estateConfig} from "@/lib/estate";
+import {currentUser} from "@/lib/auth";
 
 export const dynamic="force-dynamic";
 
 export async function GET(request:Request){
+  if(!await currentUser(request))return Response.json({error:"Authentication required"},{status:401});
   const estate=estateConfig();
   const parsed=salesQuerySchema(estate.state).safeParse(Object.fromEntries(new URL(request.url).searchParams));
   if(!parsed.success)return Response.json({error:parsed.error.flatten()},{status:400});

@@ -2,6 +2,33 @@
 
 Last verified: 2026-07-30 (Australia/Perth)
 
+## Auth phase continuation update
+
+The allowlisted Neon Auth implementation is deployed to production at `https://duckdive.gold`. Production credential, trusted-origin, provider, and webhook configuration are complete; the remaining auth release work is human completion of one GitHub or emailed magic-link session plus authenticated/revoked-user smoke testing.
+
+- Production Neon migrations `010_allowlisted_neon_auth.sql` and `011_auth_webhook_response.sql` are applied.
+- Post-migration state remains zero `app.app_user` rows and zero workspaces.
+- The main app, Dives, gallery, stats, analytics, chat, edit, personal embed/version/revert, and share-management routes now require an active allowlisted Neon Auth session.
+- `/share/*` remains public, no-index, view-only, and capability-based. `POST /api/ingest` remains protected only by `INGEST_SECRET`.
+- Magic-link requests are allowlist-gated and non-enumerating. A signed `user.before_create` webhook provides a second fail-closed signup gate.
+- `send.magic_link` webhook delivery uses Resend after verifying Neon's rotating Ed25519/JWKS signature, timestamp, event ID/type, and an idempotent persisted response.
+- Password login, password hashing, `editor:create`, and the legacy application session cookie are removed. Owner commands are `access:add`, `access:revoke`, and `access:list`.
+- Current local validation: 10 test files / 28 tests passed; lint, TypeScript, local production build, Vercel production build, `db:reconcile`, and `smoke:motherduck` pass.
+- Vercel Production and Preview now contain `NEON_AUTH_BASE_URL`, `NEON_AUTH_COOKIE_SECRET`, `RESEND_API_KEY`, and `AUTH_EMAIL_FROM`; `NEXT_PUBLIC_SITE_URL` is configured for Production, Preview, and Development. Secret values were transferred without printing them.
+- `https://duckdive.gold` is attached to the Vercel production project with valid configuration and its Resend domain is verified. Use `DuckDive <noreply@duckdive.gold>` as the sender and `https://duckdive.gold` as the canonical application origin.
+- Neon Auth application name is `DuckDive`; trusted origins contain exactly `https://duckdive.gold`; GitHub initiation returns a valid OAuth redirect.
+- The blocking Neon Auth webhook is enabled at `https://duckdive.gold/api/webhooks/neon-auth` for exactly `User Before Create` and `Send Magic Link`. A live allowlisted magic-link request returned 202 and its signed webhook returned 200 after Resend delivery.
+- `rossfarrell7@gmail.com` is the first active production allowlist administrator.
+
+Remaining production sequence:
+
+1. Ross completes the delivered magic link or GitHub login with `rossfarrell7@gmail.com` and confirms the private home loads.
+2. Exercise an authenticated private API, then revoke/reactivate the owner once to prove fail-closed authorization without losing the stable `app_user.user_id`.
+3. Optionally execute a direct non-allowlisted signup attempt to exercise `User Before Create`; the public request-link endpoint already returns the same generic 202 for an unlisted address without contacting Neon.
+4. Remove legacy Vercel `AUTH_SECRET` only after the authenticated and revoked-user paths pass.
+
+The older objective notes below describe the design context and pre-implementation state; this continuation update is authoritative where they differ.
+
 ## Suggested bootstrap prompt
 
 > Read `AGENTS.md`, `NEXT_SESSION_HANDOFF.md`, and the complete `vic-house-platform-operator` skill. Continue from the verified production state; do not reprovision Neon, MotherDuck, Dives, or share links unless inspection proves it necessary. Implement the next objective: allowlisted Neon Auth with magic-link login and Resend delivery, while preserving `/share/*` as the intentional public read-only capability route. Start with read-only verification and tell me the smallest human dashboard/credential action that materially unblocks you.
@@ -17,12 +44,11 @@ Last verified: 2026-07-30 (Australia/Perth)
 
 - Repository: `C:\Users\rossf\Desktop\vic-house-data-lab`
 - Branch: `main`
-- Handoff base commit: `50827f591f71271a14a54f9848702a88ebf42214`
-- Commit subject: `Add unlisted Dive sharing and strengthen production smoke checks`
-- Working tree was clean immediately before this handoff file was added.
+- Current base commit: `f0ec9e4` (`Document session handoff requirements`).
+- The auth and DuckDive changes are an intentionally uncommitted working tree.
 - Vercel project: `big-team/vic-house-data-lab`
-- Canonical production URL: `https://vic-house-data-lab.vercel.app`
-- Latest verified deployment: `dpl_8B8MYXXfc7HEQuNoa3wB5hFHuECs`
+- Canonical production URL: `https://duckdive.gold`
+- Current production deployment: `dpl_FSXo67yt2t2uXuSQZCFQ1YTBorvx` (READY and aliased to `duckdive.gold`).
 - Neon project shown by the user: `neon-vic-house-data`; keep it isolated from WA or unrelated estates.
 - Migration `009_dive_shares.sql` is applied in production Neon.
 - There were zero real rows in `app.app_user` and zero workspaces after the share smoke cleanup. Do not assume this remains true; query counts before an auth migration.
@@ -84,19 +110,20 @@ Always run cleanup if the smoke sequence is interrupted.
 
 ## Environment state (names only)
 
-Vercel Production and Preview contain the Neon integration variables, `MOTHERDUCK_TOKEN`, `MOTHERDUCK_SHARE_URL`, `AUTH_SECRET`, `INGEST_SECRET`, Blob integration variables, estate variables, and MotherDuck endpoint selectors.
+Vercel Production and Preview contain the Neon integration variables, Neon Auth variables, Resend variables, `MOTHERDUCK_TOKEN`, `MOTHERDUCK_SHARE_URL`, legacy `AUTH_SECRET`, `INGEST_SECRET`, Blob integration variables, estate variables, and MotherDuck endpoint selectors. `NEXT_PUBLIC_SITE_URL` is set across Production, Preview, and Development.
 
 Known missing capability variables:
 
 - No `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or `AI_GATEWAY_API_KEY` was configured. AI remixing is not a completed release gate even though model-name selectors exist.
-- Neon Auth has not been provisioned/configured. `NEON_AUTH_BASE_URL` and `NEON_AUTH_COOKIE_SECRET` were absent from Vercel at handoff.
-- Resend has not been configured. `RESEND_API_KEY`, sending domain/from address, and any Neon Auth webhook secret were absent.
+- Neon Auth is provisioned and GitHub plus Magic Link are enabled. Trusted-origin and blocking-webhook configuration still require release verification.
+- Resend is configured with a verified `duckdive.gold` domain and the application sender `DuckDive <noreply@duckdive.gold>`.
 
 Local credential posture:
 
 - `.env.local`, `.env.blob`, and `.vercel` are ignored.
 - Local Neon URLs and a MotherDuck operator token were usable at handoff. Inspect only presence/placeholder state; never print values.
 - Vercel Sensitive variables pull locally as literal `[SENSITIVE]`; ask the human for a direct dashboard-to-ignored-file handoff when needed.
+- Local `pnpm preflight` currently also lacks `MOTHERDUCK_SHARE_URL`; production Vercel still has the variable and the live MotherDuck smoke passes. Restore the share URL to ignored `.env.local` before relying on local preflight.
 
 ## Highest-priority next objective: allowlisted Neon Auth
 
@@ -165,7 +192,7 @@ pnpm db:status
 pnpm db:reconcile
 pnpm smoke:motherduck
 vercel env ls production
-vercel logs vic-house-data-lab.vercel.app --since 15m --no-follow
+vercel logs duckdive.gold --since 15m --no-follow
 ```
 
 Do not run `pnpm preflight` expecting success until an AI provider key and the future Neon Auth variables are intentionally reflected in its contract.

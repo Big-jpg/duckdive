@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": "22.x" },
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -21,7 +23,9 @@
     "publish:motherduck": "tsx --env-file=.env.local scripts/publish-motherduck.ts",
     "smoke:motherduck": "tsx --env-file=.env.local scripts/smoke-motherduck.ts",
     "smoke:share": "tsx --env-file=.env.local scripts/smoke-share.ts",
-    "editor:create": "tsx --env-file=.env.local scripts/create-editor.ts"
+    "access:add": "tsx --env-file=.env.local scripts/access.ts add",
+    "access:revoke": "tsx --env-file=.env.local scripts/access.ts revoke",
+    "access:list": "tsx --env-file=.env.local scripts/access.ts list"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.67",
@@ -29,13 +33,14 @@
     "@ai-sdk/openai": "^3.0.51",
     "@ai-sdk/react": "^3.0.151",
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "@neondatabase/auth": "0.4.2-beta",
     "@neondatabase/serverless": "^1.1.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/blob": "^2.0.0",
     "@vercel/speed-insights": "^2.0.0",
+    "ai": "^6.0.149",
     "csv-parse": "^6.1.0",
     "html-to-image": "1.11.13",
-    "ai": "^6.0.149",
     "next": "16.2.10",
     "postgres": "^3.4.7",
     "react": "19.2.4",

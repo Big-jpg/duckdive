@@ -12,7 +12,7 @@ try{
   }else{
     const [source]=await sql<{value:string}[]>`SELECT value FROM app.setting WHERE key='source_dive:suburb-story'`;
     if(!source?.value)throw new Error("Source Suburb Story Dive is not provisioned");
-    const [user]=await sql<AppUser[]>`INSERT INTO app.app_user(email,password_hash) VALUES(${QA_EMAIL},'disabled:share-smoke') ON CONFLICT(email) DO UPDATE SET updated_at=now() RETURNING user_id,email,password_hash`;
+    const [user]=await sql<AppUser[]>`INSERT INTO app.app_user(email,password_hash,status,invited_at) VALUES(${QA_EMAIL},NULL,'active',now()) ON CONFLICT(email) DO UPDATE SET status='active',revoked_at=NULL,updated_at=now() RETURNING user_id,email,auth_subject,role,status,invited_at,last_login_at,revoked_at`;
     const diveIds={"suburb-story":source.value};
     const [workspace]=await sql<Workspace[]>`INSERT INTO app.workspace(user_id,motherduck_username,dive_ids,source_dive_ids) VALUES(${user.user_id}::uuid,${process.env.MOTHERDUCK_SHARED_SERVICE_ACCOUNT_USERNAME||"vic_house_lab"},${sql.json(diveIds)},${sql.json(diveIds)}) ON CONFLICT(user_id) DO UPDATE SET dive_ids=excluded.dive_ids,source_dive_ids=excluded.source_dive_ids,updated_at=now() RETURNING workspace_id,user_id,motherduck_username,dive_ids,source_dive_ids`;
     if(action==="create"){

@@ -1,3 +1,24 @@
 "use client";/* eslint-disable @next/next/no-html-link-for-pages */
-import {FormEvent,useState} from "react";import {useRouter,useSearchParams} from "next/navigation";
-export default function LoginForm(){const router=useRouter(),params=useSearchParams(),[email,setEmail]=useState(""),[password,setPassword]=useState(""),[error,setError]=useState(""),[loading,setLoading]=useState(false);async function submit(event:FormEvent){event.preventDefault();setLoading(true);setError("");const response=await fetch("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,password})});const body=await response.json();if(!response.ok){setError(body.error||"Sign in failed");setLoading(false);return;}const requested=params.get("next"),next=requested?.startsWith("/")&&!requested.startsWith("//")?requested:"/";router.replace(next);router.refresh();}return <main className="login-page"><a href="/" className="lab-brand"><span className="lab-duck">V</span><span>VIC HOUSE DATA <i>LAB</i></span></a><form onSubmit={submit}><p>Editor access</p><h1>Enter the lab.</h1><span>Accounts are provisioned by the project owner. Public Dives remain open to everyone.</span><label>Email<input type="email" value={email} onChange={e=>setEmail(e.target.value)} required autoComplete="email" maxLength={254}/></label><label>Password<input type="password" value={password} onChange={e=>setPassword(e.target.value)} required autoComplete="current-password" maxLength={256}/></label>{error&&<div className="lab-error" role="alert">{error}</div>}<button disabled={loading}>{loading?"Signing in…":"Sign in →"}</button><a href="/">← Back to public gallery</a></form></main>}
+import {FormEvent,useState} from "react";
+import {useSearchParams} from "next/navigation";
+import {safeNextPath} from "@/lib/auth-policy";
+
+const errors:Record<string,string>={access_denied:"This verified email does not have active access.",link_failed:"That sign-in link is invalid or expired. Request a fresh link.",github_failed:"GitHub sign-in could not be completed."};
+export default function LoginForm(){
+  const params=useSearchParams(),[email,setEmail]=useState(""),[error,setError]=useState(errors[params.get("error")||""]||""),[message,setMessage]=useState(""),[loading,setLoading]=useState(false),[githubLoading,setGithubLoading]=useState(false);
+  async function submit(event:FormEvent){
+    event.preventDefault();setLoading(true);setError("");setMessage("");
+    const response=await fetch("/api/auth/request-link",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,next:safeNextPath(params.get("next"))})});
+    const body=await response.json().catch(()=>({}));setLoading(false);
+    if(!response.ok){setError(body.error||"Could not request a sign-in link.");return;}
+    setMessage(body.message||"If this address has active access, a sign-in link is on its way.");
+  }
+  async function github(){
+    setGithubLoading(true);setError("");
+    const response=await fetch("/api/auth/github",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({next:safeNextPath(params.get("next"))})});
+    const body=await response.json().catch(()=>({}));
+    if(!response.ok||typeof body.url!=="string"){setError(body.error||"Could not start GitHub sign-in.");setGithubLoading(false);return;}
+    location.assign(body.url);
+  }
+  return <main className="login-page"><a href="/" className="lab-brand"><span className="lab-duck">D</span><span>DUCKDIVE <i>GOLD</i></span></a><form onSubmit={submit}><p>Private access</p><h1>Enter DuckDive.</h1><span>Access is allowlist-only. Continue with GitHub or request a short-lived, single-use email link.</span><button type="button" className="github-login" disabled={githubLoading||loading} onClick={github}>{githubLoading?"Opening GitHub…":"Continue with GitHub"}</button><div className="login-divider"><span>or use email</span></div><label>Email<input type="email" value={email} onChange={event=>setEmail(event.target.value)} required autoComplete="email" maxLength={254}/></label>{error&&<div className="lab-error" role="alert">{error}</div>}{message&&<div className="lab-success" role="status">{message}</div>}<button disabled={loading||githubLoading||Boolean(message)}>{loading?"Sending…":message?"Link requested":"Email sign-in link →"}</button><span className="login-help">Unlisted shared Dives remain available through their direct links.</span></form></main>;
+}

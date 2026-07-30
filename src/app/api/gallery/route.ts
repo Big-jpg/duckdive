@@ -1,3 +1,7 @@
-import {publicGallery,workspaceGallery} from "@/lib/dive-provisioning";import {currentUser} from "@/lib/auth";
+import {workspaceGallery} from "@/lib/dive-provisioning";
+import {currentUser} from "@/lib/auth";
 export const dynamic="force-dynamic";
-export async function GET(request:Request){try{const user=await currentUser(request),dives=user?await workspaceGallery(user):await publicGallery();return Response.json({viewer:user?{kind:"editor",email:user.email}:{kind:"public"},dives},{headers:{"Cache-Control":"no-store"}});}catch(error){console.error("gallery provisioning failed",error);return Response.json({error:"Live Dives are temporarily unavailable."},{status:503,headers:{"Retry-After":"60"}});}}
+export async function GET(request:Request){
+  const user=await currentUser(request);if(!user)return Response.json({error:"Authentication required"},{status:401});
+  try{return Response.json({viewer:{kind:"editor",email:user.email},dives:await workspaceGallery(user)},{headers:{"Cache-Control":"private, no-store"}});}catch(error){console.error("gallery provisioning failed",error);return Response.json({error:"Live Dives are temporarily unavailable."},{status:503,headers:{"Retry-After":"60"}});}
+}

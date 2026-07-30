@@ -2,14 +2,38 @@ import {randomUUID} from "node:crypto";
 import {database} from "./db";
 import {shareSlug} from "./dive-share";
 
-export type AppUser={user_id:string;email:string;password_hash:string};
+export type AppUser={user_id:string;email:string;auth_subject:string|null;role:"member"|"admin";status:"active"|"revoked";invited_at:string|null;last_login_at:string|null;revoked_at:string|null};
 export type Workspace={workspace_id:string;user_id:string;motherduck_username:string;dive_ids:Record<string,string>;source_dive_ids:Record<string,string>};
 export type DiveShare={share_id:string;workspace_id:string;created_by:string;dive_id:string;starter_key:string;slug:string;title:string;description:string;status:"active"|"revoked";expires_at:string|null;view_count:number;last_viewed_at:string|null;created_at:string;updated_at:string;revoked_at:string|null};
 export type PublicDiveShare=DiveShare&{motherduck_username:string};
 
-export async function findUserByEmail(email:string){const sql=database();try{const [row]=await sql<AppUser[]>`SELECT user_id,email,password_hash FROM app.app_user WHERE lower(email)=lower(${email})`;return row;}finally{await sql.end();}}
-export async function findUserById(id:string){const sql=database();try{const [row]=await sql<AppUser[]>`SELECT user_id,email,password_hash FROM app.app_user WHERE user_id=${id}::uuid`;return row;}finally{await sql.end();}}
-export async function upsertEditor(email:string,passwordHash:string){const sql=database();try{const [row]=await sql<AppUser[]>`INSERT INTO app.app_user(email,password_hash) VALUES(${email.toLowerCase()},${passwordHash}) ON CONFLICT(email) DO UPDATE SET password_hash=excluded.password_hash,updated_at=now() RETURNING user_id,email,password_hash`;return row;}finally{await sql.end();}}
+export async function findActiveAllowlistedUserByEmail(email:string){const sql=database();try{const [row]=await sql<AppUser[]>`SELECT user_id,email,auth_subject,role,status,invited_at,last_login_at,revoked_at FROM app.app_user WHERE lower(email)=lower(${email}) AND status='active'`;return row||null;}finally{await sql.end();}}
+export async function linkActiveAllowlistedUser(authSubject:string,email:string){
+  const sql=database();try{
+    const [row]=await sql<AppUser[]>`UPDATE app.app_user SET auth_subject=coalesce(auth_subject,${authSubject}),last_login_at=CASE WHEN last_login_at IS NULL OR last_login_at<now()-INTERVAL '15 minutes' THEN now() ELSE last_login_at END,updated_at=now()
+      WHERE lower(email)=lower(${email}) AND status='active' AND (auth_subject IS NULL OR auth_subject=${authSubject})
+      RETURNING user_id,email,auth_subject,role,status,invited_at,last_login_at,revoked_at`;
+    return row||null;
+  }catch(error){if((error as {code?:string}).code==="23505")return null;throw error;}finally{await sql.end();}
+}
+export async function addAccess(email:string,role:"member"|"admin"="member"){
+  const sql=database();try{const [row]=await sql<AppUser[]>`INSERT INTO app.app_user(email,password_hash,role,status,invited_at) VALUES(lower(${email}),NULL,${role},'active',now())
+    ON CONFLICT((lower(email))) DO UPDATE SET role=excluded.role,status='active',revoked_at=NULL,invited_at=coalesce(app.app_user.invited_at,now()),updated_at=now()
+    RETURNING user_id,email,auth_subject,role,status,invited_at,last_login_at,revoked_at`;return row;}finally{await sql.end();}
+}
+export async function revokeAccess(email:string){const sql=database();try{const [row]=await sql<AppUser[]>`UPDATE app.app_user SET status='revoked',revoked_at=now(),updated_at=now() WHERE lower(email)=lower(${email}) RETURNING user_id,email,auth_subject,role,status,invited_at,last_login_at,revoked_at`;return row||null;}finally{await sql.end();}}
+export async function listAccess(){const sql=database();try{return await sql<AppUser[]>`SELECT user_id,email,auth_subject,role,status,invited_at,last_login_at,revoked_at FROM app.app_user ORDER BY lower(email)`;}finally{await sql.end();}}
+export async function claimAuthWebhook(eventId:string,eventType:string){
+  const sql=database();try{
+    const [claimed]=await sql<{status:string}[]>`INSERT INTO app.auth_webhook_event(event_id,event_type) VALUES(${eventId}::uuid,${eventType})
+      ON CONFLICT(event_id) DO UPDATE SET status='processing',attempt_count=app.auth_webhook_event.attempt_count+1,last_error_code=NULL,updated_at=now()
+      WHERE app.auth_webhook_event.status='failed' OR app.auth_webhook_event.updated_at<now()-INTERVAL '30 seconds' RETURNING status`;
+    if(claimed)return {state:"claimed" as const,response:null};
+    const [existing]=await sql<{status:string;response_json:Record<string,unknown>|null}[]>`SELECT status,response_json FROM app.auth_webhook_event WHERE event_id=${eventId}::uuid`;
+    return existing?.status==="succeeded"?{state:"succeeded" as const,response:existing.response_json}:{state:"busy" as const,response:null};
+  }finally{await sql.end();}
+}
+export async function finishAuthWebhook(eventId:string,status:"succeeded"|"failed",errorCode:string|null=null,response:Record<string,unknown>|null=null){const sql=database();try{await sql`UPDATE app.auth_webhook_event SET status=${status},last_error_code=${errorCode},response_json=${response?sql.json(response as never):null},updated_at=now() WHERE event_id=${eventId}::uuid`;}finally{await sql.end();}}
 export async function getWorkspace(userId:string){const sql=database();try{const [row]=await sql<Workspace[]>`SELECT workspace_id,user_id,motherduck_username,dive_ids,source_dive_ids FROM app.workspace WHERE user_id=${userId}::uuid`;return row;}finally{await sql.end();}}
 export async function saveWorkspace(userId:string,username:string,diveIds:Record<string,string>,sourceDiveIds:Record<string,string>){const sql=database();try{const [row]=await sql<Workspace[]>`INSERT INTO app.workspace(user_id,motherduck_username,dive_ids,source_dive_ids) VALUES(${userId}::uuid,${username},${sql.json(diveIds)},${sql.json(sourceDiveIds)}) ON CONFLICT(user_id) DO UPDATE SET dive_ids=excluded.dive_ids,source_dive_ids=excluded.source_dive_ids,updated_at=now() RETURNING workspace_id,user_id,motherduck_username,dive_ids,source_dive_ids`;return row;}finally{await sql.end();}}
 export function workspaceOwnsDive(workspace:Workspace,diveId:string){return Object.values(workspace.dive_ids).includes(diveId);}

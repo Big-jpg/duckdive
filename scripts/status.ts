@@ -13,7 +13,9 @@ try {
     (SELECT count(*) FROM core.sale_event)::int sales,
     (SELECT count(*) FROM core.sale_event WHERE price_aud IS NULL)::int sales_without_numeric_price,
     (SELECT count(*) FROM core.sale_event WHERE sold_date IS NULL)::int sales_without_sold_date,
-    (SELECT count(*) FROM mart.suburb_monthly_sales)::int monthly_mart_rows`;
+    (SELECT count(*) FROM mart.suburb_monthly_sales)::int monthly_mart_rows,
+    (SELECT count(*) FROM app.app_user)::int app_users,
+    (SELECT count(*) FROM app.workspace)::int workspaces`;
   const files=await sql`SELECT file_name,status,source_rows,accepted_rows,rejected_rows,error FROM ops.ingest_file ORDER BY created_at DESC LIMIT 10`;
   console.log(JSON.stringify({counts,files},null,2));
 } finally { await sql.end(); }

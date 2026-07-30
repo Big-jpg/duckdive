@@ -1,12 +1,14 @@
 import {motherduck} from "@/lib/motherduck";
 import {analyticsDefinitions,analyticsPolicy,insightsQuerySchema,jsonDate,jsonNumbers} from "@/lib/analytics-contract";
 import {estateConfig} from "@/lib/estate";
+import {currentUser} from "@/lib/auth";
 
 export const dynamic="force-dynamic";
 const numericSummary=["sale_count","reported_priced_sales","priced_sales","excluded_price_outliers","median_price_aud","average_price_aud","land_sample","land_price_pair_sample","land_price_correlation","median_land_size_sqm"];
 const numericComparison=["current_sale_count","current_reported_priced_sales","current_priced_sales","current_median_price_aud","prior_sale_count","prior_reported_priced_sales","prior_priced_sales","prior_median_price_aud"];
 
 export async function GET(request:Request){
+  if(!await currentUser(request))return Response.json({error:"Authentication required"},{status:401});
   const estate=estateConfig();
   const parsed=insightsQuerySchema(estate.state).safeParse(Object.fromEntries(new URL(request.url).searchParams));
   if(!parsed.success)return Response.json({error:parsed.error.flatten()},{status:400});

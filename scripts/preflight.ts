@@ -1,12 +1,14 @@
 import {estateConfig} from "../src/lib/estate";
 
 const errors:string[]=[],warnings:string[]=[];
-const required=["DATABASE_URL","DATABASE_URL_UNPOOLED","MOTHERDUCK_TOKEN","MOTHERDUCK_SHARE_URL","AUTH_SECRET","INGEST_SECRET","NEXT_PUBLIC_SITE_URL"] as const;
+const required=["DATABASE_URL","DATABASE_URL_UNPOOLED","MOTHERDUCK_TOKEN","MOTHERDUCK_SHARE_URL","NEON_AUTH_BASE_URL","NEON_AUTH_COOKIE_SECRET","RESEND_API_KEY","AUTH_EMAIL_FROM","INGEST_SECRET","NEXT_PUBLIC_SITE_URL"] as const;
 for(const key of required)if(!process.env[key]?.trim())errors.push(`${key} is required`);
 const estate=estateConfig();
 if(estate.state!=="VIC")errors.push("ESTATE_STATE must be VIC for this deployment");
 if(estate.motherduckDatabase!=="vic_house_data")errors.push("MOTHERDUCK_DATABASE must be vic_house_data for this deployment");
-if((process.env.AUTH_SECRET||"").length<32)errors.push("AUTH_SECRET must contain at least 32 characters");
+if(process.env.NEON_AUTH_COOKIE_SECRET&&(process.env.NEON_AUTH_COOKIE_SECRET.length<32))errors.push("NEON_AUTH_COOKIE_SECRET must contain at least 32 characters");
+if(process.env.NEON_AUTH_BASE_URL)try{const authUrl=new URL(process.env.NEON_AUTH_BASE_URL);if(authUrl.protocol!=="https:")errors.push("NEON_AUTH_BASE_URL must use HTTPS");}catch{errors.push("NEON_AUTH_BASE_URL must be an absolute URL");}
+if(process.env.AUTH_EMAIL_FROM&&!/^.+@.+$/.test(process.env.AUTH_EMAIL_FROM))errors.push("AUTH_EMAIL_FROM must contain a configured sender address");
 if(process.env.MOTHERDUCK_SHARE_URL?.includes("replace-with")||!process.env.MOTHERDUCK_SHARE_URL?.startsWith("md:_share/"))errors.push("MOTHERDUCK_SHARE_URL must be a provisioned md:_share URL");
 try{const site=new URL(process.env.NEXT_PUBLIC_SITE_URL||"");if(site.protocol!=="https:"&&!['localhost','127.0.0.1'].includes(site.hostname))errors.push("NEXT_PUBLIC_SITE_URL must use HTTPS outside localhost");}catch{errors.push("NEXT_PUBLIC_SITE_URL must be an absolute URL");}
 for(const key of ["DATABASE_URL","DATABASE_URL_UNPOOLED"] as const){try{const url=new URL(process.env[key]||"");if(!url.hostname)throw new Error();}catch{errors.push(`${key} must be a valid absolute PostgreSQL URL`);}}

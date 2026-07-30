@@ -9,7 +9,7 @@ export function socialCard(){
   return new ImageResponse(
     <div style={{width:"100%",height:"100%",display:"flex",background:"#f8efea",color:"#3f2928",fontFamily:"Arial, sans-serif",position:"relative",overflow:"hidden"}}>
       <div style={{display:"flex",position:"absolute",left:"64px",top:"54px",alignItems:"center",gap:"14px",color:"#7d3034",fontSize:"24px",fontWeight:700}}>
-        <span>VIC HOUSE DATA LAB</span>
+        <span>DUCKDIVE.GOLD</span>
         <span style={{color:"#d98782"}}>•</span>
         <span style={{fontSize:"15px",letterSpacing:"3px"}}>ANALYTICS EXPERIMENT</span>
       </div>
