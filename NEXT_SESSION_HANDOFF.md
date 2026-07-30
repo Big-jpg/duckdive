@@ -21,6 +21,7 @@ The allowlisted Neon Auth implementation is deployed to production at `https://d
 - The blocking Neon Auth webhook is enabled at `https://duckdive.gold/api/webhooks/neon-auth` for exactly `User Before Create` and `Send Magic Link`. A live allowlisted magic-link request returned 202 and its signed webhook returned 200 after Resend delivery.
 - `rossfarrell7@gmail.com` is the first active production allowlist administrator.
 - Vercel Functions are explicitly pinned to Sydney (`syd1`) through `vercel.json`, beside the Sydney Neon/Auth estate. Before/after warm measurements improved anonymous auth/API checks from about 0.5-1.0 seconds to 0.13-0.42 seconds and the unlisted magic-link authorization path from about 6.0 seconds to 0.10-0.38 seconds.
+- Production AI incident: Vercel Functions expose OIDC through request context rather than `process.env.VERCEL_OIDC_TOKEN`. The original provider guard rejected production before AI SDK authentication. `src/lib/ai-provider.ts` now returns the Gateway model as a plain string on Vercel so AI SDK can consume runtime OIDC; the project OIDC setting is verified enabled with team issuer mode.
 
 Remaining production sequence:
 
