@@ -16,4 +16,12 @@ describe("Dive source rendering",()=>{
     expect(sources[0]).toContain("AS sale_month");
     expect(sources[1]).toContain("AS sale_year");
   });
+
+  it("injects the shared DuckDive visual contract",async()=>{
+    const source=await readFile(path.join(process.cwd(),"src","dives","market-pulse.tsx"),"utf8");
+    const rendered=renderDiveSource(source,"md:_share/vic/test");
+    expect(rendered).not.toContain("__DUCKDIVE_THEME_CSS__");
+    expect(rendered).toContain("--dd-sky:#58bbe3");
+    expect(rendered).toContain("prefers-color-scheme:dark");
+  });
 });

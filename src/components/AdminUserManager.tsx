@@ -15,7 +15,7 @@ export default function AdminUserManager({users,currentUserId}:{users:AdminUser[
   }
   async function submit(event:React.FormEvent<HTMLFormElement>){event.preventDefault();const data=new FormData(event.currentTarget),email=String(data.get("email")||""),role=String(data.get("role")||"member");if(await request("POST",{email,role},"new"))formRef.current?.reset();}
   return <section className="admin-users">
-    <header><div><p className="admin-kicker">Access</p><h2>Users</h2></div><p>Add an email for GitHub or magic-link access. Revoking access preserves the user’s identity and history.</p></header>
+    <header><h2>Access</h2></header>
     <form ref={formRef} onSubmit={submit} className="admin-invite">
       <label>Email<input name="email" type="email" required maxLength={254} placeholder="tester@example.com" autoComplete="off" spellCheck={false}/></label>
       <label>Role<select name="role" defaultValue="member"><option value="member">Member</option><option value="admin">Admin</option></select></label>

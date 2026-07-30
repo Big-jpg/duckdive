@@ -15,8 +15,22 @@ export const STARTER_DIVES=[
 export type StarterKey=(typeof STARTER_DIVES)[number]["key"];
 type Provisioned=(typeof STARTER_DIVES)[number]&{diveId:string};
 
+export const DIVE_THEME_CSS=`
+:root{--dd-bg:#fbfcf8;--dd-surface:#fff8e8;--dd-sand:#efd59b;--dd-ink:#182127;--dd-muted:#56656b;--dd-sky:#58bbe3;--dd-accent:#b66d2c;--dd-line:rgba(24,33,39,.22)}
+@media(prefers-color-scheme:dark){:root{--dd-bg:#17120d;--dd-surface:#2a2015;--dd-sand:#3a2a18;--dd-ink:#f1d589;--dd-muted:#bda873;--dd-sky:#742d17;--dd-accent:#d86228;--dd-line:rgba(241,213,137,.24)}}
+.dd-root{min-height:600px;background:linear-gradient(180deg,var(--dd-sky) 0 96px,var(--dd-bg) 96px);color:var(--dd-ink);font-family:Arial,Helvetica,sans-serif}
+.dd-kicker{color:var(--dd-ink);font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.dd-muted{color:var(--dd-muted)}
+.dd-control{border:1px solid var(--dd-line);border-radius:2px;background:var(--dd-surface);color:var(--dd-ink)}
+.dd-panel{border:1px solid var(--dd-line);background:var(--dd-surface)}
+.dd-rule{border-color:var(--dd-line)}
+.dd-loading{background:var(--dd-sand)}
+.recharts-cartesian-axis-tick-value{fill:var(--dd-muted)}
+`;
+
 function shareUrl(){const value=process.env.MOTHERDUCK_SHARE_URL;if(!value?.startsWith("md:_share/"))throw new Error("MOTHERDUCK_SHARE_URL must be the organization share URL emitted by MotherDuck");return value;}
 export function renderDiveSource(source:string,share:string){return source
+  .replaceAll("__DUCKDIVE_THEME_CSS__",DIVE_THEME_CSS)
   .replaceAll("__MOTHERDUCK_SHARE_URL__",share)
   .replaceAll("__PRICE_MIN__",String(analyticsPolicy.priceAud.minimum))
   .replaceAll("__PRICE_MAX__",String(analyticsPolicy.priceAud.maximum))
