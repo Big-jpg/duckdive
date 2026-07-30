@@ -123,16 +123,34 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .edit-toolbar button:hover{background:var(--surface-soft)}
 .edit-toolbar button:disabled{opacity:.4}
 .chat-panel{display:grid;grid-template-rows:58px 1fr auto;min-height:0;border-left:1px solid var(--line);background:var(--surface)}
-.chat-panel>header{display:flex;align-items:center;padding:0 16px;border-bottom:1px solid var(--line)}
+.chat-panel[hidden]{display:none}
+.chat-panel>header{display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 16px;border-bottom:1px solid var(--line)}
 .chat-panel h2{margin:0;font-size:17px;letter-spacing:-.025em}
+.chat-panel>header>div{display:flex;gap:4px}
+.chat-panel>header button,.contract-view header button{padding:5px 7px;border:1px solid var(--line);border-radius:var(--radius);background:transparent;color:var(--muted);font-size:9px;cursor:pointer}
+.chat-panel>header button:hover,.contract-view header button:hover{color:var(--ink);background:var(--surface-soft)}
 .chat-messages{min-height:0;overflow:auto;padding:16px}
 .chat-empty{max-width:210px;margin:0;color:var(--muted);font-size:13px;line-height:1.5}
 .chat-message{margin:10px 0;padding:11px 12px;color:var(--muted);font-size:12px;line-height:1.5}
 .chat-message.user{margin-left:24px;background:var(--surface-soft);color:var(--ink)}
 .chat-message.assistant{border-left:2px solid var(--orange)}
 .chat-message p{margin:0;white-space:pre-wrap}
-.chat-message small{display:block;margin-top:5px;color:var(--teal);text-transform:capitalize}
-.chat-thinking{padding:8px 0;color:var(--orange);font-size:11px}
+.chat-message small{display:block;margin-top:5px;color:var(--teal)}
+.chat-phase{padding:8px 0;color:var(--orange);font-size:11px}
+.run-outcome{margin-top:12px;padding:11px 12px;border-left:2px solid var(--muted);background:var(--paper);font-size:11px;line-height:1.45}
+.run-outcome.applied{border-color:var(--teal)}
+.run-outcome.clarification{border-color:var(--ochre)}
+.run-outcome.failed{border-color:var(--orange)}
+.run-outcome strong{display:block;color:var(--ink)}
+.run-outcome p{margin:4px 0 0;color:var(--muted)}
+.contract-view{min-height:0;overflow:auto;padding:16px;color:var(--muted);font-size:11px;line-height:1.45}
+.contract-view header{display:flex;align-items:center;justify-content:space-between}
+.contract-view h3{margin:0;color:var(--ink);font-size:16px}
+.contract-view h4{margin:20px 0 7px;color:var(--orange);font:800 9px Arial;text-transform:uppercase;letter-spacing:.12em}
+.contract-view p{margin:6px 0}
+.contract-view dl{margin:0}.contract-view dl div{padding:7px 0;border-bottom:1px solid var(--line)}
+.contract-view dt{color:var(--ink);font-weight:800;text-transform:capitalize}.contract-view dd{margin:2px 0 0}
+.contract-view ul{margin:0;padding-left:17px}.contract-view li{margin:6px 0}
 .chat-panel form{padding:12px;border-top:1px solid var(--line)}
 .chat-panel textarea{width:100%;height:76px;resize:none;padding:10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);color:var(--ink);font:13px Arial}
 .chat-panel form>div{display:flex;align-items:center;justify-content:space-between;margin-top:7px}
@@ -150,8 +168,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .admin-limits dt{color:var(--muted);font-size:9px;text-transform:uppercase}
 .admin-limits dd{margin:5px 0 0;font-size:19px;font-weight:800;font-variant-numeric:tabular-nums}
 .admin-limits small{margin-left:4px;color:var(--muted);font-size:9px;font-weight:500}
-.admin-metrics{display:grid;grid-template-columns:repeat(7,1fr);border:1px solid var(--line);background:var(--surface)}
-.admin-metrics article{display:grid;gap:6px;min-height:104px;padding:13px;border-right:1px solid var(--line)}
+.admin-metrics{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);background:var(--surface)}
+.admin-metrics article{display:grid;gap:6px;min-height:104px;padding:13px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
 .admin-metrics article:last-child{border-right:0}
 .admin-metrics article>span{color:var(--muted);font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
 .admin-metrics article>strong{margin-top:auto;font-size:25px;line-height:1;font-weight:800;font-variant-numeric:tabular-nums}

@@ -2,6 +2,22 @@
 
 Last verified: 2026-07-30 (Australia/Perth)
 
+## Verified DuckDive editing release update
+
+This section is authoritative over older DuckDive/admin/AI notes below it.
+
+- Production deployment `dpl_AUtHYca9SNkBoSBD975ezkogo1hR` is READY and aliased to `https://duckdive.gold`; Next.js Functions remain in `syd1`.
+- Additive Neon migration `013_duckdive_runs.sql` is applied. It adds durable `app.duckdive_run` state with one active run per workspace/Dive, stale-run recovery, versions/hashes, outcomes, duration and token usage.
+- DuckDive now defaults to AI Gateway model `openai/gpt-5.6-sol` and receives the active Dive source/version plus an application-owned VIC semantic and visual contract.
+- The model has only two application-owned tools: a governed, single-statement, read-only, 200-row `inspect_data` query and `save_dive_revision`, which forces the active Dive and permits only one mutation attempt.
+- A save is reported only after the MotherDuck version advances, the source SHA-256 changes and a fresh embed session succeeds. The client polls `GET /api/duckdive/runs/[runId]` and refreshes only for an `applied` outcome.
+- Full UI messages and compact tool outcomes are persisted. The three starter Dives maintain separate mounted conversations, so tab changes cannot share agent context.
+- The editor now has a 4,000-character brief, accurate character count, meaningful phases, explicit clarification/no-change/failure/aborted states, an on-demand semantic Data Contract, and a confirmed/version-guarded Reset to Starter that creates another reversible version.
+- `/admin` is deployed with 24-hour applied/failed/clarified DuckDive counts and median duration/token usage. Audit events cover applied, clarification, failed, aborted and reset outcomes. Existing per-user/global hourly AI admission limits are unchanged.
+- Validation passed: 16 test files / 40 tests, TypeScript, production build, preflight, full 83-file/88,422-row reconciliation and live MotherDuck smoke. ESLint has zero errors; its 17 warnings are confined to the checked-in `vercel-optimize` skill package.
+- Post-deploy runtime logs contained only expected `/`, `/edit` and `/login` requests with no errors. An isolated anonymous browser correctly redirected `/edit` to `/login`.
+- Remaining release check: use an authenticated owner browser to record the current Market Pulse version, submit one deterministic copy-only change, verify the persisted `applied` run/new version/refreshed embed/admin telemetry, then use Undo Version or Reset to Starter and verify restoration. This could not be completed in the isolated browser because it had no owner session; do not bypass authentication.
+
 ## Auth phase continuation update
 
 The allowlisted Neon Auth implementation is deployed to production at `https://duckdive.gold`. Production credential, trusted-origin, provider, webhook, and OAuth verifier configuration are complete. GitHub login now persists and the owner reaches the private editor. The remaining auth release work is a controlled revoked-user smoke test.

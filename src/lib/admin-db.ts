@@ -4,6 +4,7 @@ import type {AppUser} from "./app-db";
 export type AdminOverview={
   active_users:number;revoked_users:number;linked_users:number;ai_requests_hour:number;ai_requests_day:number;
   login_attempts_15m:number;public_share_loads_hour:number;active_shares:number;share_views:number;chats_day:number;audit_events_day:number;
+  duckdives_applied_day:number;duckdives_failed_day:number;duckdives_clarified_day:number;duckdive_median_duration_ms:number;duckdive_median_tokens:number;
 };
 export type AdminUser=AppUser&{ai_requests_hour:number;ai_requests_day:number;audit_events_day:number;chat_sessions:number;active_shares:number;share_views:number};
 export type AdminAuditEvent={event_id:string;event_type:string;actor_email:string|null;target_email:string|null;occurred_at:string};
@@ -23,7 +24,12 @@ export async function getAdminDashboard(){
         (SELECT count(*)::int FROM app.dive_share WHERE status='active' AND (expires_at IS NULL OR expires_at>now())) AS active_shares,
         (SELECT coalesce(sum(view_count),0)::int FROM app.dive_share) AS share_views,
         (SELECT count(*)::int FROM app.chat_session WHERE created_at>=now()-INTERVAL '24 hours') AS chats_day,
-        (SELECT count(*)::int FROM app.audit_event WHERE occurred_at>=now()-INTERVAL '24 hours') AS audit_events_day`;
+        (SELECT count(*)::int FROM app.audit_event WHERE occurred_at>=now()-INTERVAL '24 hours') AS audit_events_day,
+        (SELECT count(*)::int FROM app.duckdive_run WHERE created_at>=now()-INTERVAL '24 hours' AND status='applied') AS duckdives_applied_day,
+        (SELECT count(*)::int FROM app.duckdive_run WHERE created_at>=now()-INTERVAL '24 hours' AND status='failed') AS duckdives_failed_day,
+        (SELECT count(*)::int FROM app.duckdive_run WHERE created_at>=now()-INTERVAL '24 hours' AND status='clarification') AS duckdives_clarified_day,
+        (SELECT coalesce(percentile_cont(.5) WITHIN GROUP(ORDER BY duration_ms),0)::int FROM app.duckdive_run WHERE created_at>=now()-INTERVAL '24 hours' AND finished_at IS NOT NULL) AS duckdive_median_duration_ms,
+        (SELECT coalesce(percentile_cont(.5) WITHIN GROUP(ORDER BY input_tokens+output_tokens),0)::int FROM app.duckdive_run WHERE created_at>=now()-INTERVAL '24 hours' AND finished_at IS NOT NULL) AS duckdive_median_tokens`;
     const usersPromise=sql<AdminUser[]>`
       WITH ai AS (
         SELECT user_id,count(*) FILTER(WHERE occurred_at>=now()-INTERVAL '1 hour')::int ai_requests_hour,

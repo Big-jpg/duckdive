@@ -11,7 +11,7 @@ import AppBrand from "@/components/AppBrand";
 export const dynamic="force-dynamic";
 export const metadata:Metadata={title:"Admin",robots:{index:false,follow:false}};
 const number=new Intl.NumberFormat("en-AU");
-const labels:Record<string,string>={"ai.completed":"AI completed","dive.share.published":"Share published","dive.share.revoked":"Share revoked","workspace.provisioned":"Workspace created","admin.access.upserted":"Access updated","admin.access.revoked":"Access revoked","auth.logout":"Signed out"};
+const labels:Record<string,string>={"ai.completed":"AI completed","duckdive.applied":"DuckDive saved","duckdive.clarification":"DuckDive asked for detail","duckdive.failed":"DuckDive failed","duckdive.aborted":"DuckDive stopped","duckdive.reset":"Starter restored","duckdive.reset.no_change":"Starter already current","dive.share.published":"Share published","dive.share.revoked":"Share revoked","workspace.provisioned":"Workspace created","admin.access.upserted":"Access updated","admin.access.revoked":"Access revoked","auth.logout":"Signed out"};
 
 export default async function AdminPage(){
   const user=await currentUser();if(!user)redirect("/login?next=%2Fadmin");if(user.role!=="admin")notFound();
@@ -24,6 +24,8 @@ export default async function AdminPage(){
     ["Active share links",overview.active_shares,`${number.format(overview.share_views)} total opens`],
     ["New conversations · 24h",overview.chats_day,`${overview.audit_events_day} audited events`],
     ["Revoked access",overview.revoked_users,"Identity and history retained"],
+    ["DuckDives applied · 24h",overview.duckdives_applied_day,`${overview.duckdives_failed_day} failed · ${overview.duckdives_clarified_day} clarified`],
+    ["Median DuckDive",Math.round(overview.duckdive_median_duration_ms/1000),`${number.format(overview.duckdive_median_tokens)} tokens · seconds shown`],
   ] as const;
   return <main id="main-content" className="admin-page">
     <header className="lab-header"><AppBrand/><nav aria-label="Administration navigation"><Link href="/">Dives</Link><Link href="/edit">Editor</Link><span className="admin-identity">{user.email}</span></nav></header>
