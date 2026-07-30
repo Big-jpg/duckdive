@@ -4,7 +4,7 @@ Last verified: 2026-07-30 (Australia/Perth)
 
 ## Auth phase continuation update
 
-The allowlisted Neon Auth implementation is deployed to production at `https://duckdive.gold`. Production credential, trusted-origin, provider, and webhook configuration are complete; the remaining auth release work is human completion of one GitHub or emailed magic-link session plus authenticated/revoked-user smoke testing.
+The allowlisted Neon Auth implementation is deployed to production at `https://duckdive.gold`. Production credential, trusted-origin, provider, and webhook configuration are complete. An initial GitHub approval created the Neon identity but did not persist an application session; the missing OAuth verifier exchange was fixed and redeployed. The remaining auth release work is one human retry plus authenticated/revoked-user smoke testing.
 
 - Production Neon migrations `010_allowlisted_neon_auth.sql` and `011_auth_webhook_response.sql` are applied.
 - Post-migration state remains zero `app.app_user` rows and zero workspaces.
@@ -17,12 +17,13 @@ The allowlisted Neon Auth implementation is deployed to production at `https://d
 - Vercel Production and Preview now contain `NEON_AUTH_BASE_URL`, `NEON_AUTH_COOKIE_SECRET`, `RESEND_API_KEY`, and `AUTH_EMAIL_FROM`; `NEXT_PUBLIC_SITE_URL` is configured for Production, Preview, and Development. Secret values were transferred without printing them.
 - `https://duckdive.gold` is attached to the Vercel production project with valid configuration and its Resend domain is verified. Use `DuckDive <noreply@duckdive.gold>` as the sender and `https://duckdive.gold` as the canonical application origin.
 - Neon Auth application name is `DuckDive`; trusted origins contain exactly `https://duckdive.gold`; GitHub initiation returns a valid OAuth redirect.
+- OAuth persistence fix: `src/proxy.ts` runs Neon Auth middleware only when `neon_auth_session_verifier` is present, cookies use `SameSite=Lax`, the catch-all handler exports GET and POST, and new/existing GitHub users share `/auth/complete`. Production initiation now sets a Secure, HttpOnly Lax challenge cookie.
 - The blocking Neon Auth webhook is enabled at `https://duckdive.gold/api/webhooks/neon-auth` for exactly `User Before Create` and `Send Magic Link`. A live allowlisted magic-link request returned 202 and its signed webhook returned 200 after Resend delivery.
 - `rossfarrell7@gmail.com` is the first active production allowlist administrator.
 
 Remaining production sequence:
 
-1. Ross completes the delivered magic link or GitHub login with `rossfarrell7@gmail.com` and confirms the private home loads.
+1. Ross retries GitHub login from `https://duckdive.gold/login` with `rossfarrell7@gmail.com` and confirms the private home loads. The first attempt already created the Neon identity; the retry should exchange the verifier and atomically link the existing allowlist row.
 2. Exercise an authenticated private API, then revoke/reactivate the owner once to prove fail-closed authorization without losing the stable `app_user.user_id`.
 3. Optionally execute a direct non-allowlisted signup attempt to exercise `User Before Create`; the public request-link endpoint already returns the same generic 202 for an unlisted address without contacting Neon.
 4. Remove legacy Vercel `AUTH_SECRET` only after the authenticated and revoked-user paths pass.
@@ -48,7 +49,7 @@ The older objective notes below describe the design context and pre-implementati
 - The auth and DuckDive changes are an intentionally uncommitted working tree.
 - Vercel project: `big-team/vic-house-data-lab`
 - Canonical production URL: `https://duckdive.gold`
-- Current production deployment: `dpl_FSXo67yt2t2uXuSQZCFQ1YTBorvx` (READY and aliased to `duckdive.gold`).
+- Current production deployment: `dpl_JCvmwUXNLq1ux3Qy3RkguNvqYMt4` (READY and aliased to `duckdive.gold`).
 - Neon project shown by the user: `neon-vic-house-data`; keep it isolated from WA or unrelated estates.
 - Migration `009_dive_shares.sql` is applied in production Neon.
 - There were zero real rows in `app.app_user` and zero workspaces after the share smoke cleanup. Do not assume this remains true; query counts before an auth migration.
