@@ -18,3 +18,4 @@ rea_sales_data_model/
 .rea-collector/
 .env*.local
 .env.motherduck
+.env*
