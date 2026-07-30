@@ -2,11 +2,31 @@ import postgres from "postgres";
 import type { RawObservation } from "./source";
 import { sourceFileMetadata } from "./estate";
 
-export function database(url = process.env.DATABASE_URL) {
-  if (!url) throw new Error("DATABASE_URL is required");
-  return postgres(url, { ssl: "require", max: 4, prepare: false });
+export function validateDatabaseUrl(url: string | undefined, variableName = "DATABASE_URL") {
+  if (!url) throw new Error(`${variableName} is required`);
+  if (url === "[SENSITIVE]") {
+    throw new Error(
+      `${variableName} contains Vercel's [SENSITIVE] placeholder. ` +
+      "Sensitive environment variables cannot be downloaded for local commands; copy a current connection string from Neon into .env.local instead.",
+    );
+  }
+  try {
+    const parsed = new URL(url);
+    if (!['postgres:', 'postgresql:'].includes(parsed.protocol) || !parsed.hostname) throw new Error();
+  } catch {
+    throw new Error(`${variableName} must be a valid absolute PostgreSQL URL`);
+  }
+  return url;
 }
-function directDatabase(){return database(process.env.DATABASE_URL_UNPOOLED||process.env.DATABASE_URL);}
+
+export function database(url = process.env.DATABASE_URL, variableName = "DATABASE_URL") {
+  return postgres(validateDatabaseUrl(url, variableName), { ssl: "require", max: 4, prepare: false });
+}
+function directDatabase(){
+  return process.env.DATABASE_URL_UNPOOLED
+    ? database(process.env.DATABASE_URL_UNPOOLED,"DATABASE_URL_UNPOOLED")
+    : database(process.env.DATABASE_URL);
+}
 
 export async function registerFile(fileName: string, objectUrl: string | null, sha256: string, byteSize: number) {
   const sql = directDatabase();

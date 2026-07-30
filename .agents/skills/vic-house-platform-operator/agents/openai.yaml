@@ -1,0 +1,4 @@
+interface:
+  display_name: "VIC House Platform Operator"
+  short_description: "Provision and operate the VIC analytics stack"
+  default_prompt: "Use $vic-house-platform-operator to provision, validate, or troubleshoot this repository across Neon, Vercel, Blob, and MotherDuck."

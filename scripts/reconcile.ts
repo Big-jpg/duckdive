@@ -2,6 +2,9 @@ import { database } from "../src/lib/db";
 import {analyticsPolicy} from "../src/lib/analytics-contract";
 
 const sourceBaseline={files:83,sourceRows:88422,minDate:"2004-09-14",maxDate:"2026-07-18"};
+export function dateOnly(value:unknown){
+  return value instanceof Date?value.toISOString().slice(0,10):String(value).slice(0,10);
+}
 const sql=database(process.env.DATABASE_URL_UNPOOLED??process.env.DATABASE_URL);
 try {
   const [actual]=await sql`SELECT
@@ -20,10 +23,12 @@ try {
     (SELECT count(DISTINCT p.suburb) FROM core.sale_event s JOIN core.property p USING(property_id))::int suburbs,
     (SELECT min(sold_date) FROM core.sale_event) minimum_sold_date,
     (SELECT max(sold_date) FROM core.sale_event) maximum_sold_date`;
-  console.log(JSON.stringify({sourceBaseline,neon:actual,checks:{
+  const checks={
     files:Number(actual.files)===sourceBaseline.files,
     sourceRows:Number(actual.source_rows)===sourceBaseline.sourceRows,
-    minimumDate:String(actual.minimum_sold_date).slice(0,10)===sourceBaseline.minDate,
-    maximumDate:String(actual.maximum_sold_date).slice(0,10)===sourceBaseline.maxDate,
-  }},null,2));
+    minimumDate:dateOnly(actual.minimum_sold_date)===sourceBaseline.minDate,
+    maximumDate:dateOnly(actual.maximum_sold_date)===sourceBaseline.maxDate,
+  };
+  console.log(JSON.stringify({sourceBaseline,neon:actual,checks},null,2));
+  if(Object.values(checks).some((passed)=>!passed))process.exitCode=1;
 } finally { await sql.end(); }

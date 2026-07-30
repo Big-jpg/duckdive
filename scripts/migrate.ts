@@ -2,7 +2,8 @@ import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { database } from "../src/lib/db";
 
-const sql=database(process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL);
+const directUrl=process.env.DATABASE_URL_UNPOOLED;
+const sql=database(directUrl ?? process.env.DATABASE_URL,directUrl?"DATABASE_URL_UNPOOLED":"DATABASE_URL");
 try {
   await sql`CREATE SCHEMA IF NOT EXISTS ops`;
   await sql`CREATE TABLE IF NOT EXISTS ops.schema_migration(version text PRIMARY KEY,applied_at timestamptz NOT NULL DEFAULT now())`;

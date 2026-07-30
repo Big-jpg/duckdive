@@ -32,14 +32,14 @@ pnpm preflight
 EDITOR_PASSWORD='a-long-one-time-password' pnpm editor:create -- editor@example.com
 ```
 
-Archive the historical CSV source after pulling a fresh short-lived Blob OIDC token without overwriting the Neon credentials in `.env.local`:
+Archive the historical CSV source with a separate ignored environment file so Neon credentials in `.env.local` are not overwritten. Locally minted Vercel OIDC tokens carry a `development` environment claim even when Production variables are pulled, so the Blob store must allow the Development connection (or `.env.blob` must contain a dedicated read/write token):
 
 ```bash
 vercel env pull .env.blob --environment=production
 pnpm archive:blob
 ```
 
-Standalone database scripts load `.env.local` explicitly. Pull the connected Production variables before the first migration with `vercel env pull .env.local --environment=production`.
+Standalone database scripts load `.env.local` explicitly. Vercel deliberately downloads variables marked Sensitive as the literal value `[SENSITIVE]`; neither `vercel env pull` nor `vercel env run` can recover those values for a local migration. Copy the pooled and direct connection strings from the isolated Neon project's **Connect** panel into `DATABASE_URL` and `DATABASE_URL_UNPOOLED` in `.env.local`, then run `pnpm db:migrate`. Keep the Vercel variables marked Sensitive: production builds and Functions receive their real values.
 
 ## HTTP ingestion
 
@@ -65,6 +65,16 @@ REA's sold-search result window is treated as deliberately bounded: page 80 / 2,
 `GET /api/analytics/suburb-insights` accepts `suburb_key`, `from`, and `to`. It queries the curated MotherDuck sale fact table for rolling 12-month and prior-year medians, explicit sample sizes, land-to-price correlation, plausible median land size, and bedroom-segment medians over the visitor's selected period.
 
 The public gallery provisions secure, read-only Embedded Dives. Pre-provisioned editors receive isolated Dive IDs and chat history while a controlled MotherDuck service account supplies compute and read-only access to the automatic organization share.
+
+Editors can publish an individual personal Dive as an unlisted, view-only `/share/<slug>` link. The 80-bit capability slug resolves through `app.dive_share`; the server verifies ownership, active/revoked state, and optional expiry before minting a fresh short-lived MotherDuck embed session. Durable links never contain MotherDuck tokens or expose arbitrary Dive IDs. Revocation takes effect immediately and returns HTTP 404 for the old slug.
+
+The production lifecycle smoke harness uses a temporary `.invalid` QA owner and the existing source Suburb Story without modifying the source Dive:
+
+```bash
+pnpm smoke:share create
+pnpm smoke:share revoke
+pnpm smoke:share cleanup
+```
 
 The API uses one versioned analytics contract: all observations count toward volume, while price statistics use reported values from AUD 50,000 through AUD 20,000,000 and land statistics use 50 through 10,000 m². Responses include these definitions and explicit valid-sample counts. `suburb-insights` compares a requested period with the immediately preceding period of equal inclusive length.
 

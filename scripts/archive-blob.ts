@@ -8,8 +8,9 @@ import { sourceFileHash } from "../src/lib/source";
 const oidcFile=path.resolve(process.env.VERCEL_ENV_FILE||".env.blob");
 if(existsSync(oidcFile)) {
   const pulled=parseEnv(await readFile(oidcFile,"utf8"));
-  if(pulled.VERCEL_OIDC_TOKEN) process.env.VERCEL_OIDC_TOKEN=pulled.VERCEL_OIDC_TOKEN;
-  if(pulled.BLOB_STORE_ID) process.env.BLOB_STORE_ID=pulled.BLOB_STORE_ID;
+  for(const key of ["VERCEL_OIDC_TOKEN","VERCEL_ENV","VERCEL_TARGET_ENV","BLOB_STORE_ID"] as const) {
+    if(pulled[key]) process.env[key]=pulled[key];
+  }
 }
 if(!process.env.VERCEL_OIDC_TOKEN) throw new Error("Fresh VERCEL_OIDC_TOKEN required; run: vercel env pull .env.blob --environment=production");
 

@@ -20,6 +20,7 @@
     "profile": "tsx scripts/profile-data.ts",
     "publish:motherduck": "tsx --env-file=.env.local scripts/publish-motherduck.ts",
     "smoke:motherduck": "tsx --env-file=.env.local scripts/smoke-motherduck.ts",
+    "smoke:share": "tsx --env-file=.env.local scripts/smoke-share.ts",
     "editor:create": "tsx --env-file=.env.local scripts/create-editor.ts"
   },
   "dependencies": {
