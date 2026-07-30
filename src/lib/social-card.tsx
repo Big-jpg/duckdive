@@ -14,9 +14,9 @@ export function socialCard(){
       </div>
 
       <div style={{display:"flex",position:"absolute",left:"64px",top:"146px",width:"780px",flexDirection:"column"}}>
-        <div style={{display:"flex",fontFamily:"Georgia, serif",fontSize:"68px",lineHeight:1,letterSpacing:"-3px",color:"#20242a"}}>House data,</div>
-        <div style={{display:"flex",fontFamily:"Georgia, serif",fontSize:"68px",lineHeight:1,letterSpacing:"-3px",color:"#1177b8",marginTop:"8px"}}>made explorable.</div>
-        <div style={{display:"flex",fontSize:"22px",color:"#687078",marginTop:"28px"}}>Live, auditable Victorian house-sales analytics.</div>
+        <div style={{display:"flex",fontFamily:"Georgia, serif",fontSize:"66px",lineHeight:1,letterSpacing:"-3px",color:"#20242a"}}>Explore the market.</div>
+        <div style={{display:"flex",fontFamily:"Georgia, serif",fontSize:"66px",lineHeight:1,letterSpacing:"-3px",color:"#1177b8",marginTop:"8px"}}>Keep the meaning.</div>
+        <div style={{display:"flex",fontSize:"22px",color:"#687078",marginTop:"28px"}}>Contract-first analytics for Victorian house sales.</div>
       </div>
 
       <div style={{display:"flex",position:"absolute",left:"64px",bottom:"62px",gap:"12px"}}>

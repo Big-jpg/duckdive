@@ -17,19 +17,19 @@ export default async function AdminPage(){
   const user=await currentUser();if(!user)redirect("/login?next=%2Fadmin");if(user.role!=="admin")notFound();
   const {overview,users,audit}=await getAdminDashboard(),limits=aiLimits(),shareLimits=publicShareLimits();
   const cards=[
-    ["Active people",overview.active_users,`${overview.linked_users} linked identities`],
-    ["AI requests · 1h",overview.ai_requests_hour,`${overview.ai_requests_day} in 24 hours`],
-    ["Login attempts · 15m",overview.login_attempts_15m,"Allowlisted and rejected requests"],
-    ["Public loads · 1h",overview.public_share_loads_hour,`${shareLimits.globalHourly} global hourly cap`],
-    ["Live share links",overview.active_shares,`${number.format(overview.share_views)} total views`],
-    ["New chats · 24h",overview.chats_day,`${overview.audit_events_day} audited actions`],
-    ["Revoked people",overview.revoked_users,"History retained"],
+    ["People with access",overview.active_users,`${overview.linked_users} linked identities`],
+    ["AI calls · 1h",overview.ai_requests_hour,`${overview.ai_requests_day} in 24 hours`],
+    ["Sign-in attempts · 15m",overview.login_attempts_15m,"Accepted and rejected"],
+    ["Shared-view loads · 1h",overview.public_share_loads_hour,`${shareLimits.globalHourly} hourly ceiling`],
+    ["Active share links",overview.active_shares,`${number.format(overview.share_views)} total opens`],
+    ["New conversations · 24h",overview.chats_day,`${overview.audit_events_day} audited events`],
+    ["Revoked access",overview.revoked_users,"Identity and history retained"],
   ] as const;
   return <main id="main-content" className="admin-page">
     <header className="lab-header"><AppBrand/><nav aria-label="Administration navigation"><Link href="/">Dives</Link><Link href="/edit">Editor</Link><span className="admin-identity">{user.email}</span></nav></header>
-    <section className="admin-intro"><div><p className="admin-kicker">Administration</p><h1>Operations overview</h1><p>Manage access and review the activity that can create cost. Counts cover identities, AI requests, chats, shares and security events—not a behavioural clickstream.</p></div><dl className="admin-limits"><div><dt>User AI limit</dt><dd>{limits.perUserHourly}<small>/ hour</small></dd></div><div><dt>Global AI limit</dt><dd>{limits.globalHourly}<small>/ hour</small></dd></div><div><dt>Public share limit</dt><dd>{shareLimits.globalHourly}<small>/ hour</small></dd></div></dl></section>
+    <section className="admin-intro"><div><p className="admin-kicker">DuckDive Operations</p><h1>Access, usage and exposure</h1><p>The controls and signals that matter in one place. Manage who can enter, watch the actions that incur cost and review durable security events—without collecting a behavioural clickstream.</p></div><dl className="admin-limits"><div><dt>Per person</dt><dd>{limits.perUserHourly}<small>AI calls / hour</small></dd></div><div><dt>Application-wide</dt><dd>{limits.globalHourly}<small>AI calls / hour</small></dd></div><div><dt>Shared views</dt><dd>{shareLimits.globalHourly}<small>loads / hour</small></dd></div></dl></section>
     <section className="admin-metrics">{cards.map(([label,value,detail])=><article key={label}><span>{label}</span><strong>{number.format(value)}</strong><small>{detail}</small></article>)}</section>
     <AdminUserManager users={users} currentUserId={user.user_id}/>
-    <section className="admin-audit"><header><div><p className="admin-kicker">Recent audit</p><h2>Meaningful actions</h2></div><p>The latest 40 durable events. Routine page views are deliberately excluded.</p></header><div>{audit.length?audit.map(event=><article key={event.event_id}><time>{new Intl.DateTimeFormat("en-AU",{dateStyle:"medium",timeStyle:"short"}).format(new Date(event.occurred_at))}</time><strong>{labels[event.event_type]||event.event_type.replaceAll("."," ")}</strong><span>{event.actor_email||"System"}{event.target_email?` → ${event.target_email}`:""}</span></article>):<p className="admin-empty">No audited activity yet.</p>}</div></section>
+    <section className="admin-audit"><header><div><p className="admin-kicker">Audit Trail</p><h2>Recent activity</h2></div><p>The latest 40 durable operational events. Routine navigation is deliberately excluded.</p></header><div>{audit.length?audit.map(event=><article key={event.event_id}><time>{new Intl.DateTimeFormat("en-AU",{dateStyle:"medium",timeStyle:"short"}).format(new Date(event.occurred_at))}</time><strong>{labels[event.event_type]||event.event_type.replaceAll("."," ")}</strong><span>{event.actor_email||"System"}{event.target_email?` → ${event.target_email}`:""}</span></article>):<p className="admin-empty">No operational events recorded.</p>}</div></section>
   </main>;
 }
