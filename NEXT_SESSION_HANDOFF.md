@@ -22,13 +22,17 @@ The allowlisted Neon Auth implementation is deployed to production at `https://d
 - `rossfarrell7@gmail.com` is the first active production allowlist administrator.
 - Vercel Functions are explicitly pinned to Sydney (`syd1`) through `vercel.json`, beside the Sydney Neon/Auth estate. Before/after warm measurements improved anonymous auth/API checks from about 0.5-1.0 seconds to 0.13-0.42 seconds and the unlisted magic-link authorization path from about 6.0 seconds to 0.10-0.38 seconds.
 - Production AI incident: Vercel Functions expose OIDC through request context rather than `process.env.VERCEL_OIDC_TOKEN`. The original provider guard rejected production before AI SDK authentication. `src/lib/ai-provider.ts` now returns the Gateway model as a plain string on Vercel so AI SDK can consume runtime OIDC; the project OIDC setting is verified enabled with team issuer mode.
+- A private `/admin` dashboard is implemented locally but not yet deployed. It is restricted to active `admin` users and manages allowlist add/reactivate/revoke without deleting identity or history. It reports aggregate AI/login/chat/share/audit activity, prevents self/last-admin lockout, and records access changes in `app.audit_event`.
+- AI admission now has two strict hourly caps: 20 per user and 100 globally by default. A PostgreSQL advisory transaction lock serializes the count-and-insert decision so concurrent requests cannot overshoot the global cap. Configure with `AI_REMIX_REQUESTS_PER_HOUR` and `AI_REMIX_GLOBAL_REQUESTS_PER_HOUR`.
+- Migration `012_public_share_throttle.sql` is applied in production Neon; its application code is implemented locally but not yet deployed. Anonymous share loads are capped before MotherDuck session creation at 30 per visitor/link and 300 globally per hour by default. Only a secret-salted IP+slug hash is retained, never a raw IP.
+- Browser-visible MotherDuck embed sessions and CloudFront signed object URLs are expected short-lived bearer capabilities, not account credentials. Never log or persist them; the admin token remains server-only.
 
 Remaining production sequence:
 
 1. Revoke/reactivate the owner once to prove fail-closed authorization without losing the stable `app_user.user_id`.
 2. Optionally execute a direct non-allowlisted signup attempt to exercise `User Before Create`; the public request-link endpoint already returns the same generic 202 for an unlisted address without contacting Neon.
 3. Remove legacy Vercel `AUTH_SECRET` only after the revoked-user path passes.
-4. Run the authenticated `/api/chat` smoke; standalone Vercel AI Gateway streaming is already verified through OIDC.
+4. Deploy and smoke the new `/admin` access-management surface, then complete the authenticated `/api/chat` smoke with the corrected runtime OIDC path.
 
 The older objective notes below describe the design context and pre-implementation state; this continuation update is authoritative where they differ.
 

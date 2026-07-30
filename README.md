@@ -46,6 +46,14 @@ Enable Neon Auth and the Magic Link plugin on the isolated production branch. Co
 
 The webhook verifies Neon's rotating Ed25519 signatures against the branch JWKS, rejects stale or mismatched events, delivers links through Resend, blocks non-allowlisted user creation, and persists exact responses for idempotent retries. `/share/*` remains the only deliberate public read-only application capability; `POST /api/ingest` remains independently protected by `INGEST_SECRET`.
 
+## Private administration and cost controls
+
+Active allowlist administrators can open `/admin` to add, reactivate, or revoke members and inspect aggregate operational activity. The dashboard tracks identities, AI attempts, chat sessions, share links/views, login attempts, and durable audit events; it deliberately does not record a clickstream. Revocation preserves the user's stable identity, workspace, and history. Administrators cannot revoke or demote themselves, and transactional locking prevents removal of the final active administrator.
+
+AI requests are admitted through Neon before reaching a model. `AI_REMIX_REQUESTS_PER_HOUR` defaults to 20 per user and `AI_REMIX_GLOBAL_REQUESTS_PER_HOUR` defaults to 100 across the application. The global decision uses a PostgreSQL advisory transaction lock so concurrent requests cannot burst past the configured hourly cap. Unauthenticated or non-allowlisted callers cannot reach AI at all.
+
+Anonymous `/share/*` loads have a separate cost circuit breaker before MotherDuck session creation: `PUBLIC_SHARE_REQUESTS_PER_HOUR` defaults to 30 per visitor/link and `PUBLIC_SHARE_GLOBAL_REQUESTS_PER_HOUR` defaults to 300. Visitor identity is stored only as a salted SHA-256 hash; raw IP addresses are not retained. Exceeding either cap fails closed before calling MotherDuck.
+
 Archive the historical CSV source with a separate ignored environment file so Neon credentials in `.env.local` are not overwritten. Locally minted Vercel OIDC tokens carry a `development` environment claim even when Production variables are pulled, so the Blob store must allow the Development connection (or `.env.blob` must contain a dedicated read/write token):
 
 ```bash
@@ -81,6 +89,8 @@ REA's sold-search result window is treated as deliberately bounded: page 80 / 2,
 Authenticated members receive isolated Dive IDs and chat history while a controlled MotherDuck service account supplies compute and read-only access to the automatic organization share.
 
 Editors can publish an individual personal Dive as an unlisted, view-only `/share/<slug>` link. The 80-bit capability slug resolves through `app.dive_share`; the server verifies ownership, active/revoked state, and optional expiry before minting a fresh short-lived MotherDuck embed session. Durable links never contain MotherDuck tokens or expose arbitrary Dive IDs. Revocation takes effect immediately and returns HTTP 404 for the old slug.
+
+Embedded Dive sessions and their downstream CloudFront signed object URLs are intentionally visible to the authorized browser. Treat both as short-lived bearer capabilities: do not persist them in application logs, analytics, screenshots, or support tickets. They are scoped and expiring, while the MotherDuck admin token remains server-only.
 
 The production lifecycle smoke harness uses a temporary `.invalid` QA owner and the existing source Suburb Story without modifying the source Dive:
 
