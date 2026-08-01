@@ -5,12 +5,12 @@ import {audit,consumeAiQuota,ensureChat,getWorkspace,workspaceOwnsDive} from "@/
 import {motherduckMcp} from "@/lib/motherduck-access";
 import {aiLimits} from "@/lib/ai-limits";
 import {aiModel,duckDiveModelName} from "@/lib/ai-provider";
-import {duckDiveContractPrompt} from "@/lib/duckdive-contract";
 import {DuckDiveBusyError,finishDuckDiveRun,saveChatMessages,startDuckDiveRun} from "@/lib/duckdive-db";
 import {readDiveSnapshot} from "@/lib/duckdive-runtime";
 import {createDuckDiveTools} from "@/lib/duckdive-tools";
 import {STARTER_DIVES} from "@/lib/dive-provisioning";
 import {duckDiveRequestSchema,validateDuckDiveBrief} from "@/lib/duckdive-request";
+import {datasetContextForWorkspaceDive,datasetContractPrompt} from "@/lib/datasets";
 
 export const maxDuration=300;
 const MAX_STEPS=8;
@@ -22,8 +22,8 @@ export async function POST(request:Request){
   const body=parsed.data,latest=[...body.messages].reverse().find(message=>message.role==="user");if(!latest)return Response.json({error:"Describe the change you want"},{status:400});
   const brief=validateDuckDiveBrief(latest);if(!brief.ok)return Response.json({error:brief.error},{status:400});const latestText=brief.text;
   const workspace=await getWorkspace(user.user_id);if(!workspace||!workspaceOwnsDive(workspace,body.activeDiveId))return Response.json({error:"Access denied"},{status:403});
-  const starterEntry=Object.entries(workspace.dive_ids).find(([,id])=>id===body.activeDiveId),starter=STARTER_DIVES.find(item=>item.key===starterEntry?.[0]);
-  if(!starter)return Response.json({error:"This Dive is not editable"},{status:400});
+  const datasetContext=datasetContextForWorkspaceDive(workspace.dive_ids,body.activeDiveId),starter=STARTER_DIVES.find(item=>item.key===datasetContext?.starterKey);
+  if(!datasetContext||!starter||!datasetContext.dataset.capabilities.editing)return Response.json({error:"This Dive is not editable"},{status:400});
   const before=await readDiveSnapshot(body.activeDiveId,workspace.motherduck_username);
   if(before.version!==body.expectedVersion)return Response.json({error:`This Dive advanced to v${before.version}. Refresh before editing.`,currentVersion:before.version},{status:409});
   const limits=aiLimits();if(!await consumeAiQuota(user.user_id,limits.perUserHourly,limits.globalHourly))return Response.json({error:"Hourly DuckDive capacity reached"},{status:429,headers:{"Retry-After":"3600"}});
@@ -32,7 +32,7 @@ export async function POST(request:Request){
   catch(error){if(error instanceof DuckDiveBusyError)return Response.json({error:error.message},{status:409});throw error;}
   try{
     await saveChatMessages(chatId,body.messages);
-    const client=await motherduckMcp(workspace.motherduck_username),control=await createDuckDiveTools({client,runId:body.runId,diveId:body.activeDiveId,username:workspace.motherduck_username,before});
+    const client=await motherduckMcp(workspace.motherduck_username),control=await createDuckDiveTools({client,runId:body.runId,diveId:body.activeDiveId,username:workspace.motherduck_username,before,dataset:datasetContext.runtime});
     const result=streamText({
       model:aiModel("gateway"),
       system:`You are DuckDive, a verified report-editing agent. You edit exactly one active MotherDuck Dive.
@@ -44,12 +44,14 @@ Apply a request automatically when it names an analytical, control, layout, char
 Use inspect_data only when actual values are required to design the requested view. Preserve metric definitions, valid-sample caveats, REQUIRED_DATABASES, and DD_THEME_CSS. Use save_dive_revision once with the complete minimal edit. After it succeeds, give a concrete summary under 60 words. Never claim a save unless the tool reports a verified new version.
 
 ACTIVE DIVE
+Dataset: ${datasetContext.dataset.title} (${datasetContext.dataset.key})
+Contract version: ${datasetContext.dataset.contractVersion}
 Starter: ${starter.key}
 Purpose: ${starter.description}
 Current version: ${before.version}
 
 SEMANTIC CONTRACT
-${duckDiveContractPrompt()}
+${datasetContractPrompt(datasetContext.dataset)}
 
 CURRENT DIVE SOURCE
 <current_dive_source>
@@ -63,16 +65,16 @@ ${before.content}
         const mutation=control.getMutation(),summary=text.trim()||mutation?.summary||"";
         const status=mutation?"applied":finishReason==="error"||finishReason==="length"?"failed":/\?\s*$/.test(summary)?"clarification":"no_change";
         const finalized=await finishDuckDiveRun(body.runId,{status,afterVersion:mutation?.after.version,afterHash:mutation?.after.hash,summary,errorCode:status==="failed"?finishReason:undefined,inputTokens:totalUsage.inputTokens,outputTokens:totalUsage.outputTokens});
-        if(finalized)await audit(`duckdive.${status}`,user.user_id,body.activeDiveId,{runId:body.runId,beforeVersion:before.version,afterVersion:mutation?.after.version||null,inputTokens:totalUsage.inputTokens||0,outputTokens:totalUsage.outputTokens||0});
+        if(finalized)await audit(`duckdive.${status}`,user.user_id,body.activeDiveId,{runId:body.runId,datasetKey:datasetContext.dataset.key,contractVersion:datasetContext.dataset.contractVersion,beforeVersion:before.version,afterVersion:mutation?.after.version||null,inputTokens:totalUsage.inputTokens||0,outputTokens:totalUsage.outputTokens||0});
       },
-      async onAbort(){const finalized=await finishDuckDiveRun(body.runId,{status:"aborted",errorCode:"stream_aborted"});if(finalized)await audit("duckdive.aborted",user.user_id,body.activeDiveId,{runId:body.runId});},
+      async onAbort(){const finalized=await finishDuckDiveRun(body.runId,{status:"aborted",errorCode:"stream_aborted"});if(finalized)await audit("duckdive.aborted",user.user_id,body.activeDiveId,{runId:body.runId,datasetKey:datasetContext.dataset.key,contractVersion:datasetContext.dataset.contractVersion});},
     });
     result.consumeStream();
     return result.toUIMessageStreamResponse({originalMessages:body.messages,onFinish:async({messages})=>saveChatMessages(chatId,messages),onError:error=>error instanceof Error?error.message:"DuckDive failed"});
   }catch(error){
     const message=error instanceof Error?error.message:"DuckDive failed";
     const finalized=await finishDuckDiveRun(body.runId,{status:"failed",errorCode:"setup_failed",summary:message});
-    if(finalized)await audit("duckdive.failed",user.user_id,body.activeDiveId,{runId:body.runId,errorCode:"setup_failed"});
+    if(finalized)await audit("duckdive.failed",user.user_id,body.activeDiveId,{runId:body.runId,datasetKey:datasetContext.dataset.key,contractVersion:datasetContext.dataset.contractVersion,errorCode:"setup_failed"});
     return Response.json({error:message},{status:502});
   }
 }

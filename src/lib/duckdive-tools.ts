@@ -3,6 +3,7 @@ import {z} from "zod";
 import type {MCPClient} from "@ai-sdk/mcp";
 import {duckDiveRunIsActive} from "./duckdive-db";
 import {verifyDiveRevision,type DiveSnapshot} from "./duckdive-runtime";
+import type {DatasetRuntime} from "./datasets";
 
 export type VerifiedMutation={before:DiveSnapshot;after:DiveSnapshot;summary:string};
 
@@ -18,17 +19,17 @@ export function governedReadOnlyQuery(sql:string){
   return `SELECT * FROM (${statement}) AS duckdive_inspection LIMIT 200`;
 }
 
-export async function createDuckDiveTools(input:{client:MCPClient;runId:string;diveId:string;username:string;before:DiveSnapshot}){
+export async function createDuckDiveTools(input:{client:MCPClient;runId:string;diveId:string;username:string;before:DiveSnapshot;dataset:DatasetRuntime}){
   const mcp=await input.client.tools(),query=mcp.query,edit=mcp.edit_dive_content;
   if(!query?.execute||!edit?.execute)throw new Error("MotherDuck editing tools are unavailable");
   let mutation:VerifiedMutation|null=null,mutationAttempted=false;
   const tools:ToolSet={
     inspect_data:tool({
-      description:"Run one bounded read-only query against the governed VIC House dataset when the supplied semantic contract and current Dive source are insufficient. Do not use this for schema discovery.",
+      description:`Run one bounded read-only query against the governed ${input.dataset.title} dataset when the supplied semantic contract and current Dive source are insufficient. Do not use this for schema discovery.`,
       inputSchema:z.object({purpose:z.string().trim().min(1).max(240),sql:z.string().trim().min(1).max(4_000)}),
       execute:async({purpose,sql},options)=>{
         if(!await duckDiveRunIsActive(input.runId))throw new Error("DuckDive run is no longer active");
-        const result=await query.execute!({database:process.env.MOTHERDUCK_DATABASE||"vic_house_data",sql:governedReadOnlyQuery(sql)},options);
+        const result=await query.execute!({database:input.dataset.motherduckDatabase,sql:governedReadOnlyQuery(sql)},options);
         return {purpose,result:boundedDuckDiveResult(result)};
       },
     }),
