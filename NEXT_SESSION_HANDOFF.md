@@ -1,6 +1,69 @@
 # Next Session Handoff
 
-Last verified: 2026-08-02 (Australia/Perth)
+Last verified: 2026-08-03 (Australia/Perth)
+
+## Phase 2A question-led architecture production checkpoint
+
+This section is authoritative over every older production, multi-dataset, DuckDive and continuation note below it.
+
+### Reference point
+
+- Branch: `main`.
+- Current commit: `aa80102` (`Add multi-dataset editor manifest and starter landing UI`).
+- `main`, `origin/main` and `origin/HEAD` were aligned with a clean working tree when this checkpoint was written.
+- The user pushed Phase 2A to production and confirmed that the production release passed and the implementation behaved as intended.
+- The deployment ID and release log interval were not captured in this agent session because no Vercel CLI binary was available locally. Do not invent them; inspect Vercel read-only if exact deployment telemetry is required later.
+- No database migration, credential change, MotherDuck mutation or other production resource change was part of Phase 2A.
+
+### Product and architecture contract
+
+Phase 2A makes the existing DuckDive system question-led without introducing a parallel router, renderer, chat system or autonomous homepage mutation:
+
+- The authenticated homepage begins with `What should the data make clear?`, offers dataset-specific example questions and requires the user to choose one trusted starter shape explicitly.
+- The three current shapes remain VIC Market Pulse, Suburb Story and Market Matchup. They are trusted Dive recipes, not a general hard-coded product taxonomy.
+- Choosing a shape writes only the trimmed question to a versioned `sessionStorage` draft keyed by starter. The draft expires after 24 hours, survives refresh, remains local to the browser and is cleared when submitted.
+- The question opens in the existing DuckDive editor as a reviewable draft. It is never submitted automatically and consumes no AI quota until the user presses Apply.
+- Live gallery previews are now secondary and lazy. The homepage does not mint three short-lived MotherDuck embed sessions until the user requests the preview gallery.
+- Existing workspace ownership, chat persistence, AI admission limits, governed read-only inspection, single verified mutation, embed verification, versioning, reset, revert and public-share behavior remain unchanged.
+
+The reusable implementation seams are:
+
+- `src/lib/dive-provisioning.ts` remains the authoritative starter definition. It now emits safe dataset-bound homepage entries, gallery entries and editor manifests while keeping source filenames server-only.
+- `src/lib/datasets.ts` separates each dataset's complete server semantic contract from its safe public contract.
+- `POST /api/edit` returns a private, no-store editor manifest built from exact relational `app.workspace_dive` ownership. Missing or dataset-mismatched ownership fails closed.
+- `src/components/EditLab.tsx` derives tabs, active Dive metadata and the displayed Data Contract from that server manifest. The duplicated client-side VIC starter list and direct VIC contract import are removed.
+- `src/lib/duckdive-draft.ts` owns the small, versioned browser draft contract. Its tests cover trimming, starter isolation, malformed values, expiry and explicit clearing.
+
+Do not reintroduce a separate client starter registry, infer a starter through an unreviewed classifier, place questions in URLs, or make the homepage call `/api/chat` automatically. Preserve the dataset-agnostic product boundary: VIC validates the general question -> trusted recipe -> governed DuckDive -> verified embedded result flow.
+
+### Validation and production evidence
+
+The implementing agent executed and recorded:
+
+- 19 test files / 53 tests passed.
+- TypeScript passed.
+- Local production build passed.
+- Preflight passed for VIC / `vic_house_data`.
+- ESLint had zero errors; the existing 17 warnings remained confined to the checked-in `vercel-optimize` skill package.
+- VIC reconciliation passed at 83 files, 88,422 observations and unchanged bounds 2004-09-14 through 2026-07-18.
+- Workspace-Dive reconciliation passed for three workspaces and nine relational mappings with zero mismatches, duplicate Dive IDs, unknown starters or cross-workspace results.
+- MotherDuck smoke passed at five months, 929 house facts, six bedroom groups and rolling annual medians.
+- `git diff --check` passed before the user committed and pushed the change.
+- An anonymous local browser remained correctly blocked at sign-in. Authentication was not bypassed for visual QA.
+
+The user subsequently confirmed the pushed production release passed and was correctly implemented. This is user verification, not independently captured Vercel deployment/log telemetry.
+
+### Next gate
+
+Phase 2A is complete and production-verified by the user. Scope the next phase separately; do not infer approval for a second dataset, generated TSX architecture, new build-contract enforcement, database migration or service-account change.
+
+Before onboarding a second dataset, explicitly decide whether it can use the current workspace MotherDuck identity inside the same organization boundary or requires a separate service-account/workload boundary. Prefer one deliberately small fixture that tests the existing dataset/public-contract/editor-manifest interfaces before generalizing the VIC analytics APIs or provisioning topology.
+
+For any future release that touches this flow, repeat an authenticated smoke of: question -> explicit starter -> prefilled editor draft -> manual Apply or deliberate cancellation -> correct dataset Data Contract -> verified new Dive version when applied. Confirm that opening the homepage alone creates no gallery embed sessions.
+
+### Compact restart prompt
+
+> Read `AGENTS.md`, this Phase 2A checkpoint, and the complete `vic-house-platform-operator` skill with its references. Phase 2A is production-verified by the user at commit `aa80102`: the homepage is question-led, starters and public contracts are server-derived, drafts remain reviewable and local, and live previews are lazy. Do not redo Phase 1B or Phase 2A. Separately scope the next general-system experiment and preserve VIC as a fixture rather than the product abstraction.
 
 ## Multi-dataset continuation checkpoint
 
