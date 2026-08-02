@@ -72,12 +72,13 @@ Review gate: do not apply migration 014 to production, deploy the relational cut
 - Vercel logs for the release interval contained only 23 expected informational `/`, `/login`, `/edit` and `/api/gallery` requests, with no warnings or errors.
 - The Git-triggered deployment became ready before migration 014 was applied. This created a possible brief missing-table interval, but the captured release logs contained no error and code/database are now aligned.
 - Anonymous `/edit` correctly redirected to `/login`; authentication was not bypassed.
+- The authenticated owner production smoke passed: `/edit` retained Market Pulse, Suburb Story and Market Matchup across refresh, and an existing Dive embed/version loaded without error.
 
-Remaining release check: in an authenticated owner browser, refresh `/edit`, confirm all three existing Dives load with their unchanged IDs, and open at least one embed/version action. The available isolated browser had no owner session, and no connected Chrome session was available. Do not claim authenticated route verification until the owner performs this check.
+Phase 1B is fully released and user-verified. The next phase must be scoped separately; do not infer approval for the question-led homepage or another multi-dataset implementation batch from this release.
 
 ### Compact restart prompt
 
-> Read `AGENTS.md`, this top checkpoint, and the complete `vic-house-platform-operator` skill with its references. Phase 1B code and migration 014 are live in production at commit `8d4d180` / deployment `dpl_EVPoNS16godrhou9FhwNSt8q3ePG`. Complete the authenticated owner `/edit` smoke without bypassing authentication, record the result, then separately scope the question-led homepage phase.
+> Read `AGENTS.md`, this top checkpoint, and the complete `vic-house-platform-operator` skill with its references. Phase 1B is fully released and owner-verified at commit `8d4d180` / deployment `dpl_EVPoNS16godrhou9FhwNSt8q3ePG`, with production migration 014 applied. Separately scope the next multi-dataset/question-led homepage phase before implementation.
 
 ## Verified DuckDive editing release update
 
