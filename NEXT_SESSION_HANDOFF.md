@@ -1,6 +1,69 @@
 # Next Session Handoff
 
-Last verified: 2026-07-30 (Australia/Perth)
+Last verified: 2026-08-02 (Australia/Perth)
+
+## Multi-dataset continuation checkpoint
+
+This section is authoritative over older production, DuckDive and continuation notes below it.
+
+### Reference point
+
+- Branch: `main`.
+- Reference commit: `9fd140d` (`Use dataset-specific contracts for DuckDive editing`).
+- The working tree was clean at that commit before the handoff and Phase 1B changes.
+- Phase 0, Phase 1A and the local/disposable-branch portion of Phase 1B are complete. Do not repeat them unless a read-only check shows drift.
+- Next gate: review Phase 1B, then separately approve the production migration/deployment sequence. Migration 014 is not applied to production.
+
+### Phase 0 completion
+
+Phase 0 changed no application code. It established the production safety baseline:
+
+- Tests, lint, TypeScript, local production build and preflight passed.
+- VIC reconciled exactly to 83 source files and 88,422 observations, dated 2004-09-14 through 2026-07-18.
+- MotherDuck query and Embedded Dive smoke passed.
+- Production deployment `dpl_7xiZZAFYK3EABJ5nPJe1HZupg3k7` was `READY`, aliased to `https://duckdive.gold`, with Functions in `syd1`.
+- Required Vercel production variable names were present; recent production logs contained only expected requests and no errors.
+- MotherDuck Business was confirmed active.
+- The authenticated owner Market Pulse lifecycle passed: deterministic copy-only edit, verified version/hash advance, refreshed embed, admin telemetry, Undo Version and persisted restoration.
+
+### Phase 1A completion
+
+Phase 1A introduced the first server-side dataset boundary without a migration, UI change or production resource change:
+
+- `src/lib/datasets.ts` registers `vic-housing` with its semantic contract/version, existing starter keys, MotherDuck runtime selectors and editing/query/sharing capabilities.
+- Registry validation rejects duplicate dataset keys, duplicate starter keys and unsafe MotherDuck database selectors.
+- Existing workspace JSON Dive ownership resolves fail-closed from owned Dive ID to starter and dataset context.
+- `/api/chat` now supplies dataset identity and contract version explicitly to DuckDive and records both in audit details.
+- `inspect_data` queries the MotherDuck database resolved from the active dataset context instead of using a hard-coded global fallback.
+- Unknown, unmapped or non-editable Dives remain denied. Existing VIC starter definitions, Dive IDs, route shapes and browser UI are unchanged.
+- Tests cover registration, resolution, unsafe selectors, contract serialization, duplicate detection and dataset-bound query execution.
+
+Phase 1A validation passed:
+
+- 17 test files / 45 tests.
+- TypeScript.
+- Production build.
+- Preflight.
+- Live MotherDuck smoke: five months, 929 house facts, six bedroom groups and rolling annual medians.
+- ESLint had zero errors; the existing 17 warnings remained confined to the checked-in `vercel-optimize` skill package.
+
+### Phase 1B completion and review gate
+
+- `db/014_workspace_dives.sql` adds `app.workspace_dive` with workspace/starter primary ownership, globally unique owned Dive IDs, registered dataset/starter identity, source Dive lineage and fail-fast backfill checks.
+- The migration preserves `app.workspace.dive_ids` and `source_dive_ids` unchanged. Application provisioning now writes the JSON rollback representation and relational ownership in one transaction.
+- Chat, edit, gallery, embed, version, revert, reset and share-management ownership checks now resolve through `app.workspace_dive`. Unknown, incomplete, dataset-mismatched and cross-workspace ownership fails closed.
+- `scripts/reconcile-workspace-dives.ts` proves exact legacy/relational parity, complete owned lookups, registered starters, unique Dive IDs and zero cross-workspace matches.
+- A disposable Neon branch cloned from production received migration 014. It contained three workspaces and nine paired VIC mappings; all nine backfilled exactly with zero mismatches, duplicates, unknown starters or cross-workspace matches.
+- Migration SQL reapplied successfully, and the migration runner subsequently skipped 014 from the ledger. No MotherDuck Dive or production resource was created, updated or deleted.
+- Validation passed: 18 test files / 49 tests, TypeScript, production build, preflight, VIC reconciliation at 83 files / 88,422 observations / unchanged date bounds, and MotherDuck smoke at five months / 929 facts / six bedroom groups / rolling medians.
+- ESLint has zero errors; the existing 17 warnings remain confined to the checked-in `vercel-optimize` skill package.
+- No homepage or visual changes were made.
+
+Review gate: do not apply migration 014 to production, deploy the relational cutover, or begin the question-led homepage without a separate approval. The safe production order is migration -> exact ownership reconciliation -> deploy -> authenticated owner/cross-workspace route smoke -> production log inspection.
+
+### Compact restart prompt
+
+> Read `AGENTS.md`, this top checkpoint, and the complete `vic-house-platform-operator` skill with its references. Phase 1B is implemented and rehearsed on the disposable Neon branch; production still ends at migration 013. Review the Phase 1B diff and validation evidence, then request explicit approval before applying migration 014 or deploying. Do not begin the question-led homepage in the same change batch.
 
 ## Verified DuckDive editing release update
 

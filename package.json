@@ -17,6 +17,7 @@
     "db:status": "tsx --env-file=.env.local scripts/status.ts",
     "db:inspect": "tsx --env-file=.env.local scripts/inspect-quality.ts",
     "db:reconcile": "tsx --env-file=.env.local scripts/reconcile.ts",
+    "db:reconcile:workspace-dives": "tsx --env-file=.env.local scripts/reconcile-workspace-dives.ts",
     "ingest:local": "tsx --env-file=.env.local scripts/ingest-local.ts",
     "archive:blob": "tsx --env-file=.env.local scripts/archive-blob.ts",
     "profile": "tsx scripts/profile-data.ts",

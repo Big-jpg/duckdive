@@ -1,7 +1,7 @@
 import {convertToModelMessages,stepCountIs,streamText} from "ai";
 import {currentUser} from "@/lib/auth";
 import {assertSameOrigin} from "@/lib/csrf";
-import {audit,consumeAiQuota,ensureChat,getWorkspace,workspaceOwnsDive} from "@/lib/app-db";
+import {audit,consumeAiQuota,ensureChat,getOwnedWorkspaceDive} from "@/lib/app-db";
 import {motherduckMcp} from "@/lib/motherduck-access";
 import {aiLimits} from "@/lib/ai-limits";
 import {aiModel,duckDiveModelName} from "@/lib/ai-provider";
@@ -10,7 +10,7 @@ import {readDiveSnapshot} from "@/lib/duckdive-runtime";
 import {createDuckDiveTools} from "@/lib/duckdive-tools";
 import {STARTER_DIVES} from "@/lib/dive-provisioning";
 import {duckDiveRequestSchema,validateDuckDiveBrief} from "@/lib/duckdive-request";
-import {datasetContextForWorkspaceDive,datasetContractPrompt} from "@/lib/datasets";
+import {datasetContextForWorkspaceDiveRecord,datasetContractPrompt} from "@/lib/datasets";
 
 export const maxDuration=300;
 const MAX_STEPS=8;
@@ -21,18 +21,18 @@ export async function POST(request:Request){
   const parsed=duckDiveRequestSchema.safeParse(await request.json().catch(()=>null));if(!parsed.success)return Response.json({error:"Invalid DuckDive request"},{status:400});
   const body=parsed.data,latest=[...body.messages].reverse().find(message=>message.role==="user");if(!latest)return Response.json({error:"Describe the change you want"},{status:400});
   const brief=validateDuckDiveBrief(latest);if(!brief.ok)return Response.json({error:brief.error},{status:400});const latestText=brief.text;
-  const workspace=await getWorkspace(user.user_id);if(!workspace||!workspaceOwnsDive(workspace,body.activeDiveId))return Response.json({error:"Access denied"},{status:403});
-  const datasetContext=datasetContextForWorkspaceDive(workspace.dive_ids,body.activeDiveId),starter=STARTER_DIVES.find(item=>item.key===datasetContext?.starterKey);
+  const workspaceDive=await getOwnedWorkspaceDive(user.user_id,body.activeDiveId);if(!workspaceDive)return Response.json({error:"Access denied"},{status:403});
+  const datasetContext=datasetContextForWorkspaceDiveRecord(workspaceDive),starter=STARTER_DIVES.find(item=>item.key===datasetContext?.starterKey);
   if(!datasetContext||!starter||!datasetContext.dataset.capabilities.editing)return Response.json({error:"This Dive is not editable"},{status:400});
-  const before=await readDiveSnapshot(body.activeDiveId,workspace.motherduck_username);
+  const before=await readDiveSnapshot(body.activeDiveId,workspaceDive.motherduck_username);
   if(before.version!==body.expectedVersion)return Response.json({error:`This Dive advanced to v${before.version}. Refresh before editing.`,currentVersion:before.version},{status:409});
   const limits=aiLimits();if(!await consumeAiQuota(user.user_id,limits.perUserHourly,limits.globalHourly))return Response.json({error:"Hourly DuckDive capacity reached"},{status:429,headers:{"Retry-After":"3600"}});
-  const chatId=await ensureChat(workspace.workspace_id,body.chatId,body.activeDiveId,latestText),model=duckDiveModelName();
-  try{await startDuckDiveRun({runId:body.runId,workspaceId:workspace.workspace_id,userId:user.user_id,chatId,diveId:body.activeDiveId,requestText:latestText,beforeVersion:before.version,beforeHash:before.hash,model});}
+  const chatId=await ensureChat(workspaceDive.workspace_id,body.chatId,body.activeDiveId,latestText),model=duckDiveModelName();
+  try{await startDuckDiveRun({runId:body.runId,workspaceId:workspaceDive.workspace_id,userId:user.user_id,chatId,diveId:body.activeDiveId,requestText:latestText,beforeVersion:before.version,beforeHash:before.hash,model});}
   catch(error){if(error instanceof DuckDiveBusyError)return Response.json({error:error.message},{status:409});throw error;}
   try{
     await saveChatMessages(chatId,body.messages);
-    const client=await motherduckMcp(workspace.motherduck_username),control=await createDuckDiveTools({client,runId:body.runId,diveId:body.activeDiveId,username:workspace.motherduck_username,before,dataset:datasetContext.runtime});
+    const client=await motherduckMcp(workspaceDive.motherduck_username),control=await createDuckDiveTools({client,runId:body.runId,diveId:body.activeDiveId,username:workspaceDive.motherduck_username,before,dataset:datasetContext.runtime});
     const result=streamText({
       model:aiModel("gateway"),
       system:`You are DuckDive, a verified report-editing agent. You edit exactly one active MotherDuck Dive.

@@ -3,9 +3,10 @@ import {readFile} from "node:fs/promises";
 import path from "node:path";
 import {createMotherDuckUser,createEmbedSession} from "./motherduck-api";
 import {motherduckServiceSql,sharedUsername} from "./motherduck-access";
-import {getSetting,setSetting,getWorkspace,saveWorkspace,audit,type AppUser} from "./app-db";
+import {getSetting,setSetting,getWorkspace,getWorkspaceDives,saveWorkspace,audit,type AppUser} from "./app-db";
 import {mdString} from "./sql-literal";
 import {analyticsPolicy} from "./analytics-contract";
+import {hasExactWorkspaceDives} from "./workspace-dives";
 
 export const STARTER_DIVES=[
  {key:"market-pulse",title:"VIC Market Pulse",label:"Dashboard",description:"Sale volume, price and land signals with suburb controls.",file:"market-pulse.tsx",accent:"blue"},
@@ -43,5 +44,5 @@ export async function sourceDives(){if(setup)return setup;setup=(async()=>{const
 let publicCache:{expires:number;value:Awaited<ReturnType<typeof buildPublicGallery>>}|null=null;
 async function buildPublicGallery(){const starters=await sourceDives();return Promise.all(starters.map(async starter=>{const session=await createEmbedSession(starter.diveId,sharedUsername());await audit("embed.public",null,starter.diveId);return {...starter,session};}));}
 export async function publicGallery(){if(publicCache&&publicCache.expires>Date.now())return publicCache.value;const value=await buildPublicGallery();publicCache={expires:Date.now()+5*60*1000,value};return value;}
-export async function ensureUserWorkspace(user:AppUser){const existing=await getWorkspace(user.user_id);if(existing&&Object.keys(existing.dive_ids).length)return existing;const starters=await sourceDives(),diveIds:Record<string,string>={},sourceIds:Record<string,string>={};for(const starter of starters){diveIds[starter.key]=await createDive(`${starter.title} · ${user.user_id.slice(0,8)}`,starter.description,await content(starter.file));sourceIds[starter.key]=starter.diveId;}const workspace=await saveWorkspace(user.user_id,sharedUsername(),diveIds,sourceIds);await audit("workspace.provisioned",user.user_id,workspace.workspace_id,{diveCount:starters.length});return workspace;}
-export async function workspaceGallery(user:AppUser){const workspace=await ensureUserWorkspace(user);return Promise.all(STARTER_DIVES.map(async starter=>({...starter,diveId:workspace.dive_ids[starter.key],session:await createEmbedSession(workspace.dive_ids[starter.key],workspace.motherduck_username)})));}
+export async function ensureUserWorkspace(user:AppUser){const existing=await getWorkspace(user.user_id);if(existing){const owned=await getWorkspaceDives(existing.workspace_id);if(hasExactWorkspaceDives(owned,STARTER_DIVES.map(starter=>starter.key)))return existing;throw new Error("Workspace has incomplete or invalid relational Dive ownership");}const starters=await sourceDives(),diveIds:Record<string,string>={},sourceIds:Record<string,string>={};for(const starter of starters){diveIds[starter.key]=await createDive(`${starter.title} · ${user.user_id.slice(0,8)}`,starter.description,await content(starter.file));sourceIds[starter.key]=starter.diveId;}const workspace=await saveWorkspace(user.user_id,sharedUsername(),diveIds,sourceIds);await audit("workspace.provisioned",user.user_id,workspace.workspace_id,{diveCount:starters.length});return workspace;}
+export async function workspaceGallery(user:AppUser){const workspace=await ensureUserWorkspace(user),owned=await getWorkspaceDives(workspace.workspace_id);return Promise.all(STARTER_DIVES.map(async starter=>{const mapping=owned.find(dive=>dive.starter_key===starter.key);if(!mapping)throw new Error(`Workspace is missing ${starter.key}`);return {...starter,diveId:mapping.dive_id,session:await createEmbedSession(mapping.dive_id,workspace.motherduck_username)};}));}

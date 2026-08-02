@@ -97,3 +97,12 @@ export function datasetContextForWorkspaceDive(
   if(!dataset)return null;
   return {dataset,runtime:resolveDatasetRuntime(dataset,env),starterKey:starterEntry[0]};
 }
+
+export function datasetContextForWorkspaceDiveRecord(
+  ownership:{dataset_key:string;starter_key:string},
+  env:Record<string,string|undefined>=process.env,
+):WorkspaceDatasetContext|null{
+  const dataset=datasetByKey(ownership.dataset_key);
+  if(!dataset||!dataset.starterKeys.some(starterKey=>starterKey===ownership.starter_key))return null;
+  return {dataset,runtime:resolveDatasetRuntime(dataset,env),starterKey:ownership.starter_key};
+}

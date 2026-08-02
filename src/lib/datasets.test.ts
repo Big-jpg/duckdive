@@ -5,6 +5,7 @@ import {
   VIC_HOUSING_DATASET,
   datasetByKey,
   datasetContextForWorkspaceDive,
+  datasetContextForWorkspaceDiveRecord,
   datasetContractPrompt,
   datasetForStarterKey,
   resolveDatasetRuntime,
@@ -36,6 +37,15 @@ describe("dataset registry",()=>{
 
   it("fails closed for an unsafe database selector",()=>{
     expect(()=>resolveDatasetRuntime(VIC_HOUSING_DATASET,{MOTHERDUCK_DATABASE:"vic_house_data; DROP TABLE x"})).toThrow("Invalid MotherDuck database");
+  });
+
+  it("resolves relational ownership and rejects a mismatched dataset/starter pair",()=>{
+    expect(datasetContextForWorkspaceDiveRecord(
+      {dataset_key:"vic-housing",starter_key:"market-pulse"},
+      {MOTHERDUCK_DATABASE:"vic_house_data"},
+    )?.dataset.key).toBe("vic-housing");
+    expect(datasetContextForWorkspaceDiveRecord({dataset_key:"unknown",starter_key:"market-pulse"},{})).toBeNull();
+    expect(datasetContextForWorkspaceDiveRecord({dataset_key:"vic-housing",starter_key:"unknown"},{})).toBeNull();
   });
 
   it("rejects ambiguous dataset and starter registrations",()=>{

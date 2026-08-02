@@ -1,9 +1,11 @@
 import {randomUUID} from "node:crypto";
 import {database} from "./db";
 import {shareSlug} from "./dive-share";
+import {buildWorkspaceDives,type WorkspaceDive} from "./workspace-dives";
 
 export type AppUser={user_id:string;email:string;auth_subject:string|null;role:"member"|"admin";status:"active"|"revoked";invited_at:string|null;last_login_at:string|null;revoked_at:string|null};
 export type Workspace={workspace_id:string;user_id:string;motherduck_username:string;dive_ids:Record<string,string>;source_dive_ids:Record<string,string>};
+export type OwnedWorkspaceDive=WorkspaceDive&{user_id:string;motherduck_username:string};
 export type DiveShare={share_id:string;workspace_id:string;created_by:string;dive_id:string;starter_key:string;slug:string;title:string;description:string;status:"active"|"revoked";expires_at:string|null;view_count:number;last_viewed_at:string|null;created_at:string;updated_at:string;revoked_at:string|null};
 export type PublicDiveShare=DiveShare&{motherduck_username:string};
 
@@ -35,13 +37,21 @@ export async function claimAuthWebhook(eventId:string,eventType:string){
 }
 export async function finishAuthWebhook(eventId:string,status:"succeeded"|"failed",errorCode:string|null=null,response:Record<string,unknown>|null=null){const sql=database();try{await sql`UPDATE app.auth_webhook_event SET status=${status},last_error_code=${errorCode},response_json=${response?sql.json(response as never):null},updated_at=now() WHERE event_id=${eventId}::uuid`;}finally{await sql.end();}}
 export async function getWorkspace(userId:string){const sql=database();try{const [row]=await sql<Workspace[]>`SELECT workspace_id,user_id,motherduck_username,dive_ids,source_dive_ids FROM app.workspace WHERE user_id=${userId}::uuid`;return row;}finally{await sql.end();}}
-export async function saveWorkspace(userId:string,username:string,diveIds:Record<string,string>,sourceDiveIds:Record<string,string>){const sql=database();try{const [row]=await sql<Workspace[]>`INSERT INTO app.workspace(user_id,motherduck_username,dive_ids,source_dive_ids) VALUES(${userId}::uuid,${username},${sql.json(diveIds)},${sql.json(sourceDiveIds)}) ON CONFLICT(user_id) DO UPDATE SET dive_ids=excluded.dive_ids,source_dive_ids=excluded.source_dive_ids,updated_at=now() RETURNING workspace_id,user_id,motherduck_username,dive_ids,source_dive_ids`;return row;}finally{await sql.end();}}
-export function workspaceOwnsDive(workspace:Workspace,diveId:string){return Object.values(workspace.dive_ids).includes(diveId);}
+export async function getWorkspaceDives(workspaceId:string){const sql=database();try{return await sql<WorkspaceDive[]>`SELECT workspace_id,dataset_key,starter_key,dive_id,source_dive_id FROM app.workspace_dive WHERE workspace_id=${workspaceId}::uuid ORDER BY dataset_key,starter_key`;}finally{await sql.end();}}
+export async function getOwnedWorkspaceDive(userId:string,diveId:string){const sql=database();try{const [row]=await sql<OwnedWorkspaceDive[]>`SELECT wd.workspace_id,w.user_id,w.motherduck_username,wd.dataset_key,wd.starter_key,wd.dive_id,wd.source_dive_id FROM app.workspace_dive wd JOIN app.workspace w USING(workspace_id) WHERE w.user_id=${userId}::uuid AND wd.dive_id=${diveId}`;return row||null;}finally{await sql.end();}}
+export async function saveWorkspace(userId:string,username:string,diveIds:Record<string,string>,sourceDiveIds:Record<string,string>){
+  const mappings=buildWorkspaceDives(diveIds,sourceDiveIds),sql=database();
+  try{return await sql.begin(async tx=>{
+    const [row]=await tx<Workspace[]>`INSERT INTO app.workspace(user_id,motherduck_username,dive_ids,source_dive_ids) VALUES(${userId}::uuid,${username},${tx.json(diveIds)},${tx.json(sourceDiveIds)}) ON CONFLICT(user_id) DO UPDATE SET motherduck_username=excluded.motherduck_username,dive_ids=excluded.dive_ids,source_dive_ids=excluded.source_dive_ids,updated_at=now() RETURNING workspace_id,user_id,motherduck_username,dive_ids,source_dive_ids`;
+    for(const mapping of mappings)await tx`INSERT INTO app.workspace_dive(workspace_id,dataset_key,starter_key,dive_id,source_dive_id) VALUES(${row.workspace_id}::uuid,${mapping.dataset_key},${mapping.starter_key},${mapping.dive_id},${mapping.source_dive_id}) ON CONFLICT(workspace_id,starter_key) DO UPDATE SET dataset_key=excluded.dataset_key,dive_id=excluded.dive_id,source_dive_id=excluded.source_dive_id,updated_at=now()`;
+    return row;
+  });}finally{await sql.end();}
+}
 export async function getActiveDiveShare(workspaceId:string,diveId:string){const sql=database();try{const [row]=await sql<DiveShare[]>`SELECT share_id,workspace_id,created_by,dive_id,starter_key,slug,title,description,status,expires_at,view_count,last_viewed_at,created_at,updated_at,revoked_at FROM app.dive_share WHERE workspace_id=${workspaceId}::uuid AND dive_id=${diveId} AND status='active' AND (expires_at IS NULL OR expires_at>now())`;return row||null;}finally{await sql.end();}}
-export async function createDiveShare(workspace:Workspace,userId:string,diveId:string,starterKey:string,title:string,description:string){
+export async function createDiveShare(workspaceId:string,userId:string,diveId:string,starterKey:string,title:string,description:string){
   const sql=database();try{
     for(let attempt=0;attempt<3;attempt++){
-      try{const slug=shareSlug(starterKey),[row]=await sql<DiveShare[]>`INSERT INTO app.dive_share(workspace_id,created_by,dive_id,starter_key,slug,title,description) VALUES(${workspace.workspace_id}::uuid,${userId}::uuid,${diveId},${starterKey},${slug},${title},${description}) ON CONFLICT(workspace_id,dive_id) WHERE status='active' DO UPDATE SET title=excluded.title,description=excluded.description,updated_at=now() RETURNING share_id,workspace_id,created_by,dive_id,starter_key,slug,title,description,status,expires_at,view_count,last_viewed_at,created_at,updated_at,revoked_at`;return row;}catch(error){if((error as {code?:string}).code!=="23505"||attempt===2)throw error;}
+      try{const slug=shareSlug(starterKey),[row]=await sql<DiveShare[]>`INSERT INTO app.dive_share(workspace_id,created_by,dive_id,starter_key,slug,title,description) VALUES(${workspaceId}::uuid,${userId}::uuid,${diveId},${starterKey},${slug},${title},${description}) ON CONFLICT(workspace_id,dive_id) WHERE status='active' DO UPDATE SET title=excluded.title,description=excluded.description,updated_at=now() RETURNING share_id,workspace_id,created_by,dive_id,starter_key,slug,title,description,status,expires_at,view_count,last_viewed_at,created_at,updated_at,revoked_at`;return row;}catch(error){if((error as {code?:string}).code!=="23505"||attempt===2)throw error;}
     }
     throw new Error("Could not allocate a share slug");
   }finally{await sql.end();}
