@@ -61,9 +61,23 @@ Phase 1A validation passed:
 
 Review gate: do not apply migration 014 to production, deploy the relational cutover, or begin the question-led homepage without a separate approval. The safe production order is migration -> exact ownership reconciliation -> deploy -> authenticated owner/cross-workspace route smoke -> production log inspection.
 
+### Phase 1B production release
+
+- User approved the breaking production release and pushed commit `8d4d180` (`Enforce relational workspace Dive ownership`) to `main`.
+- Vercel Git deployment `dpl_EVPoNS16godrhou9FhwNSt8q3ePG` is `READY`, targets production, is aliased to `https://duckdive.gold`, and runs Functions in `syd1`.
+- Production Neon migration `014_workspace_dives.sql` is applied.
+- Production reconciliation passed for three workspaces: nine legacy owned rows, nine legacy source rows and nine relational rows, with zero mismatches, duplicate Dive IDs, unknown starters or cross-workspace matches.
+- The immutable VIC baseline still reconciles to 83 files and 88,422 observations with date bounds 2004-09-14 through 2026-07-18.
+- Production preflight and MotherDuck smoke passed: five months, 929 house facts, six bedroom groups and rolling annual medians.
+- Vercel logs for the release interval contained only 23 expected informational `/`, `/login`, `/edit` and `/api/gallery` requests, with no warnings or errors.
+- The Git-triggered deployment became ready before migration 014 was applied. This created a possible brief missing-table interval, but the captured release logs contained no error and code/database are now aligned.
+- Anonymous `/edit` correctly redirected to `/login`; authentication was not bypassed.
+
+Remaining release check: in an authenticated owner browser, refresh `/edit`, confirm all three existing Dives load with their unchanged IDs, and open at least one embed/version action. The available isolated browser had no owner session, and no connected Chrome session was available. Do not claim authenticated route verification until the owner performs this check.
+
 ### Compact restart prompt
 
-> Read `AGENTS.md`, this top checkpoint, and the complete `vic-house-platform-operator` skill with its references. Phase 1B is implemented and rehearsed on the disposable Neon branch; production still ends at migration 013. Review the Phase 1B diff and validation evidence, then request explicit approval before applying migration 014 or deploying. Do not begin the question-led homepage in the same change batch.
+> Read `AGENTS.md`, this top checkpoint, and the complete `vic-house-platform-operator` skill with its references. Phase 1B code and migration 014 are live in production at commit `8d4d180` / deployment `dpl_EVPoNS16godrhou9FhwNSt8q3ePG`. Complete the authenticated owner `/edit` smoke without bypassing authentication, record the result, then separately scope the question-led homepage phase.
 
 ## Verified DuckDive editing release update
 
