@@ -1,4 +1,12 @@
-import {duckDiveContract} from "./duckdive-contract";
+import {duckDiveContract,duckDivePublicContract} from "./duckdive-contract";
+
+export type DatasetPublicContract={
+  scope:string;
+  grains:readonly {name:string;grain:string}[];
+  measures:Readonly<Record<string,string>>;
+  dimensions:readonly string[];
+  caveats:readonly string[];
+};
 
 export type DatasetDefinition={
   key:string;
@@ -7,6 +15,7 @@ export type DatasetDefinition={
   kind:"historical"|"near-real-time";
   contractVersion:string;
   contract:unknown;
+  publicContract:DatasetPublicContract;
   starterKeys:readonly string[];
   motherduck:{databaseEnv:string;databaseDefault:string;serviceAccountEnv:string;serviceAccountDefault:string};
   capabilities:{agentQuery:boolean;editing:boolean;publicShare:boolean};
@@ -19,6 +28,7 @@ export const VIC_HOUSING_DATASET={
   kind:"historical",
   contractVersion:"vic-housing/v1",
   contract:duckDiveContract,
+  publicContract:duckDivePublicContract,
   starterKeys:["market-pulse","suburb-story","market-matchup"],
   motherduck:{
     databaseEnv:"MOTHERDUCK_DATABASE",

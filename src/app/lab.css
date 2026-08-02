@@ -47,7 +47,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 .lab-shell,.dive-page,.edit-lab,.login-page,.shared-dive-page,.admin-page{min-height:100svh;background:var(--paper);color:var(--ink)}
-.lab-shell{height:100svh;overflow:hidden;position:relative;background:linear-gradient(180deg,#75c9ec 0%,var(--paper) 72%)}
+.lab-shell{min-height:100svh;position:relative;background:linear-gradient(180deg,#75c9ec 0%,var(--paper) 72%)}
 .lab-shell:before,.lab-shell:after{content:"";position:absolute;z-index:0;border-radius:50%;background:var(--cloud);filter:blur(2px);pointer-events:none}
 .lab-shell:before{width:34vw;height:15vw;left:-7vw;top:10vh}
 .lab-shell:after{width:26vw;height:11vw;right:7vw;top:5vh}
@@ -67,6 +67,39 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .lab-header nav{display:flex;align-items:center;gap:2px;min-width:0}
 .lab-header nav a,.lab-header nav button,.lab-header>a:last-child,.lab-header>button{padding:8px 10px;border:0;background:transparent;color:var(--ink);font-size:12px;font-weight:700;text-decoration:none;cursor:pointer}
 .lab-header nav a:hover,.lab-header nav button:hover,.lab-header>a:last-child:hover,.lab-header>button:hover{background:var(--surface-soft)}
+
+.lab-entry,.lab-browse{width:min(100% - 36px,1240px);margin-inline:auto}
+.lab-entry{padding:clamp(54px,9vw,116px) 0 72px}
+.lab-entry-copy{max-width:920px}
+.lab-kicker{margin:0;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.lab-entry h1{max-width:900px;margin:14px 0 18px;font-size:clamp(42px,7vw,88px);line-height:.9;letter-spacing:-.065em}
+.lab-entry-copy>p:last-child{max-width:680px;margin:0;color:var(--muted);font-size:clamp(15px,2vw,19px);line-height:1.55}
+.lab-question{margin-top:44px;padding:18px;border:1px solid var(--line);background:color-mix(in srgb,var(--surface) 88%,transparent);box-shadow:var(--shadow)}
+.lab-question label{display:block;margin-bottom:10px;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+.lab-question textarea{display:block;width:100%;min-height:126px;padding:0 0 14px;resize:vertical;border:0;border-bottom:2px solid var(--line);background:transparent;color:var(--ink);font-size:clamp(20px,3vw,32px);font-weight:700;line-height:1.25;letter-spacing:-.025em}
+.lab-question textarea::placeholder{color:color-mix(in srgb,var(--muted) 70%,transparent)}
+.lab-question textarea:focus{border-color:var(--orange);outline:0}
+.lab-question>div{display:flex;justify-content:space-between;gap:16px;margin-top:10px;color:var(--muted);font-size:10px}
+.lab-suggestions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.lab-suggestions button,.lab-browse-toggle{min-height:38px;padding:0 12px;border:1px solid var(--line);border-radius:var(--radius);background:color-mix(in srgb,var(--surface) 72%,transparent);color:var(--ink);font-size:10px;font-weight:700;cursor:pointer}
+.lab-suggestions button:hover,.lab-browse-toggle:hover{background:var(--surface-soft)}
+.lab-recipe-heading{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-top:54px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.lab-recipe-heading>p:last-child{max-width:480px;margin:0;color:var(--muted);font-size:12px;line-height:1.5;text-align:right}
+.lab-recipes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+.lab-recipe{display:flex;min-height:260px;flex-direction:column;padding:20px;border:1px solid var(--line);border-top:5px solid var(--blue);background:var(--surface);box-shadow:var(--shadow)}
+.lab-recipe.accent-orange{border-top-color:var(--orange)}.lab-recipe.accent-teal{border-top-color:var(--teal)}
+.lab-recipe>span{color:var(--muted);font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+.lab-recipe h2{margin:28px 0 8px;font-size:clamp(20px,2.4vw,30px);line-height:1;letter-spacing:-.04em}
+.lab-recipe p{margin:0;color:var(--muted);font-size:12px;line-height:1.55}
+.lab-recipe button{min-height:40px;margin-top:auto;padding:0 12px;border:1px solid var(--ochre);border-radius:var(--radius);background:var(--ochre);color:#fff8e8;font-size:11px;font-weight:800;cursor:pointer}
+.lab-recipe button:hover{filter:brightness(.9)}.lab-recipe button:disabled{cursor:not-allowed;opacity:.42}
+.lab-entry>.lab-error{margin:14px 0 0}
+.lab-browse{padding:62px 0 86px;border-top:1px solid var(--line)}
+.lab-browse>div:first-child{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:end}
+.lab-browse h2{margin:8px 0 0;font-size:clamp(30px,4vw,54px);line-height:.95;letter-spacing:-.05em}
+.lab-browse>div:first-child>p:last-child{max-width:430px;margin:0 0 4px;color:var(--muted);font-size:12px;line-height:1.5;justify-self:end}
+.lab-browse-toggle{margin-top:22px;background:var(--surface)}
+.lab-browse .lab-gallery{height:480px;margin-top:22px}
 
 .lab-dives{height:calc(100svh - 58px);padding:18px clamp(18px,3vw,44px) clamp(18px,3vw,38px)}
 .lab-gallery{height:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
@@ -224,6 +257,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   .admin-invite button{grid-column:1/-1}
   .admin-audit article{grid-template-columns:1fr;gap:4px}
   .dive-full{width:calc(100% - 20px);height:calc(100svh - 140px);margin:10px}
+  .lab-recipes{grid-template-columns:1fr}.lab-recipe{min-height:220px}.lab-recipe-heading,.lab-browse>div:first-child{display:block}.lab-recipe-heading>p:last-child,.lab-browse>div:first-child>p:last-child{margin-top:9px;text-align:left;justify-self:auto}.lab-browse .lab-gallery{height:auto}.lab-browse .lab-card{height:500px}
 }
 
 @media(max-width:560px){
@@ -238,6 +272,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   .admin-invite{grid-template-columns:1fr}
   .admin-invite button{grid-column:auto}
   .login-page form{padding:22px}
+  .lab-entry,.lab-browse{width:min(100% - 24px,1240px)}.lab-entry{padding-top:42px}.lab-entry h1{font-size:42px}.lab-question{padding:14px}.lab-question textarea{min-height:150px;font-size:20px}.lab-question>div{display:block}.lab-question>div small{display:block;margin-top:5px}.lab-suggestions{display:grid}.lab-suggestions button{text-align:left}.lab-browse .lab-card{height:460px}
 }
 
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
