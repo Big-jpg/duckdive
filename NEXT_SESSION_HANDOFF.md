@@ -2,11 +2,11 @@
 
 Last verified: 2026-08-03 (Australia/Perth)
 
-## Phase 2B BYOD semantic-evidence local checkpoint
+## Phase 2B BYOD semantic-evidence production release
 
-This section is authoritative for the uncommitted Bring Your Own Semantic Model implementation. It does not supersede the released Phase 2A production checkpoint below.
+This section is authoritative for the released Bring Your Own Semantic Model evidence flow. It supersedes the older local-only Phase 2B release notes and does not change the released Phase 2A product contract below.
 
-### Implemented locally
+### Released implementation
 
 - Added an authenticated `/datasets/new` flow linked from the existing homepage. Semantic-model ZIPs are opened with JSZip and parsed in the browser; no raw archive, TMDL, M expression, connection identifier or RLS filter is sent to the server.
 - The archive gate accepts exactly one Azure DevOps `*.SemanticModel` root with `.platform`, `definition.pbism`, `model.tmdl`, `relationships.tmdl` and table definitions. It enforces 50 MiB compressed, 10,000-entry and 250 MiB expanded limits plus unsafe-path rejection and SHA-256 fingerprints.
@@ -17,16 +17,20 @@ This section is authoritative for the uncommitted Bring Your Own Semantic Model 
 
 ### Validation and release state
 
+- Commit `1512075` (`Add BYOD semantic model review and draft flow`) is on `main` and `origin/main` and is deployed to Vercel production as `dpl_2DQprmEiqmKmtxhtVcgqJiWE82D7`, Ready, aliased to `https://duckdive.gold`, with Functions in `syd1`.
+- The Git deployment became Ready before Neon migration 015 was applied. One authenticated `GET /api/dataset-drafts` produced PostgreSQL `42P01` (`app.dataset_draft` missing). Migration `015_dataset_drafts.sql` was then applied exactly once; later release logs contain only informational requests and no further runtime errors.
 - 24 test files / 74 tests passed, including parser, archive limits, malformed text, determinism/privacy shape, fingerprint, CSRF, unauthenticated and cross-owner route behavior.
 - TypeScript passed. Production build passed with `/datasets/new`, `/api/dataset-drafts` and `/api/dataset-drafts/[draftId]` dynamic.
 - ESLint has zero errors; the existing 17 warnings remain confined to the checked-in `vercel-optimize` skill package.
 - Preflight passed. VIC reconciliation remains 83 files / 88,422 source rows / dates 2004-09-14 through 2026-07-18. MotherDuck smoke passed at five months / 929 house facts / six bedroom groups / rolling annual medians.
-- Anonymous browser QA confirmed `/datasets/new` redirects to `/login?next=/datasets/new`. No authenticated browser was connected, so the full import -> review -> save -> reload -> delete UI smoke was not performed and authentication was not bypassed.
-- Migration 015 has not been applied, and no deployment, credential, Fabric, MotherDuck, service-account or other production resource change was made. A direct read-only ledger probe failed at local command quoting before execution; do not treat it as migration evidence.
+- Anonymous browser QA confirmed `/datasets/new` redirects to `/login?next=/datasets/new`, private dataset-draft and stats APIs return 401, and an invalid public share slug returns 404.
+- Authenticated owner QA passed with a synthetic, non-sensitive one-table TMDL ZIP: browser-local import, diagnostic acknowledgement, purpose/grain confirmation, selected columns and DAX measure, reviewed save, full-page reload, persisted review, identical idempotent resave and delete.
+- The persisted QA row contained one entity, one measure, zero relationships, one acknowledged diagnostic, the expected reviewed-contract and identity keys, no security summary and no prohibited raw-model/connectivity marker. The identical resave retained the same single row and dataset-draft ID. Final database inspection returned zero QA rows, and the local synthetic fixture was removed.
+- Migration 015 and the Vercel deployment were the only production mutations in this release. No credential, Fabric, MotherDuck, service-account, Dive, workspace-ownership or source-data change was made.
 
-### Next release gate
+### Next gate
 
-Rehearse migration 015 on a disposable Neon branch, then separately approve production migration and deployment. After release, perform an authenticated owner smoke with a non-sensitive TMDL fixture: local import -> warning acknowledgement -> purpose/grain confirmation -> reviewed save -> reload/review -> idempotent resave -> delete. Inspect the persisted row to prove only the reviewed contract, acknowledgements, optional RLS summary and fingerprints crossed the browser boundary.
+Phase 2B is released and owner-verified. Scope any operational dataset onboarding separately: this phase stores reviewed semantic evidence only and deliberately does not connect Fabric data, register a runtime dataset, provision MotherDuck resources or create a Dive. Preserve the reviewed-contract privacy boundary before adding any execution capability.
 
 ## Phase 2A question-led architecture production checkpoint
 
