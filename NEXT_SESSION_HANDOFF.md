@@ -6,7 +6,38 @@ Last verified: 2026-08-03 (Australia/Perth)
 
 `MULTI_DATASET_DELIVERY_PLAN.md` records the recovered original multi-dataset plan, reconciles it with released Phases 0 through 2B, and defines the updated sequence. This handoff remains authoritative for verified commits, migrations, deployments, smoke tests and production state. The delivery plan is authoritative for intended scope and the named next gate.
 
-The current next gate is Phase 2C-A: preview activation of an owner-scoped `ReviewedSemanticContractV1` as a deterministic operational dataset candidate. This gate covers local code, tests and interface verification only. It does not authorize a migration, production deployment, MotherDuck mutation, Fabric connection, WA ingestion or aviation work.
+Phase 2C-A is complete at its local code, test and interface-verification boundary. It is not committed, pushed or released. The next decision is whether to commit Phase 2C-A; Phase 2C-B requires separate approval. No migration, production deployment, MotherDuck mutation, Fabric connection, WA ingestion or aviation work is authorized by this checkpoint.
+
+## Phase 2C-A local implementation checkpoint
+
+Phase 2C-A is complete locally but is not committed, pushed or released.
+
+### Implemented boundary
+
+- `src/lib/operational-dataset-candidate.ts` compiles a validated `ReviewedSemanticContractV1` into deterministic `operational-dataset-candidate/v1` preview data. It preserves the archive and reviewed-contract fingerprints plus field provenance, normalizes entity/column/measure/relationship order and derives a deterministic candidate fingerprint.
+- The preview public contract contains selected entities, grains, columns, semantic measures, relationships and acknowledged caveats. Reviewed DAX text is omitted; only its SHA-256 fingerprint and the explicit `DAX` / non-executable status remain.
+- Compilation reuses the Phase 2B schema, privacy scan and fingerprint validation, then rejects unsupported operational identifiers, duplicate entities/columns, measures for unselected entities and relationships whose endpoints were not selected.
+- `GET /api/dataset-drafts/[draftId]/activation-preview` is authenticated, owner-scoped, private/no-store and read-only. A cross-owner or absent draft returns 404. Invalid stored evidence returns an explicit 422 without persistence.
+- `/datasets/new` adds **Preview activation** beside each saved draft and labels the result `not registered`, `Runtime unbound`, `No SQL generated` and `Nothing persisted`. It lists every compiler limitation and keeps review/preview state mutually exclusive.
+- The preview panel is isolated in `src/components/OperationalCandidatePreview.tsx`, so the exact production component can be verified against disposable synthetic candidate data without weakening the authenticated `/datasets/new` route.
+- The compiler test uses a synthetic reviewed contract aligned to the public `sample_data.who.ambient_air_quality` fixture. It does not connect to or query MotherDuck.
+
+### Current validation
+
+- 26 test files / 83 tests pass. The nine new tests cover deterministic WHO compilation, privacy shape, fingerprint integrity, unsupported identifiers, rejected and preserved relationship endpoints, authentication, cross-owner denial and explicit compiler failure.
+- TypeScript passes.
+- Production build passes and includes dynamic `/api/dataset-drafts/[draftId]/activation-preview` and `/datasets/new` routes.
+- ESLint has zero errors; the existing 17 warnings remain confined to the checked-in `vercel-optimize` skill package.
+- `git diff --check` passes.
+- Anonymous local browser verification confirms `/datasets/new` still redirects to `/login?next=%2Fdatasets%2Fnew`.
+- The owner completed GitHub sign-in and reached the authenticated production `/datasets/new` page. A process-only localhost callback was rejected by the production-only Neon Auth trusted-origin policy, so no cookie was copied and authentication was not weakened.
+- The exact extracted production preview component passed local synthetic WHO visual verification at 1440 x 900 and 390 x 844. The mobile document width remained exactly 390 pixels with no horizontal overflow. Status labels, entity grain, selected columns, semantic-measure treatment, limitations and fingerprints remained visible; exact DAX text and connectivity detail were absent.
+- Close and reopen passed. The temporary visual harness was removed before the final build, and the final route manifest contains no visual-test route.
+- The authenticated production page contained zero saved dataset drafts before and after verification. The temporary harness made no API or database request, and no disposable draft required cleanup.
+
+### Phase 2C-A handoff
+
+Review and commit only the Phase 2C-A files if the local boundary is accepted. Do not deploy this slice or begin Phase 2C-B without separate approval. Phase 2C-B remains the owner-scoped operational-registry migration and lifecycle gate described in `MULTI_DATASET_DELIVERY_PLAN.md`.
 
 ## Phase 2B BYOD semantic-evidence production release
 

@@ -3,11 +3,13 @@
 import Link from "next/link";
 import {useEffect,useMemo,useRef,useState} from "react";
 import AppBrand from "@/components/AppBrand";
+import OperationalCandidatePreview from "@/components/OperationalCandidatePreview";
 import {openSemanticModelArchive,SemanticModelArchiveError} from "@/lib/semantic-model-archive";
 import {
   SEMANTIC_CONTRACT_SCHEMA_VERSION,canonicalJson,semanticContractFingerprintInput,semanticContractPrivacyIssues,sha256Hex,
   type LocalSemanticEvidence,type ReviewedSemanticContractV1,
 } from "@/lib/semantic-model-types";
+import type {OperationalDatasetCandidateV1} from "@/lib/operational-dataset-candidate";
 
 type SavedDraft={id:string;displayName:string;contractFingerprint:string;createdAt:string};
 type TableReview={included:boolean;purpose:string;grain:string};
@@ -29,6 +31,8 @@ export default function SemanticModelImport(){
   const [notice,setNotice]=useState("");
   const [drafts,setDrafts]=useState<SavedDraft[]>([]);
   const [viewing,setViewing]=useState<{id:string;contract:ReviewedSemanticContractV1}|null>(null);
+  const [previewingId,setPreviewingId]=useState("");
+  const [activationPreview,setActivationPreview]=useState<{id:string;candidate:OperationalDatasetCandidateV1}|null>(null);
 
   async function refreshDrafts(){
     const response=await fetch("/api/dataset-drafts",{cache:"no-store"});if(!response.ok)return;
@@ -86,12 +90,22 @@ export default function SemanticModelImport(){
   async function remove(draft:SavedDraft){
     if(!window.confirm(`Delete the reviewed draft “${draft.displayName}”?`))return;
     const response=await fetch(`/api/dataset-drafts/${encodeURIComponent(draft.id)}`,{method:"DELETE"});
-    if(response.ok){if(viewing?.id===draft.id)setViewing(null);setNotice(`Deleted ${draft.displayName}.`);await refreshDrafts();}else setError("The dataset draft could not be deleted.");
+    if(response.ok){if(viewing?.id===draft.id)setViewing(null);if(activationPreview?.id===draft.id)setActivationPreview(null);setNotice(`Deleted ${draft.displayName}.`);await refreshDrafts();}else setError("The dataset draft could not be deleted.");
   }
 
   async function view(draft:SavedDraft){
     setError("");const response=await fetch(`/api/dataset-drafts/${encodeURIComponent(draft.id)}`,{cache:"no-store"}),body=await response.json();
-    if(response.ok)setViewing({id:draft.id,contract:body.draft.contract});else setError("The dataset draft could not be opened.");
+    if(response.ok){setActivationPreview(null);setViewing({id:draft.id,contract:body.draft.contract});}else setError("The dataset draft could not be opened.");
+  }
+
+  async function previewActivation(draft:SavedDraft){
+    setError("");setPreviewingId(draft.id);
+    try{
+      const response=await fetch(`/api/dataset-drafts/${encodeURIComponent(draft.id)}/activation-preview`,{cache:"no-store"}),body=await response.json();
+      if(!response.ok)throw new Error([body.error,...(body.issues||[])].filter(Boolean).join(" · "));
+      setViewing(null);setActivationPreview({id:draft.id,candidate:body.candidate});
+    }catch(reason){setError(reason instanceof Error?reason.message:"The activation preview could not be compiled.");}
+    finally{setPreviewingId("");}
   }
 
   return <main id="main-content" className="byod-page">
@@ -124,8 +138,9 @@ export default function SemanticModelImport(){
       <section className="byod-save"><div><p className="lab-kicker">3 · Private evidence</p><h2>Save the reviewed derivative</h2><p>The archive stays in this tab. DuckDive receives only the selected semantic contract.</p>{model.roles.length?<label><input type="checkbox" checked={includeSecurity} onChange={event=>setIncludeSecurity(event.target.checked)}/> Include an RLS summary of role count and affected tables. Role names and filter expressions stay local.</label>:null}</div><button disabled={!canSave||saving} onClick={()=>void save()}>{saving?"Saving…":"Save reviewed draft"}</button></section>
     </>}
     {error?<div className="lab-error" role="alert">{error}</div>:null}{notice?<div className="admin-notice" role="status">{notice}</div>:null}
-    {drafts.length?<section className="byod-drafts"><p className="lab-kicker">Saved evidence</p><h2>Private dataset drafts</h2>{drafts.map(draft=><article key={draft.id}><div><strong>{draft.displayName}</strong><small>{new Date(draft.createdAt).toLocaleString("en-AU")} · {draft.contractFingerprint.slice(0,12)}</small></div><span><button onClick={()=>void view(draft)}>Review</button><button onClick={()=>void remove(draft)}>Delete</button></span></article>)}
+    {drafts.length?<section className="byod-drafts"><p className="lab-kicker">Saved evidence</p><h2>Private dataset drafts</h2>{drafts.map(draft=><article key={draft.id}><div><strong>{draft.displayName}</strong><small>{new Date(draft.createdAt).toLocaleString("en-AU")} · {draft.contractFingerprint.slice(0,12)}</small></div><span><button disabled={previewingId===draft.id} onClick={()=>void previewActivation(draft)}>{previewingId===draft.id?"Compiling…":"Preview activation"}</button><button onClick={()=>void view(draft)}>Review</button><button onClick={()=>void remove(draft)}>Delete</button></span></article>)}
       {viewing?<div className="byod-saved-contract"><header><strong>{viewing.contract.identity.displayName}</strong><button onClick={()=>setViewing(null)}>Close</button></header><p>{viewing.contract.entities.length} entities · {viewing.contract.measures.length} measures · {viewing.contract.relationships.length} relationships</p>{viewing.contract.entities.map(entity=><article key={entity.name}><strong>{entity.name}</strong><span>{entity.grain}</span><small>{entity.purpose}</small></article>)}</div>:null}
+      {activationPreview?<OperationalCandidatePreview candidate={activationPreview.candidate} onClose={()=>setActivationPreview(null)}/>:null}
     </section>:null}
   </main>;
 }
