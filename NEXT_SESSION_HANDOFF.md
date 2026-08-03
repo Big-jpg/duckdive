@@ -2,15 +2,36 @@
 
 Last verified: 2026-08-03 (Australia/Perth)
 
+## Phase 2C-B local implementation checkpoint
+
+Phase 2C-B is implemented but uncommitted on `codex/phase-2cb-operational-registry`, branched from Phase 2C-A commit `3fb54ad` on `main` and `origin/main`. It has not been deployed and migration 016 has not been applied to any database.
+
+### Implemented boundary
+
+- Additive migration `db/016_operational_datasets.sql` defines an owner-scoped operational dataset registry with immutable reviewed-draft and contract-fingerprint provenance, lifecycle states, a separate runtime-binding table, privacy checks, lifecycle transition enforcement, and activation/lifecycle audits without contract content.
+- Activation is transactional and idempotent for the same workspace and reviewed contract. Owner, workspace, and draft checks fail closed, and activation conflicts do not disclose another workspace's record.
+- Deleting a reviewed draft referenced by an operational dataset returns 409 instead of orphaning or silently changing activated evidence.
+- `GET /api/datasets`, `GET/PATCH /api/datasets/[datasetId]`, and `POST /api/dataset-drafts/[draftId]/activate` are authenticated, owner-scoped, private/no-store routes. Owners may archive an unbound record but cannot claim runtime readiness through the public lifecycle route.
+- Static VIC and relational operational datasets resolve through one server-owned interface. The VIC fixture remains ready and unchanged; a newly registered relational dataset remains reviewed and runtime-unbound.
+- `/datasets/new` now registers the reviewed contract explicitly, reports idempotent reactivation, and lists the workspace's static and relational datasets without claiming a data connection, generated SQL, or Dive.
+
+### Current validation and remaining gate
+
+- 31 test files / 98 tests pass, including activation idempotence, cross-owner denial, draft retention, lifecycle limits, unified resolution, and static migration/privacy-shape checks.
+- TypeScript and the production build pass. The build includes the new activation and dataset routes and contains no temporary visual-test route.
+- ESLint has zero errors; the existing 17 warnings remain confined to the checked-in `vercel-optimize` skill package. `git diff --check` passes.
+- The exact production preview component passed synthetic registration visual verification at 1440 x 900 and 390 x 844. Registration state, disabled repeat action, static VIC readiness, relational reviewed state, and mobile no-overflow behavior passed. A stale `not registered` kicker found during the smoke was corrected, rechecked, and the temporary harness removed.
+- Do not merge or claim Phase 2C-B complete until migration 016 is run twice against a disposable Neon branch and the same-owner activation, cross-workspace denial, and protected-draft behavior are exercised against that disposable database. Do not point this rehearsal at production. No deployment, production migration, credential change, MotherDuck mutation, runtime binding, or Dive is authorized by this checkpoint.
+
 ## Multi-dataset delivery-plan authority
 
 `MULTI_DATASET_DELIVERY_PLAN.md` records the recovered original multi-dataset plan, reconciles it with released Phases 0 through 2B, and defines the updated sequence. This handoff remains authoritative for verified commits, migrations, deployments, smoke tests and production state. The delivery plan is authoritative for intended scope and the named next gate.
 
-Phase 2C-A is complete at its local code, test and interface-verification boundary. It is not committed, pushed or released. The next decision is whether to commit Phase 2C-A; Phase 2C-B requires separate approval. No migration, production deployment, MotherDuck mutation, Fabric connection, WA ingestion or aviation work is authorized by this checkpoint.
+Phase 2C-A is committed and pushed as `3fb54ad` on `main` and `origin/main`. Phase 2C-B is the current local gate described above. No production migration, deployment, MotherDuck mutation, Fabric connection, WA ingestion or aviation work is authorized by this checkpoint.
 
 ## Phase 2C-A local implementation checkpoint
 
-Phase 2C-A is complete locally but is not committed, pushed or released.
+Phase 2C-A is committed and pushed as `3fb54ad`. Its code-only boundary remains unreleased unless separately confirmed by current deployment evidence.
 
 ### Implemented boundary
 

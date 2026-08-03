@@ -16,6 +16,7 @@ export type DatasetDraftRow={
 };
 
 export type DatasetDraftSummary=Pick<DatasetDraftRow,"dataset_draft_id"|"display_name"|"source_kind"|"schema_version"|"archive_fingerprint"|"contract_fingerprint"|"created_at">;
+export class DatasetDraftInUseError extends Error{}
 
 export async function createDatasetDraft(userId:string,contract:ReviewedSemanticContractV1){
   const sql=database();try{
@@ -43,5 +44,5 @@ export async function getDatasetDraft(userId:string,draftId:string){
 }
 
 export async function deleteDatasetDraft(userId:string,draftId:string){
-  const sql=database();try{const [row]=await sql<{dataset_draft_id:string}[]>`DELETE FROM app.dataset_draft WHERE user_id=${userId}::uuid AND dataset_draft_id=${draftId}::uuid RETURNING dataset_draft_id`;return row||null;}finally{await sql.end();}
+  const sql=database();try{const [row]=await sql<{dataset_draft_id:string}[]>`DELETE FROM app.dataset_draft WHERE user_id=${userId}::uuid AND dataset_draft_id=${draftId}::uuid RETURNING dataset_draft_id`;return row||null;}catch(error){if((error as {code?:string}).code==="23503")throw new DatasetDraftInUseError("Activated dataset evidence cannot be deleted");throw error;}finally{await sql.end();}
 }

@@ -1,0 +1,4 @@
+import {readFile} from "node:fs/promises";
+import {describe,expect,it} from "vitest";
+
+describe("operational dataset migration",()=>{it("is additive, rerunnable, owner-paired, immutable, and keeps bindings separate",async()=>{const sql=await readFile(new URL("../db/016_operational_datasets.sql",import.meta.url),"utf8");expect(sql).toContain("CREATE TABLE IF NOT EXISTS app.operational_dataset");expect(sql).toContain("CREATE TABLE IF NOT EXISTS app.operational_dataset_binding");expect(sql).toContain("CREATE UNIQUE INDEX IF NOT EXISTS");expect(sql).toContain("DROP TRIGGER IF EXISTS guard_operational_dataset_update");expect(sql).toContain("FOREIGN KEY(workspace_id,owner_user_id)");expect(sql).toContain("FOREIGN KEY(dataset_draft_id,owner_user_id)");expect(sql).toContain("ON DELETE RESTRICT");expect(sql).not.toMatch(/MOTHERDUCK_TOKEN|connection_string|password text/i);});});

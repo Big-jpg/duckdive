@@ -12,6 +12,7 @@ import {
 import type {OperationalDatasetCandidateV1} from "@/lib/operational-dataset-candidate";
 
 type SavedDraft={id:string;displayName:string;contractFingerprint:string;createdAt:string};
+type WorkspaceDatasetSummary={source:"static"|"operational";key:string;title:string;contractVersion:string;lifecycleState:string};
 type TableReview={included:boolean;purpose:string;grain:string};
 
 function key(...parts:string[]){return parts.join("\u0000");}
@@ -32,15 +33,18 @@ export default function SemanticModelImport(){
   const [drafts,setDrafts]=useState<SavedDraft[]>([]);
   const [viewing,setViewing]=useState<{id:string;contract:ReviewedSemanticContractV1}|null>(null);
   const [previewingId,setPreviewingId]=useState("");
-  const [activationPreview,setActivationPreview]=useState<{id:string;candidate:OperationalDatasetCandidateV1}|null>(null);
+  const [activatingId,setActivatingId]=useState("");
+  const [activationPreview,setActivationPreview]=useState<{id:string;candidate:OperationalDatasetCandidateV1;registeredKey?:string}|null>(null);
+  const [workspaceDatasets,setWorkspaceDatasets]=useState<WorkspaceDatasetSummary[]>([]);
 
   async function refreshDrafts(){
     const response=await fetch("/api/dataset-drafts",{cache:"no-store"});if(!response.ok)return;
     const body=await response.json();setDrafts(body.drafts||[]);
   }
+  async function refreshWorkspaceDatasets(){const response=await fetch("/api/datasets",{cache:"no-store"});if(response.ok)setWorkspaceDatasets((await response.json()).datasets||[]);}
   useEffect(()=>{
     let active=true;
-    void fetch("/api/dataset-drafts",{cache:"no-store"}).then(async response=>response.ok?response.json():null).then(body=>{if(active&&body)setDrafts(body.drafts||[]);});
+    void Promise.all([fetch("/api/dataset-drafts",{cache:"no-store"}),fetch("/api/datasets",{cache:"no-store"})]).then(async([draftResponse,datasetResponse])=>Promise.all([draftResponse.ok?draftResponse.json():null,datasetResponse.ok?datasetResponse.json():null])).then(([draftBody,datasetBody])=>{if(active&&draftBody)setDrafts(draftBody.drafts||[]);if(active&&datasetBody)setWorkspaceDatasets(datasetBody.datasets||[]);}).catch(()=>{});
     return ()=>{active=false;};
   },[]);
 
@@ -89,8 +93,8 @@ export default function SemanticModelImport(){
 
   async function remove(draft:SavedDraft){
     if(!window.confirm(`Delete the reviewed draft “${draft.displayName}”?`))return;
-    const response=await fetch(`/api/dataset-drafts/${encodeURIComponent(draft.id)}`,{method:"DELETE"});
-    if(response.ok){if(viewing?.id===draft.id)setViewing(null);if(activationPreview?.id===draft.id)setActivationPreview(null);setNotice(`Deleted ${draft.displayName}.`);await refreshDrafts();}else setError("The dataset draft could not be deleted.");
+    const response=await fetch(`/api/dataset-drafts/${encodeURIComponent(draft.id)}`,{method:"DELETE"}),body=await response.json().catch(()=>({}));
+    if(response.ok){if(viewing?.id===draft.id)setViewing(null);if(activationPreview?.id===draft.id)setActivationPreview(null);setNotice(`Deleted ${draft.displayName}.`);await refreshDrafts();}else setError(body.error||"The dataset draft could not be deleted.");
   }
 
   async function view(draft:SavedDraft){
@@ -106,6 +110,12 @@ export default function SemanticModelImport(){
       setViewing(null);setActivationPreview({id:draft.id,candidate:body.candidate});
     }catch(reason){setError(reason instanceof Error?reason.message:"The activation preview could not be compiled.");}
     finally{setPreviewingId("");}
+  }
+
+  async function activate(draftId:string){
+    if(!activationPreview||activationPreview.id!==draftId)return;setError("");setActivatingId(draftId);
+    try{const response=await fetch(`/api/dataset-drafts/${encodeURIComponent(draftId)}/activate`,{method:"POST"}),body=await response.json();if(!response.ok)throw new Error(body.error||"The dataset could not be registered.");setActivationPreview(current=>current?.id===draftId?{...current,registeredKey:body.dataset.dataset_key}:current);setNotice(body.created?`Registered ${body.dataset.display_name} as a reviewed workspace dataset.`:`${body.dataset.display_name} was already registered.`);await refreshWorkspaceDatasets();}
+    catch(reason){setError(reason instanceof Error?reason.message:"The dataset could not be registered.");}finally{setActivatingId("");}
   }
 
   return <main id="main-content" className="byod-page">
@@ -140,7 +150,8 @@ export default function SemanticModelImport(){
     {error?<div className="lab-error" role="alert">{error}</div>:null}{notice?<div className="admin-notice" role="status">{notice}</div>:null}
     {drafts.length?<section className="byod-drafts"><p className="lab-kicker">Saved evidence</p><h2>Private dataset drafts</h2>{drafts.map(draft=><article key={draft.id}><div><strong>{draft.displayName}</strong><small>{new Date(draft.createdAt).toLocaleString("en-AU")} · {draft.contractFingerprint.slice(0,12)}</small></div><span><button disabled={previewingId===draft.id} onClick={()=>void previewActivation(draft)}>{previewingId===draft.id?"Compiling…":"Preview activation"}</button><button onClick={()=>void view(draft)}>Review</button><button onClick={()=>void remove(draft)}>Delete</button></span></article>)}
       {viewing?<div className="byod-saved-contract"><header><strong>{viewing.contract.identity.displayName}</strong><button onClick={()=>setViewing(null)}>Close</button></header><p>{viewing.contract.entities.length} entities · {viewing.contract.measures.length} measures · {viewing.contract.relationships.length} relationships</p>{viewing.contract.entities.map(entity=><article key={entity.name}><strong>{entity.name}</strong><span>{entity.grain}</span><small>{entity.purpose}</small></article>)}</div>:null}
-      {activationPreview?<OperationalCandidatePreview candidate={activationPreview.candidate} onClose={()=>setActivationPreview(null)}/>:null}
+      {activationPreview?<OperationalCandidatePreview candidate={activationPreview.candidate} onClose={()=>setActivationPreview(null)} onActivate={()=>void activate(activationPreview.id)} activating={activatingId===activationPreview.id} registeredKey={activationPreview.registeredKey}/>:null}
     </section>:null}
+    {workspaceDatasets.length?<section className="byod-datasets"><p className="lab-kicker">Workspace registry</p><h2>Registered datasets</h2>{workspaceDatasets.map(dataset=><article key={dataset.key}><div><strong>{dataset.title}</strong><small>{dataset.key} · {dataset.contractVersion}</small></div><span className={`byod-dataset-state ${dataset.lifecycleState}`}>{dataset.lifecycleState}</span></article>)}</section>:null}
   </main>;
 }

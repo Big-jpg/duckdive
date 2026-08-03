@@ -3,7 +3,7 @@ import {currentUser} from "@/lib/auth";
 import {audit} from "@/lib/app-db";
 import type {AppUser} from "@/lib/app-db";
 import {assertSameOrigin} from "@/lib/csrf";
-import {deleteDatasetDraft,getDatasetDraft} from "@/lib/dataset-drafts-db";
+import {DatasetDraftInUseError,deleteDatasetDraft,getDatasetDraft} from "@/lib/dataset-drafts-db";
 import {datasetDraftResponse} from "@/lib/dataset-draft-contract";
 
 const idSchema=z.string().uuid(),privateHeaders={"Cache-Control":"private, no-store"};
@@ -23,7 +23,8 @@ export async function GET(request:Request,{params}:{params:Promise<{draftId:stri
 export async function DELETE(request:Request,{params}:{params:Promise<{draftId:string}>}){
   const csrf=assertSameOrigin(request);if(csrf)return csrf;
   const result=await authorize(request,params);if("error" in result)return result.error;
-  const deleted=await deleteDatasetDraft(result.user.user_id,result.draftId);if(!deleted)return Response.json({error:"Dataset draft not found"},{status:404});
+  let deleted;try{deleted=await deleteDatasetDraft(result.user.user_id,result.draftId);}catch(error){if(error instanceof DatasetDraftInUseError)return Response.json({error:error.message},{status:409,headers:privateHeaders});throw error;}
+  if(!deleted)return Response.json({error:"Dataset draft not found"},{status:404});
   await audit("dataset_draft.deleted",result.user.user_id,result.draftId);
   return Response.json({ok:true},{headers:privateHeaders});
 }

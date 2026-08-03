@@ -1,0 +1,5 @@
+import {beforeEach,describe,expect,it,vi} from "vitest";
+const mocks=vi.hoisted(()=>({currentUser:vi.fn(),list:vi.fn()}));
+vi.mock("@/lib/auth",()=>({currentUser:mocks.currentUser}));vi.mock("@/lib/workspace-datasets",()=>({listWorkspaceDatasets:mocks.list}));
+import {GET} from "./route";
+describe("workspace dataset collection route",()=>{beforeEach(()=>{vi.clearAllMocks();mocks.currentUser.mockResolvedValue({user_id:"11111111-1111-4111-8111-111111111111"});mocks.list.mockResolvedValue([]);});it("requires authentication",async()=>{mocks.currentUser.mockResolvedValue(null);expect((await GET(new Request("https://duckdive.gold/api/datasets"))).status).toBe(401);expect(mocks.list).not.toHaveBeenCalled();});it("lists only through the owner-scoped resolver",async()=>{const response=await GET(new Request("https://duckdive.gold/api/datasets"));expect(response.status).toBe(200);expect(response.headers.get("cache-control")).toBe("private, no-store");expect(mocks.list).toHaveBeenCalledWith("11111111-1111-4111-8111-111111111111");});});
