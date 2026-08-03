@@ -4,7 +4,7 @@ Last verified: 2026-08-03 (Australia/Perth)
 
 ## Phase 2C-B local implementation checkpoint
 
-Phase 2C-B is implemented but uncommitted on `codex/phase-2cb-operational-registry`, branched from Phase 2C-A commit `3fb54ad` on `main` and `origin/main`. It has not been deployed and migration 016 has not been applied to any database.
+Phase 2C-B is complete at its local and disposable-database boundary. The implementation is committed as `d0d08f5` on `codex/phase-2cb-operational-registry`, branched from Phase 2C-A commit `3fb54ad` on `main` and `origin/main`; the database-smoke evidence in this checkpoint follows that implementation commit. Nothing from Phase 2C-B has been pushed or deployed, and migration 016 has not been applied to production.
 
 ### Implemented boundary
 
@@ -15,13 +15,16 @@ Phase 2C-B is implemented but uncommitted on `codex/phase-2cb-operational-regist
 - Static VIC and relational operational datasets resolve through one server-owned interface. The VIC fixture remains ready and unchanged; a newly registered relational dataset remains reviewed and runtime-unbound.
 - `/datasets/new` now registers the reviewed contract explicitly, reports idempotent reactivation, and lists the workspace's static and relational datasets without claiming a data connection, generated SQL, or Dive.
 
-### Current validation and remaining gate
+### Current validation
 
 - 31 test files / 98 tests pass, including activation idempotence, cross-owner denial, draft retention, lifecycle limits, unified resolution, and static migration/privacy-shape checks.
 - TypeScript and the production build pass. The build includes the new activation and dataset routes and contains no temporary visual-test route.
 - ESLint has zero errors; the existing 17 warnings remain confined to the checked-in `vercel-optimize` skill package. `git diff --check` passes.
 - The exact production preview component passed synthetic registration visual verification at 1440 x 900 and 390 x 844. Registration state, disabled repeat action, static VIC readiness, relational reviewed state, and mobile no-overflow behavior passed. A stale `not registered` kicker found during the smoke was corrected, rechecked, and the temporary harness removed.
-- Do not merge or claim Phase 2C-B complete until migration 016 is run twice against a disposable Neon branch and the same-owner activation, cross-workspace denial, and protected-draft behavior are exercised against that disposable database. Do not point this rehearsal at production. No deployment, production migration, credential change, MotherDuck mutation, runtime binding, or Dive is authorized by this checkpoint.
+- Migration 016 was applied to a disposable Neon branch cloned from the current database and then rerun. The first pass applied only 016; the second pass skipped every migration including 016, proving migration-runner idempotence on the target schema.
+- Database-backed disposable smokes passed: first activation created one record, identical same-owner activation preserved its dataset ID and key, cross-workspace reads and writes returned no record, a reviewed dataset could not jump directly to ready, activated draft deletion raised the protected-evidence error, archive recorded its timestamp, and exactly two content-free audit events were written.
+- Cleanup verification returned zero disposable users, workspaces, drafts, and operational datasets. The temporary database-smoke files were removed. The disposable branch itself was not deleted by the agent.
+- Phase 2C-B is suitable to commit and merge after owner review. Production release remains a separate Phase 2C-E operation: apply migration 016 before deploying code that requires the registry, then complete authenticated production activation and denial smokes. No production deployment, migration, credential change, MotherDuck mutation, runtime binding, or Dive is authorized by this checkpoint.
 
 ## Multi-dataset delivery-plan authority
 
