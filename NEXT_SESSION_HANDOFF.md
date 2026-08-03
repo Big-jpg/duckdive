@@ -2,6 +2,12 @@
 
 Last verified: 2026-08-03 (Australia/Perth)
 
+## Multi-dataset delivery-plan authority
+
+`MULTI_DATASET_DELIVERY_PLAN.md` records the recovered original multi-dataset plan, reconciles it with released Phases 0 through 2B, and defines the updated sequence. This handoff remains authoritative for verified commits, migrations, deployments, smoke tests and production state. The delivery plan is authoritative for intended scope and the named next gate.
+
+The current next gate is Phase 2C-A: preview activation of an owner-scoped `ReviewedSemanticContractV1` as a deterministic operational dataset candidate. This gate covers local code, tests and interface verification only. It does not authorize a migration, production deployment, MotherDuck mutation, Fabric connection, WA ingestion or aviation work.
+
 ## Phase 2B BYOD semantic-evidence production release
 
 This section is authoritative for the released Bring Your Own Semantic Model evidence flow. It supersedes the older local-only Phase 2B release notes and does not change the released Phase 2A product contract below.
