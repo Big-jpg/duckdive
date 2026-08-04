@@ -164,7 +164,7 @@ Exit when:
 
 #### Phase 2C-C: bind one disposable runtime
 
-**Status**: Current assessment; external runtime mutation not yet approved
+**Status**: Repository contract and policy gate complete locally; external runtime access not yet approved
 
 Bind the WHO air-quality fixture through a read-only MotherDuck resource:
 
@@ -393,6 +393,6 @@ The following work remains outside the active sequence:
 
 ## Current next gate
 
-Phase 2C-C assessment is current. First close the read-only Phase 2C-B Vercel function-log interval. In parallel, the repository-only contract and policy gate may define and test the adapter, reconciliation result, structured query request, allowlists, bounds, and revocation behavior without a credential or live connection.
+Phase 2C-C Gate 1 is complete locally: the adapter contract, reconciliation result, structured query request, reviewed-contract intersection, allowlists, bounds, and revocation behavior are implemented and deterministic without a credential or live connection. First close the read-only Phase 2C-B Vercel function-log interval.
 
-Before live reconciliation or binding, approve the exact disposable MotherDuck identity, the non-secret reference for `sample_data.who.ambient_air_quality`, the ignored credential destination, the allowed read-only operations, and the cleanup procedure. That approval does not include a new database, share, copied table, Dive, production deployment, Fabric connection, WA ingestion, or aviation work.
+The next gate is read-only reconciliation. Before it runs, approve the exact disposable MotherDuck identity, the non-secret reference for `sample_data.who.ambient_air_quality`, the ignored credential destination, the allowed read-only operations, and the cleanup procedure. That approval does not include a new database, share, copied table, runtime binding, Dive, production deployment, Fabric connection, WA ingestion, or aviation work.

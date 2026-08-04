@@ -2,7 +2,7 @@
 
 Last verified: 2026-08-04 (Australia/Perth)
 
-Phase 2C-B code, migration, and authenticated production behavior are verified. Production serves commit `08a9bd6`; migration 016 is applied and idempotent; the owner-scoped activation, denial, archive, audit, and cleanup smoke passed. The only remaining release-evidence item is the relevant Vercel function-log interval, which was not accessible through the available GitHub deployment record or local runtime identity. Capture that read-only evidence before changing Phase 2C-B from production-verified to formally Released. Phase 2C-C repository assessment has commenced; its external runtime boundary is not yet approved.
+Phase 2C-B code, migration, and authenticated production behavior are verified. Production serves commit `08a9bd6`; migration 016 is applied and idempotent; the owner-scoped activation, denial, archive, audit, and cleanup smoke passed. The only remaining release-evidence item is the relevant Vercel function-log interval, which was not accessible through the available GitHub deployment record or local runtime identity. Capture that read-only evidence before changing Phase 2C-B from production-verified to formally Released. Phase 2C-C Gate 1 is complete locally; its external runtime boundary is not yet approved.
 
 ## Restart point
 
@@ -12,7 +12,7 @@ Phase 2C-B code, migration, and authenticated production behavior are verified. 
 - **Source state at Phase 2C-C assessment**: clean `main` was aligned with `origin/main` and `origin/HEAD` at documentation commit `5c83a20`; production remains on application commit `08a9bd6`
 - **Current phase**: Phase 2C-B is production-deployed, migrated, and owner-smoked; Vercel function-log evidence remains pending
 - **Production state**: Vercel deployment `dpl_ZLkeovEMWfd1HbsTcL34ta44bTqc` completed successfully from `08a9bd6`; Neon migration 016 was applied on 2026-08-04 and skipped on rerun
-- **Next implementation phase**: Phase 2C-C; repository-only contract and policy work may proceed while the remaining read-only release-log check and external runtime approval stay open
+- **Next implementation phase**: Phase 2C-C Gate 2 read-only reconciliation, after the remaining release-log check and approval of the exact disposable runtime identity
 
 Do not repeat migration 016 or the production QA smoke without drift evidence. No retained QA draft, operational dataset, binding, cross-owner identity, runtime resource, SQL, MotherDuck mutation, or Dive remains.
 
@@ -92,6 +92,20 @@ Phase 2C-C binds the public World Health Organization (WHO) air-quality fixture 
 - Compare the reviewed contract with live columns before marking the dataset ready
 - Keep unrelated `fabric_audit_analytics`, Fabric engagement, and VIC resources out of scope
 - Defer read scaling until measured concurrency requires it
+
+### Gate 1 local completion evidence
+
+- `src/lib/operational-runtime-policy.ts` defines the `motherduck-pg` adapter contract and fixes the only approved resource to `sample_data.who.ambient_air_quality`
+- Structured query requests accept selected fields, bounded filters, ordering, and a server-owned limit of at most 500 rows; they do not accept SQL
+- Selected fields and filters must be present in both the WHO adapter policy and the owner-reviewed public contract
+- The approved PM2.5 aggregate mapping is bound to the exact reviewed DAX evidence fingerprint; matching a measure name alone cannot authorize execution
+- Values remain positional parameters; identifiers and operators come only from fixed allowlists; mixed dimension and aggregate requests add deterministic grouping
+- Owner, dataset, adapter, resource, and `ready` binding state must all match before compilation; binding, degraded, revoked, cross-owner, and cross-dataset contexts fail closed
+- Reconciliation records exact, unacknowledged variance, or explicitly acknowledged variance; a different resource is never acknowledgeable
+- 32 test files and 103 tests passed, including five new runtime-policy tests
+- TypeScript and the production build passed
+- ESLint reported zero errors; the existing 17 warnings remain confined to the checked-in `vercel-optimize` skill package
+- No database, credential, MotherDuck, Vercel, runtime binding, SQL execution, or Dive mutation occurred
 
 Creating a MotherDuck user, token, share, database object, Data Definition Language (DDL) object, or runtime binding requires separate explicit approval.
 
