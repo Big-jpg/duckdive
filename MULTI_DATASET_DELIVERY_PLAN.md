@@ -18,7 +18,7 @@ This page is the directional authority for multi-dataset delivery. `NEXT_SESSION
 - **Audience**: product owner, implementation agents, and production operators
 - **Recovered source**: the user-supplied “DuckDive Multi-Dataset Platform: Sequenced Delivery Plan” received on 2026-08-03
 - **Content plan**: reconcile the recovered phases, state changed decisions, define the current sequence, and preserve later dataset requirements
-- **Open questions**: select the first real external dataset, select its execution adapter, and approve its workload boundary
+- **Open questions**: close the Phase 2C-B release-log evidence gap; approve the Phase 2C-C disposable MotherDuck identity and revocation boundary; later select the first real external dataset and its workload boundary
 
 ## Authority and status rules
 
@@ -116,6 +116,8 @@ The sequence below starts from the released Phase 2B checkpoint.
 
 #### Phase 2C-A: preview activation
 
+**Status**: Complete and pushed
+
 Build a code-only activation preview:
 
 - Compile an owner-scoped `ReviewedSemanticContractV1` into a deterministic operational candidate
@@ -137,6 +139,8 @@ Exit when:
 - Tests, lint, TypeScript, build, and visual verification pass
 
 #### Phase 2C-B: register a workspace dataset
+
+**Status**: Production-deployed, migrated, and owner-smoked; release-log interval pending
 
 Add an owner-scoped operational registry after Phase 2C-A passes:
 
@@ -160,6 +164,8 @@ Exit when:
 
 #### Phase 2C-C: bind one disposable runtime
 
+**Status**: Current assessment; external runtime mutation not yet approved
+
 Bind the WHO air-quality fixture through a read-only MotherDuck resource:
 
 - Keep browser traffic behind the Next.js backend
@@ -171,6 +177,15 @@ Bind the WHO air-quality fixture through a read-only MotherDuck resource:
 - Defer read scaling until measured concurrency requires it
 
 Any MotherDuck user, token, share, database, or Data Definition Language (DDL) change needs explicit production approval.
+
+Commence Phase 2C-C in four reviewable gates:
+
+1. **Repository contract and policy — small**: define the binding shape, adapter interface, structured query request, allowlists, result ceiling, and lifecycle rules. Validate these with injected metadata and query fixtures; do not require credentials or a live resource.
+2. **Read-only reconciliation — medium**: inspect only `sample_data.who.ambient_air_quality` through the approved disposable identity, compare live columns with the reviewed contract, and persist only a reconciliation outcome and non-secret resource reference. Do not copy the public fixture or create a database object merely to obtain isolation.
+3. **Bounded query routing — medium**: route a typed request by owner and dataset through the backend, compile only allowlisted identifiers and operators, reject arbitrary SQL and multi-statement input, and enforce a server-owned row limit.
+4. **Binding and revocation rehearsal — medium**: create the disposable binding, prove WHO-only access and VIC denial, revoke it, and prove that VIC remains healthy. This gate requires explicit approval for the identity, token, and binding mutations before it runs.
+
+The Phase 2C-B Vercel function-log interval remains a prerequisite for live Phase 2C-C work. It does not block documentation, local interfaces, or deterministic tests that make no external connection. The resource-bound gates remain closed until the owner approves the exact identity, resource reference, credential destination, and cleanup procedure.
 
 Exit when:
 
@@ -225,8 +240,8 @@ Select one option before implementation:
 - **Another small dataset**: choose it only when it tests a missing platform seam better than WA or Fabric
 
 Prefer WA when the goal is ingestion and publication parity with VIC. Prefer a reviewed Fabric model when the goal is proving the Phase 2B evidence path. Do not implement both in one phase.
-// Youhoo - dataset over here :-)
- C:\Users\rossf\Desktop\vic-house-data-lab\rea_sales_data_model\WA
+
+The recovered WA source archive is available locally at `rea_sales_data_model/WA`. It remains deferred until Phase 3 is selected, and its planning assertions must be reprofiled before implementation.
 
 The selected dataset needs:
 
@@ -378,4 +393,6 @@ The following work remains outside the active sequence:
 
 ## Current next gate
 
-Approve or reject Phase 2C-A as a documentation-bounded implementation slice. Approval covers local code, tests, and interface verification only. It does not cover a migration, production deployment, MotherDuck mutation, Fabric connection, WA ingestion, or aviation work.
+Phase 2C-C assessment is current. First close the read-only Phase 2C-B Vercel function-log interval. In parallel, the repository-only contract and policy gate may define and test the adapter, reconciliation result, structured query request, allowlists, bounds, and revocation behavior without a credential or live connection.
+
+Before live reconciliation or binding, approve the exact disposable MotherDuck identity, the non-secret reference for `sample_data.who.ambient_air_quality`, the ignored credential destination, the allowed read-only operations, and the cleanup procedure. That approval does not include a new database, share, copied table, Dive, production deployment, Fabric connection, WA ingestion, or aviation work.

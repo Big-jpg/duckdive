@@ -2,17 +2,17 @@
 
 Last verified: 2026-08-04 (Australia/Perth)
 
-Phase 2C-B code, migration, and authenticated production behavior are verified. Production serves commit `08a9bd6`; migration 016 is applied and idempotent; the owner-scoped activation, denial, archive, audit, and cleanup smoke passed. The only remaining release-evidence item is the relevant Vercel function-log interval, which was not accessible through the available GitHub deployment record or local runtime identity. Capture that read-only evidence before changing Phase 2C-B from production-verified to formally Released, then scope Phase 2C-C separately.
+Phase 2C-B code, migration, and authenticated production behavior are verified. Production serves commit `08a9bd6`; migration 016 is applied and idempotent; the owner-scoped activation, denial, archive, audit, and cleanup smoke passed. The only remaining release-evidence item is the relevant Vercel function-log interval, which was not accessible through the available GitHub deployment record or local runtime identity. Capture that read-only evidence before changing Phase 2C-B from production-verified to formally Released. Phase 2C-C repository assessment has commenced; its external runtime boundary is not yet approved.
 
 ## Restart point
 
 - **Repository**: `C:\Users\rossf\Desktop\vic-house-data-lab`
 - **Branch**: `main`
 - **Verified commit**: `08a9bd6` (`Add operational dataset registry activation flow`)
-- **Git state before this handoff update**: clean `main`, aligned with `origin/main` and `origin/HEAD` at `08a9bd6`
+- **Source state at Phase 2C-C assessment**: clean `main` was aligned with `origin/main` and `origin/HEAD` at documentation commit `5c83a20`; production remains on application commit `08a9bd6`
 - **Current phase**: Phase 2C-B is production-deployed, migrated, and owner-smoked; Vercel function-log evidence remains pending
 - **Production state**: Vercel deployment `dpl_ZLkeovEMWfd1HbsTcL34ta44bTqc` completed successfully from `08a9bd6`; Neon migration 016 was applied on 2026-08-04 and skipped on rerun
-- **Next implementation phase**: Phase 2C-C, after the remaining read-only release-log check and a separate scope decision
+- **Next implementation phase**: Phase 2C-C; repository-only contract and policy work may proceed while the remaining read-only release-log check and external runtime approval stay open
 
 Do not repeat migration 016 or the production QA smoke without drift evidence. No retained QA draft, operational dataset, binding, cross-owner identity, runtime resource, SQL, MotherDuck mutation, or Dive remains.
 
@@ -24,7 +24,7 @@ Use the repository documents in this order:
 2. This handoff defines verified commits, validation, production state, and the immediate restart gate
 3. `MULTI_DATASET_DELIVERY_PLAN.md` defines product scope, phase order, and exit criteria
 
-The delivery plan's final `Current next gate` section still names Phase 2C-A. That statement predates commits `3fb54ad`, `d0d08f5`, `36ffc64`, and `08a9bd6`. Do not reopen Phase 2C-A or repeat Phase 2C-B implementation or production QA unless read-only verification proves drift.
+The delivery plan's final `Current next gate` now records Phase 2C-C assessment and separates repository-only work from live runtime access. Do not reopen Phase 2C-A or repeat Phase 2C-B implementation or production QA unless read-only verification proves drift.
 
 Status terms follow the delivery plan:
 
@@ -81,7 +81,7 @@ When that log interval is clean, record Phase 2C-B as **Released** without rerun
 
 ## Next implementation phase: Phase 2C-C
 
-Phase 2C-C binds the public World Health Organization (WHO) air-quality fixture through one disposable, read-only MotherDuck runtime. It begins only after the remaining Phase 2C-B log evidence is captured and its resource boundary is approved separately.
+Phase 2C-C binds the public World Health Organization (WHO) air-quality fixture through one disposable, read-only MotherDuck runtime. Repository-only contract, policy, and deterministic test work may proceed without credentials. Live schema reconciliation and binding begin only after the remaining Phase 2C-B log evidence is captured and the exact resource boundary is approved separately.
 
 ### Scope
 
