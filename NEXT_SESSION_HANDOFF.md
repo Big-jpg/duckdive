@@ -1,18 +1,20 @@
 # Next session handoff
 
-Last verified: 2026-08-04 (Australia/Perth)
+Last verified: 2026-08-05 (Australia/Perth)
 
-Phase 2C-B code, migration, and authenticated production behavior are verified. Production serves commit `08a9bd6`; migration 016 is applied and idempotent; the owner-scoped activation, denial, archive, audit, and cleanup smoke passed. The only remaining release-evidence item is the relevant Vercel function-log interval, which was not accessible through the available GitHub deployment record or local runtime identity. Capture that read-only evidence before changing Phase 2C-B from production-verified to formally Released. Phase 2C-C Gate 1 is complete locally; its external runtime boundary is not yet approved.
+Phase 2C-B is Released. Its historical Vercel function-log interval remained inaccessible; on 2026-08-05 the owner explicitly accepted a fresh attributable smoke package as substitute evidence. Signed-in production `/`, `/admin`, and `/datasets/new` rendered without application or browser-console errors, while anonymous `/datasets/new` redirected to login and protected dataset, draft, and stats APIs returned 401. This proves current behavior rather than the absence of errors in the historical interval.
+
+Phase 2C-C Gates 1–4 are complete at the local, production-schema, disposable-runtime, and cleanup boundaries. Implementation commit `766e9fe` exists locally but is not pushed, deployed, or activated for a retained operational dataset. Production migrations 017 and 018 are applied and idempotent; the dedicated MotherDuck identity `duckdive_who_phase2cc` remains, while every generated read-scaling token expires after 15 minutes and no QA dataset or binding remains.
 
 ## Restart point
 
 - **Repository**: `C:\Users\rossf\Desktop\vic-house-data-lab`
 - **Branch**: `main`
 - **Verified commit**: `08a9bd6` (`Add operational dataset registry activation flow`)
-- **Source state at Phase 2C-C assessment**: clean `main` was aligned with `origin/main` and `origin/HEAD` at documentation commit `5c83a20`; production remains on application commit `08a9bd6`
-- **Current phase**: Phase 2C-B is production-deployed, migrated, and owner-smoked; Vercel function-log evidence remains pending
+- **Source state**: local `main` is at implementation commit `766e9fe`; `origin/main` and `origin/HEAD` remain at `c3777bc`
+- **Current phase**: Phase 2C-C complete at its declared non-Dive boundary; release and runtime activation remain pending
 - **Production state**: Vercel deployment `dpl_ZLkeovEMWfd1HbsTcL34ta44bTqc` completed successfully from `08a9bd6`; Neon migration 016 was applied on 2026-08-04 and skipped on rerun
-- **Next implementation phase**: Phase 2C-C Gate 2 read-only reconciliation, after the remaining release-log check and approval of the exact disposable runtime identity
+- **Next gate**: configure production `MOTHERDUCK_WHO_SERVICE_ACCOUNT_USERNAME=duckdive_who_phase2cc`, then push `766e9fe` plus the evidence handoff, deploy, inspect the new release interval, and run authenticated runtime-route smokes before Phase 2C-D
 
 Do not repeat migration 016 or the production QA smoke without drift evidence. No retained QA draft, operational dataset, binding, cross-owner identity, runtime resource, SQL, MotherDuck mutation, or Dive remains.
 
@@ -24,7 +26,7 @@ Use the repository documents in this order:
 2. This handoff defines verified commits, validation, production state, and the immediate restart gate
 3. `MULTI_DATASET_DELIVERY_PLAN.md` defines product scope, phase order, and exit criteria
 
-The delivery plan's final `Current next gate` now records Phase 2C-C assessment and separates repository-only work from live runtime access. Do not reopen Phase 2C-A or repeat Phase 2C-B implementation or production QA unless read-only verification proves drift.
+The delivery plan's final `Current next gate` now records the Phase 2C-C release boundary and keeps Phase 2C-D closed. Do not reopen Phase 2C-A or repeat Phase 2C-B implementation or production QA unless read-only verification proves drift.
 
 Status terms follow the delivery plan:
 
@@ -71,17 +73,20 @@ The implementation commit is `d0d08f5`. Commit `36ffc64` records the disposable-
 
 The agent left the disposable Neon branch intact. Treat branch cleanup as an owner action if it still exists.
 
-## Remaining release-evidence gate
+## Phase 2C-B substitute release evidence
 
-Do not repeat the migration or authenticated production smoke. Obtain read-only Vercel function logs covering deployment `dpl_ZLkeovEMWfd1HbsTcL34ta44bTqc`, the migration interval, and the 2026-08-04 owner smoke. Confirm there is no unresolved missing-table, activation, lifecycle, authorization, or server-render error attributable to Phase 2C-B.
+The historical function-log interval for deployment `dpl_ZLkeovEMWfd1HbsTcL34ta44bTqc` was not recoverable through the available identities. The owner approved fresh current-state smoke evidence as the closure mechanism on 2026-08-05.
 
-The local Vercel CLI and `.vercel` project link were absent. GitHub proved the exact successful deployment and production URL, but the Vercel dashboard URL required an access path unavailable to the agent, and the existing runtime OIDC identity returned HTTP 403 from the read-only deployment API. Do not link the checkout, pull environment variables, or install another access mechanism merely to satisfy this evidence item without an explicit operating decision.
+- A signed-in owner session rendered `/`, `/admin`, and `/datasets/new` without login fallback, application-error text, or browser console warnings/errors
+- Anonymous `/datasets/new` returned 307 to login; `/api/datasets`, `/api/dataset-drafts`, and `/api/stats` returned 401
+- Production migration status and VIC counts remained healthy before Phase 2C-C work: 83 files and 88,422 observations
+- The earlier authenticated Phase 2C-B activation, denial, archive, audit, and cleanup smoke remains valid evidence
 
-When that log interval is clean, record Phase 2C-B as **Released** without rerunning completed work. If it contains an attributable error, diagnose that exact interval before Phase 2C-C.
+Phase 2C-B is therefore **Released** under the revised owner-approved evidence rule. Do not describe the historical log interval itself as inspected or clean.
 
 ## Next implementation phase: Phase 2C-C
 
-Phase 2C-C binds the public World Health Organization (WHO) air-quality fixture through one disposable, read-only MotherDuck runtime. Repository-only contract, policy, and deterministic test work may proceed without credentials. Live schema reconciliation and binding begin only after the remaining Phase 2C-B log evidence is captured and the exact resource boundary is approved separately.
+Phase 2C-C binds the public World Health Organization (WHO) air-quality fixture through one disposable, read-only MotherDuck runtime. Its repository policy, live schema reconciliation, bounded query, disposable binding, revocation, isolation, and cleanup gates have passed. The code remains undeployed and no operational fixture binding is retained.
 
 ### Scope
 
@@ -107,7 +112,23 @@ Phase 2C-C binds the public World Health Organization (WHO) air-quality fixture 
 - ESLint reported zero errors; the existing 17 warnings remain confined to the checked-in `vercel-optimize` skill package
 - No database, credential, MotherDuck, Vercel, runtime binding, SQL execution, or Dive mutation occurred
 
-Creating a MotherDuck user, token, share, database object, Data Definition Language (DDL) object, or runtime binding requires separate explicit approval.
+### Gates 2–4 completion evidence
+
+- The owner approved `duckdive_who_phase2cc` as the dedicated disposable identity and fresh smokes as the Phase 2C-B evidence substitute
+- MotherDuck issued only 900-second `read_scaling` tokens; token values remained process-local and were never printed or persisted
+- Live `sample_data.who.ambient_air_quality` inspection returned 20 columns and 40,098 rows; the corrected reviewed fixture reconciled exactly
+- The runtime query returned five bounded aggregate rows; arbitrary SQL, unknown fields, VIC resources, cross-owner context, and revoked bindings failed closed
+- Migration 017 persists reconciliation fingerprints, acknowledged variance codes, timestamps, degraded state, and revocation state without credentials or live column content
+- The first lifecycle smoke exposed migration 016's unsupported `{0,299}` PostgreSQL regular-expression bound; cleanup returned zero QA rows
+- Migration 018 replaced that latent constraint with an explicit 1–300 length check and safe-character expression
+- Migrations 017 and 018 applied once in production and skipped on rerun
+- The successful lifecycle created one `.invalid` QA owner, reviewed contract, operational dataset, and runtime binding; reconciled exactly, queried five rows, denied a random cross-owner identity, revoked the binding, and made it unavailable
+- Audit events were limited to `operational_runtime.binding_started`, `operational_runtime.reconciled`, and `operational_runtime.revoked`, without contract content
+- Cleanup returned zero QA users, datasets, and bindings; VIC remained 83 files and 88,422 observations
+- 36 test files and 117 tests, TypeScript, production build, and preflight passed; ESLint reported zero errors and the unchanged 17 checked-in skill warnings
+- No MotherDuck database, share, table, Dive, copied fixture, retained operational dataset, or retained binding was created
+
+The owner approved the completed disposable identity, expiring token, QA binding, and cleanup rehearsal. Any further MotherDuck user, token-policy, share, database object, Data Definition Language (DDL) object, retained runtime binding, or Dive mutation requires a new explicit approval.
 
 ### Exit gate
 
@@ -133,7 +154,8 @@ The following baseline constrains Phase 2C-C and later work.
 | Phase 2A | Released and user-verified | Questions remain browser-local drafts until the owner chooses a trusted starter and presses **Apply** |
 | Phase 2B | Released and owner-verified | Browser-local semantic-model review stores private `ReviewedSemanticContractV1` evidence without raw archives or connectivity details |
 | Phase 2C-A | Complete and pushed | Deterministic activation preview compiles reviewed evidence without persistence, SQL generation, runtime access, or Dive creation |
-| Phase 2C-B | Production-deployed, migrated, and owner-smoked; release-log interval pending | Operational registration persists owner-scoped evidence while runtime binding remains separate |
+| Phase 2C-B | Released under owner-approved fresh-smoke evidence substitution | Operational registration persists owner-scoped evidence while runtime binding remains separate |
+| Phase 2C-C | Complete at local commit `766e9fe`; not pushed or deployed | WHO runtime policy, exact live reconciliation, bounded server query, revocation, isolation, migrations, and cleanup passed |
 | Allowlisted Neon Auth | Released | Identity and application authorization remain separate; protected routes require an active allowlisted session |
 | Unlisted sharing | Released | `/share/*` remains the only intentional public, no-index, read-only capability route |
 

@@ -18,7 +18,7 @@ This page is the directional authority for multi-dataset delivery. `NEXT_SESSION
 - **Audience**: product owner, implementation agents, and production operators
 - **Recovered source**: the user-supplied “DuckDive Multi-Dataset Platform: Sequenced Delivery Plan” received on 2026-08-03
 - **Content plan**: reconcile the recovered phases, state changed decisions, define the current sequence, and preserve later dataset requirements
-- **Open questions**: close the Phase 2C-B release-log evidence gap; approve the Phase 2C-C disposable MotherDuck identity and revocation boundary; later select the first real external dataset and its workload boundary
+- **Open questions**: configure and release the completed Phase 2C-C implementation; later approve Phase 2C-D and select the first real external dataset and its workload boundary
 
 ## Authority and status rules
 
@@ -140,7 +140,7 @@ Exit when:
 
 #### Phase 2C-B: register a workspace dataset
 
-**Status**: Production-deployed, migrated, and owner-smoked; release-log interval pending
+**Status**: Released under owner-approved fresh-smoke evidence substitution
 
 Add an owner-scoped operational registry after Phase 2C-A passes:
 
@@ -164,7 +164,7 @@ Exit when:
 
 #### Phase 2C-C: bind one disposable runtime
 
-**Status**: Repository contract and policy gate complete locally; external runtime access not yet approved
+**Status**: Complete at local commit `766e9fe`; not pushed or deployed
 
 Bind the WHO air-quality fixture through a read-only MotherDuck resource:
 
@@ -185,7 +185,7 @@ Commence Phase 2C-C in four reviewable gates:
 3. **Bounded query routing — medium**: route a typed request by owner and dataset through the backend, compile only allowlisted identifiers and operators, reject arbitrary SQL and multi-statement input, and enforce a server-owned row limit.
 4. **Binding and revocation rehearsal — medium**: create the disposable binding, prove WHO-only access and VIC denial, revoke it, and prove that VIC remains healthy. This gate requires explicit approval for the identity, token, and binding mutations before it runs.
 
-The Phase 2C-B Vercel function-log interval remains a prerequisite for live Phase 2C-C work. It does not block documentation, local interfaces, or deterministic tests that make no external connection. The resource-bound gates remain closed until the owner approves the exact identity, resource reference, credential destination, and cleanup procedure.
+The owner approved the dedicated `duckdive_who_phase2cc` identity, 15-minute read-scaling tokens, the public WHO reference, targeted production-schema rehearsal, and exact cleanup boundary. The owner also accepted fresh signed-in and anonymous production smokes as a substitute for the inaccessible historical Phase 2C-B function-log interval; retain the distinction between current behavior and historical logs.
 
 Exit when:
 
@@ -393,6 +393,6 @@ The following work remains outside the active sequence:
 
 ## Current next gate
 
-Phase 2C-C Gate 1 is complete locally: the adapter contract, reconciliation result, structured query request, reviewed-contract intersection, allowlists, bounds, and revocation behavior are implemented and deterministic without a credential or live connection. First close the read-only Phase 2C-B Vercel function-log interval.
+Phase 2C-C Gates 1–4 are complete. Exact live reconciliation, bounded WHO queries, cross-owner and VIC denial, degraded failure handling, revocation, content-free audits, production migrations 017 and 018, idempotence, baseline protection, and zero-row cleanup passed.
 
-The next gate is read-only reconciliation. Before it runs, approve the exact disposable MotherDuck identity, the non-secret reference for `sample_data.who.ambient_air_quality`, the ignored credential destination, the allowed read-only operations, and the cleanup procedure. That approval does not include a new database, share, copied table, runtime binding, Dive, production deployment, Fabric connection, WA ingestion, or aviation work.
+Before pushing, configure the production Vercel variable `MOTHERDUCK_WHO_SERVICE_ACCOUNT_USERNAME=duckdive_who_phase2cc`. Then push local implementation commit `766e9fe` plus the evidence handoff, deploy them, inspect the new release-log interval, and run authenticated bind/query/revoke route smokes. Do not start Phase 2C-D, create a Dive, retain a fixture binding, connect Fabric, ingest WA, or begin aviation work as part of that release gate.
