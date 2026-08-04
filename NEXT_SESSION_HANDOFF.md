@@ -1,20 +1,20 @@
 # Next session handoff
 
-Last verified: 2026-08-03 (Australia/Perth)
+Last verified: 2026-08-04 (Australia/Perth)
 
-Phase 2C-B is complete at its local and disposable-database boundary. Git contains the implementation and rehearsal through `36ffc64`, but production deployment and migration 016 remain unverified. Re-establish production truth, close the Phase 2C-B release gate only with owner approval, then treat Phase 2C-C as the next implementation phase.
+Phase 2C-B code, migration, and authenticated production behavior are verified. Production serves commit `08a9bd6`; migration 016 is applied and idempotent; the owner-scoped activation, denial, archive, audit, and cleanup smoke passed. The only remaining release-evidence item is the relevant Vercel function-log interval, which was not accessible through the available GitHub deployment record or local runtime identity. Capture that read-only evidence before changing Phase 2C-B from production-verified to formally Released, then scope Phase 2C-C separately.
 
 ## Restart point
 
 - **Repository**: `C:\Users\rossf\Desktop\vic-house-data-lab`
 - **Branch**: `main`
-- **Verified commit**: `36ffc64` (`Record Phase 2C-B database rehearsal`)
-- **Git state**: `main`, `origin/main`, `origin/HEAD`, and `codex/phase-2cb-operational-registry` pointed to `36ffc64` on 2026-08-03
-- **Current phase**: Phase 2C-B is complete, merged, and pushed
-- **Production state**: unverified for the Phase 2C-B code and migration 016
-- **Next implementation phase**: Phase 2C-C, after the production-state audit and any approved Phase 2C-B release closure
+- **Verified commit**: `08a9bd6` (`Add operational dataset registry activation flow`)
+- **Git state before this handoff update**: clean `main`, aligned with `origin/main` and `origin/HEAD` at `08a9bd6`
+- **Current phase**: Phase 2C-B is production-deployed, migrated, and owner-smoked; Vercel function-log evidence remains pending
+- **Production state**: Vercel deployment `dpl_ZLkeovEMWfd1HbsTcL34ta44bTqc` completed successfully from `08a9bd6`; Neon migration 016 was applied on 2026-08-04 and skipped on rerun
+- **Next implementation phase**: Phase 2C-C, after the remaining read-only release-log check and a separate scope decision
 
-Do not infer a release from the Git push. This checkpoint records no Phase 2C-B Vercel deployment ID, release-log interval, or production migration 016 evidence.
+Do not repeat migration 016 or the production QA smoke without drift evidence. No retained QA draft, operational dataset, binding, cross-owner identity, runtime resource, SQL, MotherDuck mutation, or Dive remains.
 
 ## Authority and status
 
@@ -24,7 +24,7 @@ Use the repository documents in this order:
 2. This handoff defines verified commits, validation, production state, and the immediate restart gate
 3. `MULTI_DATASET_DELIVERY_PLAN.md` defines product scope, phase order, and exit criteria
 
-The delivery plan's final `Current next gate` section still names Phase 2C-A. That statement predates commits `3fb54ad`, `d0d08f5`, and `36ffc64`. Do not reopen Phase 2C-A or Phase 2C-B unless read-only verification proves drift.
+The delivery plan's final `Current next gate` section still names Phase 2C-A. That statement predates commits `3fb54ad`, `d0d08f5`, `36ffc64`, and `08a9bd6`. Do not reopen Phase 2C-A or repeat Phase 2C-B implementation or production QA unless read-only verification proves drift.
 
 Status terms follow the delivery plan:
 
@@ -38,7 +38,7 @@ Status terms follow the delivery plan:
 
 Phase 2C-B adds a workspace-owned operational registry without connecting a runtime resource or creating a Dive.
 
-The implementation commit is `d0d08f5`. Commit `36ffc64` records the disposable-database rehearsal and is the current Git reference point.
+The implementation commit is `d0d08f5`. Commit `36ffc64` records the disposable-database rehearsal. Commit `08a9bd6` is the deployed Git reference point and consolidates this restart-oriented handoff.
 
 ### Implemented boundary
 
@@ -61,46 +61,27 @@ The implementation commit is `d0d08f5`. Commit `36ffc64` records the disposable-
 - Migration 016 applied once to a disposable Neon branch and skipped on rerun
 - Disposable database checks passed for idempotent activation, cross-workspace denial, lifecycle limits, draft retention, archive state, and content-free audits
 - Cleanup returned zero disposable users, workspaces, drafts, and operational datasets
-- No production migration, credential change, MotherDuck mutation, runtime binding, or Dive occurred
+- Production migration 016 applied at `2026-08-04T14:36:38.482Z` and skipped on an immediate rerun
+- GitHub's Vercel deployment record proves successful Production deployment `dpl_ZLkeovEMWfd1HbsTcL34ta44bTqc` from commit `08a9bd6`
+- Authenticated production QA passed: synthetic browser-local review, idempotent draft save, deterministic activation preview, registration, identical repeat registration, static-plus-relational listing, activated-draft 409 protection, cross-owner read/write denial, invalid reviewed-to-ready rejection, owner archive, and content-free audit inspection
+- The QA operational dataset remained runtime-unbound; no SQL, MotherDuck resource, binding, share, or Dive was created
+- Cleanup verification returned zero QA drafts, operational datasets, bindings, and cross-owner identities; the VIC baseline remained 83 files and 88,422 observations
+- Public checks returned the expected `/datasets/new` 307 redirect and 401 responses for protected dataset, draft, and stats APIs
+- No credential, MotherDuck, Vercel configuration, or Dive mutation occurred
 
 The agent left the disposable Neon branch intact. Treat branch cleanup as an owner action if it still exists.
 
-## Immediate ordered gate
+## Remaining release-evidence gate
 
-Complete these steps in order. Read-only inspection does not authorize production mutation.
+Do not repeat the migration or authenticated production smoke. Obtain read-only Vercel function logs covering deployment `dpl_ZLkeovEMWfd1HbsTcL34ta44bTqc`, the migration interval, and the 2026-08-04 owner smoke. Confirm there is no unresolved missing-table, activation, lifecycle, authorization, or server-render error attributable to Phase 2C-B.
 
-1. Inspect the current Vercel production deployment, source commit, status, aliases, and relevant release-log interval
-2. Inspect `ops.schema_migration` for migration 016 without printing connection details
-3. Compare the observed code and schema state with the cases below
-4. Request explicit approval before applying migration 016, changing deployment state, creating runtime resources, or writing production smoke data
+The local Vercel CLI and `.vercel` project link were absent. GitHub proved the exact successful deployment and production URL, but the Vercel dashboard URL required an access path unavailable to the agent, and the existing runtime OIDC identity returned HTTP 403 from the read-only deployment API. Do not link the checkout, pull environment variables, or install another access mechanism merely to satisfy this evidence item without an explicit operating decision.
 
-Handle the observed state as follows:
-
-- **Code and migration present**: gather release evidence, then run the approved authenticated Phase 2C-B smoke
-- **Code present and migration absent**: stop authenticated dataset-registry use; request approval to apply migration 016 through `DATABASE_URL_UNPOOLED`, rerun the migration command to prove it skips, and inspect the ledger
-- **Code absent and migration absent**: preserve migration-before-dependent-code ordering for any approved release
-- **Migration present and code absent**: confirm the additive schema is inert for the deployed application, then follow the approved deployment sequence
-
-Do not call Phase 2C-B released until code, schema, release logs, authenticated behavior, denial paths, and cleanup are evidenced.
-
-### Phase 2C-B production smoke
-
-If the owner authorizes release closure, verify:
-
-1. The static VIC dataset remains ready
-2. One reviewed synthetic draft can be previewed and registered
-3. Repeating registration preserves the same dataset ID and key
-4. Static and relational datasets list together
-5. Cross-owner reads and writes fail closed
-6. Deleting the activated draft returns 409
-7. The unbound dataset can be archived
-8. Audit events contain no contract content or credentials
-9. No runtime binding, MotherDuck resource, SQL, or Dive was created
-10. Disposable production rows are removed unless the owner elects to retain them
+When that log interval is clean, record Phase 2C-B as **Released** without rerunning completed work. If it contains an attributable error, diagnose that exact interval before Phase 2C-C.
 
 ## Next implementation phase: Phase 2C-C
 
-Phase 2C-C binds the public World Health Organization (WHO) air-quality fixture through one disposable, read-only MotherDuck runtime. It begins only after Phase 2C-B is operationally safe.
+Phase 2C-C binds the public World Health Organization (WHO) air-quality fixture through one disposable, read-only MotherDuck runtime. It begins only after the remaining Phase 2C-B log evidence is captured and its resource boundary is approved separately.
 
 ### Scope
 
@@ -138,7 +119,7 @@ The following baseline constrains Phase 2C-C and later work.
 | Phase 2A | Released and user-verified | Questions remain browser-local drafts until the owner chooses a trusted starter and presses **Apply** |
 | Phase 2B | Released and owner-verified | Browser-local semantic-model review stores private `ReviewedSemanticContractV1` evidence without raw archives or connectivity details |
 | Phase 2C-A | Complete and pushed | Deterministic activation preview compiles reviewed evidence without persistence, SQL generation, runtime access, or Dive creation |
-| Phase 2C-B | Complete and pushed; production unverified | Operational registration persists owner-scoped evidence while runtime binding remains separate |
+| Phase 2C-B | Production-deployed, migrated, and owner-smoked; release-log interval pending | Operational registration persists owner-scoped evidence while runtime binding remains separate |
 | Allowlisted Neon Auth | Released | Identity and application authorization remain separate; protected routes require an active allowlisted session |
 | Unlisted sharing | Released | `/share/*` remains the only intentional public, no-index, read-only capability route |
 
