@@ -225,6 +225,8 @@ Select one option before implementation:
 - **Another small dataset**: choose it only when it tests a missing platform seam better than WA or Fabric
 
 Prefer WA when the goal is ingestion and publication parity with VIC. Prefer a reviewed Fabric model when the goal is proving the Phase 2B evidence path. Do not implement both in one phase.
+// Youhoo - dataset over here :-)
+ C:\Users\rossf\Desktop\vic-house-data-lab\rea_sales_data_model\WA
 
 The selected dataset needs:
 
