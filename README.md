@@ -86,6 +86,14 @@ REA's sold-search result window is treated as deliberately bounded: page 80 / 2,
 
 `GET /api/analytics/suburb-insights` accepts `suburb_key`, `from`, and `to`. It queries the curated MotherDuck sale fact table for rolling 12-month and prior-year medians, explicit sample sizes, land-to-price correlation, plausible median land size, and bedroom-segment medians over the visitor's selected period.
 
+### Operational dataset runtime
+
+Reviewed operational datasets remain runtime-unbound until an authenticated owner calls `POST /api/datasets/[datasetId]/runtime`. The WHO fixture adapter accepts only `sample_data.who.ambient_air_quality`, uses the dedicated `MOTHERDUCK_WHO_SERVICE_ACCOUNT_USERNAME`, and obtains short-lived read-scaling tokens server-side. Configure that username separately from `MOTHERDUCK_SHARED_SERVICE_ACCOUNT_USERNAME`.
+
+`POST /api/datasets/[datasetId]/query` accepts a structured selection, filters, ordering, and a maximum 500-row limit. It does not accept SQL. Fields must be present in both the adapter policy and the owner-reviewed contract; values remain parameters. Cross-owner, unknown-field, VIC-resource, degraded, and revoked contexts fail closed.
+
+Operator verification commands are `pnpm smoke:operational-runtime:resource` for live public-schema reconciliation and `pnpm smoke:operational-runtime:lifecycle` for the exact `.invalid` QA binding/query/revocation/cleanup rehearsal. The lifecycle smoke targets only `qa-phase2cc-runtime@invalid.local` and verifies zero retained QA rows plus the unchanged VIC baseline.
+
 Authenticated members receive isolated Dive IDs and chat history while a controlled MotherDuck service account supplies compute and read-only access to the automatic organization share.
 
 Editors can publish an individual personal Dive as an unlisted, view-only `/share/<slug>` link. The 80-bit capability slug resolves through `app.dive_share`; the server verifies ownership, active/revoked state, and optional expiry before minting a fresh short-lived MotherDuck embed session. Durable links never contain MotherDuck tokens or expose arbitrary Dive IDs. Revocation takes effect immediately and returns HTTP 404 for the old slug.

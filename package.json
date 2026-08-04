@@ -23,6 +23,8 @@
     "profile": "tsx scripts/profile-data.ts",
     "publish:motherduck": "tsx --env-file=.env.local scripts/publish-motherduck.ts",
     "smoke:motherduck": "tsx --env-file=.env.local scripts/smoke-motherduck.ts",
+    "smoke:operational-runtime:resource": "tsx --env-file=.env.local scripts/smoke-operational-runtime-resource.ts",
+    "smoke:operational-runtime:lifecycle": "tsx --env-file=.env.local scripts/smoke-operational-runtime-lifecycle.ts",
     "smoke:ai-gateway": "tsx --env-file=.env.ai-gateway.local scripts/smoke-ai-gateway.ts",
     "smoke:share": "tsx --env-file=.env.local scripts/smoke-share.ts",
     "access:add": "tsx --env-file=.env.local scripts/access.ts add",
