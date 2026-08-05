@@ -18,7 +18,7 @@ This page is the directional authority for multi-dataset delivery. `NEXT_SESSION
 - **Audience**: product owner, implementation agents, and production operators
 - **Recovered source**: the user-supplied “DuckDive Multi-Dataset Platform: Sequenced Delivery Plan” received on 2026-08-03
 - **Content plan**: reconcile the recovered phases, state changed decisions, define the current sequence, and preserve later dataset requirements
-- **Open questions**: configure and release the completed Phase 2C-C implementation; later approve Phase 2C-D and select the first real external dataset and its workload boundary
+- **Open questions**: approve the smallest code-only Phase 2C-D recipe/context slice; later approve any governed Dive mutation and select the first real external dataset and its workload boundary
 
 ## Authority and status rules
 
@@ -164,7 +164,7 @@ Exit when:
 
 #### Phase 2C-C: bind one disposable runtime
 
-**Status**: Complete at local commit `766e9fe`; not pushed or deployed
+**Status**: Released at `58c70b4`; Vercel Production `dpl_AgbS8NzH2TnFBpk4PWJ1cNBePxwK`
 
 Bind the WHO air-quality fixture through a read-only MotherDuck resource:
 
@@ -185,7 +185,7 @@ Commence Phase 2C-C in four reviewable gates:
 3. **Bounded query routing — medium**: route a typed request by owner and dataset through the backend, compile only allowlisted identifiers and operators, reject arbitrary SQL and multi-statement input, and enforce a server-owned row limit.
 4. **Binding and revocation rehearsal — medium**: create the disposable binding, prove WHO-only access and VIC denial, revoke it, and prove that VIC remains healthy. This gate requires explicit approval for the identity, token, and binding mutations before it runs.
 
-The owner approved the dedicated `duckdive_who_phase2cc` identity, 15-minute read-scaling tokens, the public WHO reference, targeted production-schema rehearsal, and exact cleanup boundary. The owner also accepted fresh signed-in and anonymous production smokes as a substitute for the inaccessible historical Phase 2C-B function-log interval; retain the distinction between current behavior and historical logs.
+The owner approved the dedicated `duckdive_who_phase2cc` identity, 15-minute read-scaling tokens, the public WHO reference, targeted production-schema rehearsal, exact production route smoke, and exact cleanup boundary. The released route smoke proved owner activation, exact reconciliation, bounded query, route-enforced WHO resource selection, VIC-field and other denial paths, revocation, and post-revocation unavailability. Deployment-filtered Vercel logs attributed the sequence. Console Level counts in the fresh 30-minute window were Warning 0, Error 0, and Fatal 0; expected 4xx denials remained visible as request-status rows. Exact Neon cleanup removed the draft, operational dataset, and binding, retained content-free audits, and preserved the VIC baseline. No Dive, share, database object, copied fixture, or retained binding was created.
 
 Exit when:
 
@@ -393,6 +393,6 @@ The following work remains outside the active sequence:
 
 ## Current next gate
 
-Phase 2C-C Gates 1–4 are complete. Exact live reconciliation, bounded WHO queries, cross-owner and VIC denial, degraded failure handling, revocation, content-free audits, production migrations 017 and 018, idempotence, baseline protection, and zero-row cleanup passed.
+Phase 2C-C is Released. Commits `766e9fe` and `58c70b4` are pushed on `main`; Vercel Production deployment `dpl_AgbS8NzH2TnFBpk4PWJ1cNBePxwK` is Ready and current. Exact live reconciliation, bounded WHO queries, resource, SQL, VIC-field, anonymous, post-revocation, and rebind denials, degraded failure handling, revocation, content-free audits, production migrations 017 and 018, fresh attributable logs, baseline protection, and exact zero-row cleanup passed.
 
-Before pushing, configure the production Vercel variable `MOTHERDUCK_WHO_SERVICE_ACCOUNT_USERNAME=duckdive_who_phase2cc`. Then push local implementation commit `766e9fe` plus the evidence handoff, deploy them, inspect the new release-log interval, and run authenticated bind/query/revoke route smokes. Do not start Phase 2C-D, create a Dive, retain a fixture binding, connect Fabric, ingest WA, or begin aviation work as part of that release gate.
+The next reviewable slice is a code-only Phase 2C-D recipe/context seam using the released provisioning path. It may define the WHO starter and dataset-scoped context, but it must not create a Dive, share, database object, token policy, new MotherDuck identity, retained binding, token, embed session, migration, deployment, Vercel configuration, or external API call. Require a separate explicit owner gate before any external mutation. Do not connect Fabric, ingest WA, or begin aviation work in this slice.
