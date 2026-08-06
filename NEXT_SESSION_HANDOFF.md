@@ -24,6 +24,8 @@ The WHO work proved that a second dataset can be reconciled, queried through a b
 
 The current route entry points are `/` for the public narrative, `/lake`, `/flights`, and `/dives` for the teaching journey, and `/workspace` for the unchanged VIC experience. Lake state is versioned session metadata only; it clears on sign-out or tab close and never calls the VIC ingestion route. Flights now teaches the current MotherDuck contract: a versioned Python entrypoint, optional runtime configuration, an asynchronous run lifecycle, and table outputs for Dives. It does not represent Duckling count as a Flight setting; Ducklings are isolated compute assigned to users or service accounts, not dynamically added workers inside one Flight run.
 
+MotherDuck now contains one deliberately bounded probe Flight, `duckdive-flight-01` (`9daad437-aad5-4b67-a1b2-3d5745878fa5`). It is active, on-demand only, version 1, uses pinned `duckdb==1.5.5`, the default Flights token, no config or secrets, and a 120-second timeout. Run 1 succeeded on 2026-08-06 with exit code 0; its untruncated logs prove the Collect → Shape → Deliver lifecycle and report zero writes. The probe created no database or table and is not connected to the application runtime. Do not schedule, modify, rerun, or delete it without explicit approval.
+
 Historical phase records, smoke details, and design alternatives remain available in Git history. Do not reconstruct them into the active plan unless they answer a current question.
 
 ## Current direction
