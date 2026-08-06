@@ -22,7 +22,7 @@ DuckDive currently has:
 
 The WHO work proved that a second dataset can be reconciled, queried through a bounded server route, isolated from VIC, revoked, and cleaned up. It does not define the required architecture for the next feature. No WHO runtime binding or quality-assurance fixture is retained.
 
-The current route entry points are `/` for the public narrative, `/lake`, `/flights`, and `/dives` for the teaching journey, and `/workspace` for the unchanged VIC experience. Lake state is versioned session metadata only; it clears on sign-out or tab close and never calls the VIC ingestion route.
+The current route entry points are `/` for the public narrative, `/lake`, `/flights`, and `/dives` for the teaching journey, and `/workspace` for the unchanged VIC experience. Lake state is versioned session metadata only; it clears on sign-out or tab close and never calls the VIC ingestion route. Flights teaches one reusable Collect → Shape → Deliver plan and lets the user represent distributing Lake-ready objects across one to four Duckling compute nodes. The node count is local presentation state, not a real execution or orchestration contract.
 
 Historical phase records, smoke details, and design alternatives remain available in Git history. Do not reconstruct them into the active plan unless they answer a current question.
 
