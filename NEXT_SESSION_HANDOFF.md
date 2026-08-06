@@ -26,6 +26,8 @@ The current route entry points are `/` for the public narrative, `/lake`, `/flig
 
 MotherDuck now contains one deliberately bounded probe Flight, `duckdive-flight-01` (`9daad437-aad5-4b67-a1b2-3d5745878fa5`). It is active, on-demand only, version 1, uses pinned `duckdb==1.5.5`, the default Flights token, no config or secrets, and a 120-second timeout. Run 1 succeeded on 2026-08-06 with exit code 0; its untruncated logs prove the Collect → Shape → Deliver lifecycle and report zero writes. The probe created no database or table and is not connected to the application runtime. Do not schedule, modify, rerun, or delete it without explicit approval.
 
+The authenticated `/flights` server component now reads that allowlisted Flight through MotherDuck MCP using `MOTHERDUCK_DEMO_FLIGHT_ID`. It calls only `get_flight` and `list_flight_runs`, schema-validates the responses, and sends the browser a reduced definition/latest-run contract. Flight/run IDs, owner, source, dependencies, config, secrets, token labels, and logs are never included. Missing credentials, missing configuration, malformed responses, or MCP failures fall back to a representative preview. The non-secret Flight ID is configured in ignored `.env.local`; production has not been configured or deployed.
+
 Historical phase records, smoke details, and design alternatives remain available in Git history. Do not reconstruct them into the active plan unless they answer a current question.
 
 ## Current direction
