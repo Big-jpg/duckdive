@@ -14,6 +14,7 @@ Updated: 2026-08-05 (Australia/Perth)
 DuckDive currently has:
 
 - a public teaching narrative and authenticated browser-local Lake → Flights → Dives journey
+- an authenticated `/datasets/csv` slice that explicitly reads one CSV of up to 1 MiB in the browser and derives an owner-scoped, inspectable local Dive with profiling, a bounded chart, row preview, SHA-256 provenance, refresh restoration, replacement, and confirmed deletion
 - a representative Duck Lake that accepts file metadata without reading or uploading file contents
 - the production VIC Housing experience, authenticated workspaces, governed Dives, editing, versions, reset, revert, embeds, and unlisted sharing
 - browser-local semantic-model inspection with private reviewed evidence
@@ -28,6 +29,10 @@ MotherDuck now contains one deliberately bounded probe Flight, `duckdive-flight-
 
 The authenticated `/flights` server component now reads that allowlisted Flight through MotherDuck MCP using `MOTHERDUCK_DEMO_FLIGHT_ID`. It calls only `get_flight` and `list_flight_runs`, schema-validates the responses, and sends the browser a reduced definition/latest-run contract. Flight/run IDs, owner, source, dependencies, config, secrets, token labels, and logs are never included. Missing credentials, missing configuration, malformed responses, or MCP failures fall back to a representative preview. The non-secret Flight ID is configured in ignored `.env.local`; production has not been configured or deployed.
 
+The CSV slice is deliberately browser-local. It reads raw rows only after the owner chooses a file, retains only the derived profile and bounded preview in owner-scoped `sessionStorage`, fails closed when another owner scope attempts restoration, and clears all local CSV Dives on application sign-out. It does not upload or durably ingest the CSV, create a MotherDuck table, or create an Embedded Dive. That is the smallest useful product proof; durable ingestion is a later decision, not an implied next step.
+
+The UI now has a shared design-token baseline and consistent focus, typography, control, and responsive behavior across the workspace and teaching journey. The Lake explicitly distinguishes its metadata-only lesson from the real local CSV import path.
+
 Historical phase records, smoke details, and design alternatives remain available in Git history. Do not reconstruct them into the active plan unless they answer a current question.
 
 ## Current direction
@@ -40,7 +45,9 @@ For the next feature:
 4. Test the behavior and its obvious denial or failure case.
 5. Generalize only after the result is useful.
 
-The next release gate is an authenticated owner walkthrough of file selection, cross-page state continuity, refresh restoration, reset/sign-out cleanup, and the `/workspace` handoff. Keep visual iteration simple and presentation-led.
+The next release gate is an authenticated owner walkthrough of `/datasets/csv`: import a representative CSV, inspect the derived chart/profile/table, refresh and confirm restoration, replace it, delete it, sign out and confirm cleanup, then sign in as another owner and confirm the first owner’s result is unavailable. The unauthenticated redirect is browser-verified locally. The authenticated interaction remains unverified because no signed-in browser session was available to this agent.
+
+Local validation on 2026-08-06 passed 39 test files / 130 tests, typecheck, lint with 0 errors and 17 warnings confined to the bundled Vercel optimization skill, and the production build. The new slice and UI cleanup are not deployed.
 
 The current schema and runtime code may be reused, simplified, bypassed, or replaced. Do not continue the old Phase 2C sequence by default. WA Housing, Fabric, WHO, and aviation are options only when the owner chooses one for a concrete outcome.
 
