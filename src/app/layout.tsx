@@ -1,14 +1,16 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import {JourneyProvider} from "@/components/journey/JourneyProvider";
 import "./lab.css";
+import "./journey.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL||"http://localhost:3000"),
   applicationName: "DuckDive",
   title: { default: "DuckDive", template: "%s | DuckDive" },
-  description: "Trusted data. Clear views. DuckDive the next question.",
-  keywords: ["Victorian house data", "property analytics", "MotherDuck", "data visualisation"],
+  description: "From Duck Lake to Duck Dive: a simple way to teach analytics at any scale.",
+  keywords: ["data lake", "analytics", "AI agents", "data visualisation"],
   creator: "DuckDive",
   publisher: "DuckDive",
   category: "technology",
@@ -24,13 +26,13 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_AU",
     title: "DuckDive",
-    description: "Trusted data. Clear views. DuckDive the next question.",
+    description: "From Duck Lake to Duck Dive: a simple way to teach analytics at any scale.",
     images: [{url:"/opengraph-image",width:1200,height:630,alt:"DuckDive"}],
   },
   twitter: {
     card: "summary_large_image",
     title: "DuckDive",
-    description: "Trusted data. Clear views. DuckDive the next question.",
+    description: "From Duck Lake to Duck Dive: a simple way to teach analytics at any scale.",
     images: ["/twitter-image"],
   },
   robots: {index:false,follow:false},
@@ -43,7 +45,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en">
       <body>
         <a className="skip-link" href="#main-content">Skip to Main Content</a>
-        {children}
+        <JourneyProvider>{children}</JourneyProvider>
         <Analytics />
         <SpeedInsights />
       </body>

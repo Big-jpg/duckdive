@@ -28,7 +28,7 @@ export default async function AdminPage(){
     ["Median DuckDive",Math.round(overview.duckdive_median_duration_ms/1000),`${number.format(overview.duckdive_median_tokens)} tokens · seconds shown`],
   ] as const;
   return <main id="main-content" className="admin-page">
-    <header className="lab-header"><AppBrand/><nav aria-label="Administration navigation"><Link href="/">Dives</Link><Link href="/edit">Editor</Link><span className="admin-identity">{user.email}</span></nav></header>
+    <header className="lab-header"><AppBrand/><nav aria-label="Administration navigation"><Link href="/workspace">Dives</Link><Link href="/edit">Editor</Link><span className="admin-identity">{user.email}</span></nav></header>
     <section className="admin-intro"><h1>Operations</h1><dl className="admin-limits"><div><dt>Per User</dt><dd>{limits.perUserHourly}<small>AI / hour</small></dd></div><div><dt>All Users</dt><dd>{limits.globalHourly}<small>AI / hour</small></dd></div><div><dt>Shared Views</dt><dd>{shareLimits.globalHourly}<small>loads / hour</small></dd></div></dl></section>
     <section className="admin-metrics">{cards.map(([label,value,detail])=><article key={label}><span>{label}</span><strong>{number.format(value)}</strong><small>{detail}</small></article>)}</section>
     <AdminUserManager users={users} currentUserId={user.user_id}/>

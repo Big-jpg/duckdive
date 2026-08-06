@@ -5,6 +5,7 @@ import {useState} from "react";
 import {useRouter} from "next/navigation";
 import AppBrand from "@/components/AppBrand";
 import {saveDuckDiveDraft} from "@/lib/duckdive-draft";
+import {JOURNEY_STORAGE_KEY} from "@/lib/journey-state";
 
 type StarterEntry={key:string;datasetKey:string;datasetTitle:string;title:string;label:string;description:string;entryPrompt:string;questions:readonly string[];accent:string};
 type GalleryDive={key:string;title:string;label:string;description:string;questions:string[];session:string;accent:string};
@@ -40,7 +41,7 @@ export default function LabHome({isAdmin=false,starters}:{isAdmin?:boolean;start
   }
 
   return <main id="main-content" className="lab-shell">
-    <header className="lab-header"><AppBrand/><nav aria-label="Primary navigation"><a href="/api/analytics/suburbs">Data</a><Link href="/datasets/new">Bring your own model</Link>{isAdmin?<Link href="/admin">Admin</Link>:null}<button onClick={async()=>{await fetch("/api/auth/logout",{method:"POST"});location.reload();}}>Sign Out</button></nav></header>
+    <header className="lab-header"><AppBrand/><nav aria-label="Primary navigation"><a href="/api/analytics/suburbs">Data</a><Link href="/datasets/new">Bring your own model</Link>{isAdmin?<Link href="/admin">Admin</Link>:null}<button onClick={async()=>{sessionStorage.removeItem(JOURNEY_STORAGE_KEY);await fetch("/api/auth/logout",{method:"POST"});location.assign("/");}}>Sign Out</button></nav></header>
     <section className="lab-entry" aria-labelledby="question-heading">
       <div className="lab-entry-copy"><p className="lab-kicker">Question-led analytics · {datasetTitle}</p><h1 id="question-heading">What should the data make clear?</h1><p>Begin with the decision or uncertainty. Then choose the shape that gives DuckDive a trustworthy place to start.</p></div>
       <div className="lab-question">

@@ -141,6 +141,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .login-divider:before,.login-divider:after{content:"";height:1px;flex:1;background:var(--line)}
 .login-page .lab-success{margin:12px 0;padding:11px;border:1px solid var(--teal);color:var(--teal);font-size:12px}
 .login-page form>button:disabled{cursor:not-allowed;opacity:.5}
+.login-intro{margin:0 0 18px;color:var(--muted);font-size:12px;line-height:1.5}
 
 .edit-lab{height:100svh;overflow:hidden}
 .edit-tabs{height:100%;display:flex}
