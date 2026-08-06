@@ -5,6 +5,8 @@ import {mdString} from "./sql-literal";
 
 export type DiveSnapshot={version:number;content:string;hash:string};
 
+export function canonicalDiveSource(source:string){return source.replaceAll("\r\n","\n").split("\n").map(line=>line.trimEnd()).join("\n").trim();}
+
 export function assertDiveRevisionChanged(before:DiveSnapshot,after:DiveSnapshot){
   if(after.version<=before.version)throw new Error("Dive version did not advance");
   if(after.hash===before.hash)throw new Error("Dive source did not change");
@@ -18,7 +20,7 @@ export async function readDiveSnapshot(diveId:string,username:string):Promise<Di
   const versions=await sql.unsafe(`SELECT content FROM MD_GET_DIVE_VERSION(id = ${mdString(diveId)}, version = ${version})`);
   const content=String(versions[0]?.content||"");
   if(!content)throw new Error("Dive content is unavailable");
-  return {version,content,hash:createHash("sha256").update(content).digest("hex")};
+  return {version,content,hash:createHash("sha256").update(canonicalDiveSource(content)).digest("hex")};
 }
 
 export async function verifyDiveRevision(diveId:string,username:string,before:DiveSnapshot){

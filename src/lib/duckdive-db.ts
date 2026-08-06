@@ -1,11 +1,13 @@
 import type {UIMessage} from "ai";
 import {database} from "./db";
+import type {ReportUpdatePlan} from "./duckdive-report";
 
 export type DuckDiveRunStatus="running"|"clarification"|"applied"|"no_change"|"failed"|"aborted";
 export type DuckDiveRun={
   run_id:string;workspace_id:string;user_id:string;chat_session_id:string;dive_id:string;request_text:string;
   status:DuckDiveRunStatus;before_version:number;after_version:number|null;source_hash_before:string;source_hash_after:string|null;
   model:string;assistant_summary:string|null;error_code:string|null;input_tokens:number;output_tokens:number;duration_ms:number|null;
+  report_intent_json:ReportUpdatePlan|null;
   created_at:string;finished_at:string|null;
 };
 
@@ -24,9 +26,9 @@ export async function startDuckDiveRun(input:{runId:string;workspaceId:string;us
   });}finally{await sql.end();}
 }
 
-export async function finishDuckDiveRun(runId:string,input:{status:Exclude<DuckDiveRunStatus,"running">;afterVersion?:number;afterHash?:string;summary?:string;errorCode?:string;inputTokens?:number;outputTokens?:number}){
+export async function finishDuckDiveRun(runId:string,input:{status:Exclude<DuckDiveRunStatus,"running">;afterVersion?:number;afterHash?:string;summary?:string;errorCode?:string;inputTokens?:number;outputTokens?:number;reportIntent?:ReportUpdatePlan|null}){
   const sql=database();try{
-    const [run]=await sql<DuckDiveRun[]>`UPDATE app.duckdive_run SET status=${input.status},after_version=${input.afterVersion??null},source_hash_after=${input.afterHash??null},assistant_summary=${input.summary?.slice(0,2000)||null},error_code=${input.errorCode||null},input_tokens=${input.inputTokens||0},output_tokens=${input.outputTokens||0},duration_ms=round(extract(epoch FROM (now()-created_at))*1000)::int,finished_at=now()
+    const [run]=await sql<DuckDiveRun[]>`UPDATE app.duckdive_run SET status=${input.status},after_version=${input.afterVersion??null},source_hash_after=${input.afterHash??null},assistant_summary=${input.summary?.slice(0,2000)||null},error_code=${input.errorCode||null},input_tokens=${input.inputTokens||0},output_tokens=${input.outputTokens||0},report_intent_json=${input.reportIntent?sql.json(input.reportIntent as never):null},duration_ms=round(extract(epoch FROM (now()-created_at))*1000)::int,finished_at=now()
       WHERE run_id=${runId}::uuid AND (status='running' OR (status='aborted' AND ${input.status}='applied' AND ${input.afterVersion??null}::int IS NOT NULL)) RETURNING *`;
     return run||null;
   }finally{await sql.end();}

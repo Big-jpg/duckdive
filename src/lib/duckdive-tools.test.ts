@@ -5,6 +5,8 @@ const {runActive,verifyRevision}=vi.hoisted(()=>({runActive:vi.fn(),verifyRevisi
 vi.mock("./duckdive-db",()=>({duckDiveRunIsActive:runActive}));
 vi.mock("./duckdive-runtime",()=>({verifyDiveRevision:verifyRevision}));
 import {boundedDuckDiveResult,createDuckDiveTools,governedReadOnlyQuery} from "./duckdive-tools";
+import {duckDivePublicContract} from "./duckdive-contract";
+import {reportPurposeForStarter} from "./duckdive-report";
 
 describe("DuckDive controlled tools",()=>{
   beforeEach(()=>{runActive.mockReset().mockResolvedValue(true);verifyRevision.mockReset().mockResolvedValue({version:6,content:"after",hash:"bbb"});});
@@ -24,6 +26,7 @@ describe("DuckDive controlled tools",()=>{
     expect(control.tools.inspect_data.description).toContain("VIC Housing");
     await control.tools.inspect_data.execute!({purpose:"Count rows",sql:"SELECT count(*) AS count FROM suburb_dimension"},options);
     expect(queryExecute).toHaveBeenCalledWith(expect.objectContaining({database:"vic_house_data",sql:expect.stringContaining("LIMIT 200")}),options);
+    await control.tools.prepare_report_update.execute!({request:"Change title",interpretedIntent:"Change the report title",purpose:reportPurposeForStarter({starterKey:"market-pulse",title:"Market",description:"Market",contract:duckDivePublicContract}),capabilityIds:["sales-volume"],unsupportedRequests:[],materialClarification:null,added:[],changed:["Title"],removed:[],unchanged:[],validations:[]},options);
     await control.tools.save_dive_revision.execute!({summary:"Changed title",edits:[{old_string:"before",new_string:"after"}]},options);
     expect(editExecute).toHaveBeenCalledWith(expect.objectContaining({id:"active-dive"}),options);
     await expect(control.tools.save_dive_revision.execute!({summary:"Again",edits:[{old_string:"a",new_string:"b"}]},options)).rejects.toThrow("already been attempted");
