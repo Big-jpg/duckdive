@@ -1,5 +1,3 @@
-ALTER TABLE app.duckdive_run ADD COLUMN IF NOT EXISTS report_intent_json jsonb;
-
 CREATE TABLE IF NOT EXISTS app.duckdive_report_version (
   workspace_id uuid NOT NULL REFERENCES app.workspace(workspace_id) ON DELETE CASCADE,
   dive_id text NOT NULL,

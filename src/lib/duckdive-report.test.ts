@@ -1,6 +1,7 @@
 import {describe,expect,it} from "vitest";
 import {duckDivePublicContract} from "./duckdive-contract";
 import {capabilitiesForContract,reportPurposeForStarter,reportUpdatePlanSchema,validateReportUpdatePlan} from "./duckdive-report";
+import {reportMetadataSchemaUnavailable,starterReportVersion} from "./duckdive-report-db";
 
 describe("DuckDive report explanation contract",()=>{
   it("derives capabilities from the governed contract",()=>{
@@ -26,4 +27,11 @@ describe("DuckDive report explanation contract",()=>{
   });
 
   it("keeps the structured plan schema machine-readable",()=>expect(reportUpdatePlanSchema.safeParse({}).success).toBe(false));
+
+  it("can regenerate only a deterministic registered-starter explanation without persistence",()=>{
+    const report=starterReportVersion({workspaceId:"workspace",diveId:"dive",version:3,sourceHash:"hash",starterKey:"market-pulse",title:"Market pulse",description:"Statewide signals",contract:duckDivePublicContract});
+    expect(report).toMatchObject({version:3,runId:null,purpose:{title:"Market pulse"},manifest:{version:3}});
+    expect(reportMetadataSchemaUnavailable({code:"42P01"})).toBe(true);
+    expect(reportMetadataSchemaUnavailable({code:"23505"})).toBe(false);
+  });
 });

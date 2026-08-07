@@ -7,6 +7,7 @@ import {useRouter,useSearchParams} from "next/navigation";
 import {FormEvent,useEffect,useMemo,useRef,useState} from "react";
 import AppBrand from "@/components/AppBrand";
 import {clearDuckDiveDraft,loadDuckDiveDraft} from "@/lib/duckdive-draft";
+import {readableDuckDiveError} from "@/lib/duckdive-error";
 import type {DatasetPublicContract} from "@/lib/datasets";
 import type {ReportVersionMetadata} from "@/lib/duckdive-report";
 
@@ -36,7 +37,7 @@ function AskView({report}:{report:ReportVersionMetadata|null}){return <section c
 
 function DuckDivePanel({diveId,starterKey,contract,report,active,version,onApplied,onError}:{diveId:string;starterKey:string;contract:DatasetPublicContract;report:ReportVersionMetadata|null;active:boolean;version:number|null;onApplied:(version:number)=>Promise<void>;onError:(message:string)=>void}){
   const [input,setInput]=useState(""),[tab,setTab]=useState<SidebarTab>("summary"),[run,setRun]=useState<RunResult|null>(null),[resetting,setResetting]=useState(false);
-  const chatId=useRef(crypto.randomUUID()),runId=useRef<string|null>(null),diveRef=useRef(diveId),versionRef=useRef(version),chatErrorRef=useRef<Error|null>(null);diveRef.current=diveId;versionRef.current=version;
+  const chatId=useRef(crypto.randomUUID()),runId=useRef<string|null>(null),lastRequest=useRef(""),diveRef=useRef(diveId),versionRef=useRef(version),chatErrorRef=useRef<Error|null>(null);diveRef.current=diveId;versionRef.current=version;
   const transport=useMemo(()=>new DefaultChatTransport({api:"/api/chat",body:()=>({runId:runId.current,chatId:chatId.current,activeDiveId:diveRef.current,expectedVersion:versionRef.current})}),[]);
   const {messages,sendMessage,status,stop,error:chatError}=useChat({transport,id:chatId.current});chatErrorRef.current=chatError||null;
   const busy=status==="submitted"||status==="streaming";
@@ -46,8 +47,8 @@ function DuckDivePanel({diveId,starterKey,contract,report,active,version,onAppli
   async function pollRun(id:string){
     for(let attempt=0;attempt<24;attempt++){
       const response=await fetch(`/api/duckdive/runs/${id}`,{cache:"no-store"});
-      if(response.ok){const result=(await response.json()).run as RunResult;setRun(result);if(result.status!=="running"){if(result.status==="applied"&&result.afterVersion)await onApplied(result.afterVersion);return;}}
-      else if(response.status===404&&attempt>=2){setRun(current=>current?{...current,status:"failed",summary:chatErrorRef.current?.message||"The request did not start."}:current);return;}
+      if(response.ok){const result=(await response.json()).run as RunResult;setRun(result);if(result.status!=="running"){setTab("changes");if(result.status==="failed")setInput(current=>current||lastRequest.current);else lastRequest.current="";if(result.status==="applied"&&result.afterVersion)await onApplied(result.afterVersion);return;}}
+      else if(response.status===404&&attempt>=2){setRun(current=>current?{...current,status:"failed",summary:readableDuckDiveError(chatErrorRef.current)}:current);setInput(current=>current||lastRequest.current);setTab("changes");return;}
       await new Promise(resolve=>setTimeout(resolve,750));
     }
     onError("The request is still being verified. Refresh this page to check the saved version.");
@@ -61,7 +62,7 @@ function DuckDivePanel({diveId,starterKey,contract,report,active,version,onAppli
 
   function submit(event:FormEvent){
     event.preventDefault();const request=input.trim();if(!request||busy||!version)return;
-    const id=crypto.randomUUID();runId.current=id;setRun({runId:id,status:"running",beforeVersion:version,afterVersion:null,summary:null,errorCode:null,durationMs:null,inputTokens:0,outputTokens:0});
+    const id=crypto.randomUUID();runId.current=id;lastRequest.current=request;setRun({runId:id,status:"running",beforeVersion:version,afterVersion:null,summary:null,errorCode:null,durationMs:null,inputTokens:0,outputTokens:0});
     void sendMessage({text:request});clearDuckDiveDraft(sessionStorage,starterKey);setInput("");
   }
 
@@ -74,8 +75,8 @@ function DuckDivePanel({diveId,starterKey,contract,report,active,version,onAppli
 
   return <aside className="chat-panel" hidden={!active}>
     <header><h2>DuckDive</h2><button disabled={!version||resetting||busy} onClick={reset}>{resetting?"Resetting…":"Reset to Starter"}</button></header>
-    <nav className="report-tabs" role="tablist" aria-label="Report explanation">{([["summary","Summary"],["changes","Changes"],["ask","Ask This Report"],["contract","Technical Contract"]] as const).map(([key,label])=><button key={key} role="tab" aria-selected={tab===key} onClick={()=>setTab(key)}>{label}</button>)}</nav>
-    <div className="report-scroll" aria-live="polite">{tab==="summary"?<SummaryView report={report}/>:tab==="changes"?<ChangesView report={report} messages={messages}/>:tab==="ask"?<AskView report={report}/>:<ContractView contract={contract}/>} {busy?<div className="chat-phase">{status==="submitted"?"Understanding":"Verifying"}</div>:null}{run&&run.status!=="running"?<div className={`run-outcome ${run.status}`}><strong>{run.status==="applied"&&run.afterVersion?`Saved as v${run.afterVersion}`:outcomeLabels[run.status]}</strong>{run.summary?<p>{run.summary}</p>:run.errorCode?<p>{run.errorCode.replaceAll("_"," ")}</p>:null}</div>:null}</div>
+    <nav className="report-tabs" role="tablist" aria-label="Report explanation">{([["summary","Summary","Summary"],["changes","Changes","Changes"],["ask","Ask","Ask This Report"],["contract","Contract","Technical Contract"]] as const).map(([key,label,ariaLabel])=><button key={key} role="tab" aria-label={ariaLabel} aria-selected={tab===key} onClick={()=>setTab(key)}>{label}</button>)}</nav>
+    <div className="report-scroll" aria-live="polite">{tab==="summary"?<SummaryView report={report}/>:tab==="changes"?<ChangesView report={report} messages={messages}/>:tab==="ask"?<AskView report={report}/>:<ContractView contract={contract}/>} {busy?<div className="chat-phase">{status==="submitted"?"Understanding":"Verifying"}</div>:null}{tab==="changes"&&run&&run.status!=="running"?<div className={`run-outcome ${run.status}`}><strong>{run.status==="applied"&&run.afterVersion?`Saved as v${run.afterVersion}`:outcomeLabels[run.status]}</strong>{run.summary?<p>{run.summary}</p>:run.errorCode?<p>{run.errorCode.replaceAll("_"," ")}</p>:null}</div>:null}</div>
     <form onSubmit={submit}><label className="sr-only" htmlFor={`dive-change-${diveId}`}>Describe the report change</label><textarea id={`dive-change-${diveId}`} value={input} onChange={event=>setInput(event.target.value)} placeholder="What should this report show?" maxLength={4000} autoComplete="off"/><div><span>{input.length.toLocaleString("en-AU")} / 4,000 characters</span>{busy?<button type="button" onClick={stopRun}>Stop</button>:<button disabled={!input.trim()||!version}>Apply</button>}</div></form>
   </aside>;
 }

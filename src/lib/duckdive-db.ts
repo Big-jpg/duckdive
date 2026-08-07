@@ -1,13 +1,11 @@
 import type {UIMessage} from "ai";
 import {database} from "./db";
-import type {ReportUpdatePlan} from "./duckdive-report";
 
 export type DuckDiveRunStatus="running"|"clarification"|"applied"|"no_change"|"failed"|"aborted";
 export type DuckDiveRun={
   run_id:string;workspace_id:string;user_id:string;chat_session_id:string;dive_id:string;request_text:string;
   status:DuckDiveRunStatus;before_version:number;after_version:number|null;source_hash_before:string;source_hash_after:string|null;
   model:string;assistant_summary:string|null;error_code:string|null;input_tokens:number;output_tokens:number;duration_ms:number|null;
-  report_intent_json:ReportUpdatePlan|null;
   created_at:string;finished_at:string|null;
 };
 
@@ -17,7 +15,7 @@ export async function startDuckDiveRun(input:{runId:string;workspaceId:string;us
   const sql=database();try{return await sql.begin(async tx=>{
     await tx`SELECT pg_advisory_xact_lock(hashtext(${`duckdive:run:${input.workspaceId}:${input.diveId}`}))`;
     await tx`UPDATE app.duckdive_run SET status='failed',error_code='stale_run',finished_at=now(),duration_ms=round(extract(epoch FROM (now()-created_at))*1000)::int
-      WHERE workspace_id=${input.workspaceId}::uuid AND dive_id=${input.diveId} AND status='running' AND created_at<now()-INTERVAL '10 minutes'`;
+      WHERE workspace_id=${input.workspaceId}::uuid AND dive_id=${input.diveId} AND status='running' AND created_at<now()-INTERVAL '6 minutes'`;
     const [active]=await tx`SELECT 1 FROM app.duckdive_run WHERE workspace_id=${input.workspaceId}::uuid AND dive_id=${input.diveId} AND status='running'`;
     if(active)throw new DuckDiveBusyError();
     const [run]=await tx<DuckDiveRun[]>`INSERT INTO app.duckdive_run(run_id,workspace_id,user_id,chat_session_id,dive_id,request_text,before_version,source_hash_before,model)
@@ -26,9 +24,9 @@ export async function startDuckDiveRun(input:{runId:string;workspaceId:string;us
   });}finally{await sql.end();}
 }
 
-export async function finishDuckDiveRun(runId:string,input:{status:Exclude<DuckDiveRunStatus,"running">;afterVersion?:number;afterHash?:string;summary?:string;errorCode?:string;inputTokens?:number;outputTokens?:number;reportIntent?:ReportUpdatePlan|null}){
+export async function finishDuckDiveRun(runId:string,input:{status:Exclude<DuckDiveRunStatus,"running">;afterVersion?:number;afterHash?:string;summary?:string;errorCode?:string;inputTokens?:number;outputTokens?:number}){
   const sql=database();try{
-    const [run]=await sql<DuckDiveRun[]>`UPDATE app.duckdive_run SET status=${input.status},after_version=${input.afterVersion??null},source_hash_after=${input.afterHash??null},assistant_summary=${input.summary?.slice(0,2000)||null},error_code=${input.errorCode||null},input_tokens=${input.inputTokens||0},output_tokens=${input.outputTokens||0},report_intent_json=${input.reportIntent?sql.json(input.reportIntent as never):null},duration_ms=round(extract(epoch FROM (now()-created_at))*1000)::int,finished_at=now()
+    const [run]=await sql<DuckDiveRun[]>`UPDATE app.duckdive_run SET status=${input.status},after_version=${input.afterVersion??null},source_hash_after=${input.afterHash??null},assistant_summary=${input.summary?.slice(0,2000)||null},error_code=${input.errorCode||null},input_tokens=${input.inputTokens||0},output_tokens=${input.outputTokens||0},duration_ms=round(extract(epoch FROM (now()-created_at))*1000)::int,finished_at=now()
       WHERE run_id=${runId}::uuid AND (status='running' OR (status='aborted' AND ${input.status}='applied' AND ${input.afterVersion??null}::int IS NOT NULL)) RETURNING *`;
     return run||null;
   }finally{await sql.end();}
