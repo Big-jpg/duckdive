@@ -265,7 +265,27 @@
     throw lastError;
   };
 
+  const parseDocument = (doc, pageNumber, pageUrl) => {
+    const cardEntries = getCardEntries(doc);
+    const totalResults = (pageNumber === 1) ? parseTotalResults(doc) : undefined;
+    if (cardEntries.length === 0) {
+      return { records: [], empty: true, totalResults };
+    }
+
+    let ordinal = 1;
+    const records = cardEntries
+      .map(({ card, matchType }) => parseCard(card, pageNumber, pageUrl, ordinal++, matchType))
+      .filter(isValidRecord);
+    return { records, empty: records.length === 0, totalResults };
+  };
+
+  // Expose the parser for the headless runner. The browser extension listener
+  // remains the only side effect when this script is injected in a normal tab.
+  globalThis.ReaContent = Object.freeze({ parseDocument });
+
   // ── Message handler ───────────────────────────────────────────────────────
+  if (typeof chrome === "undefined" || !chrome.runtime?.onMessage) return;
+
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type !== "EXTRACT_PAGE") return false;
 
@@ -280,23 +300,7 @@
           return;
         }
 
-        const { doc } = result;
-        const cardEntries = getCardEntries(doc);
-
-        // On page 1, also parse the total results count
-        const totalResults = (pageNumber === 1) ? parseTotalResults(doc) : undefined;
-
-        if (cardEntries.length === 0) {
-          sendResponse({ success: true, records: [], empty: true, totalResults });
-          return;
-        }
-
-        let ordinal = 1;
-        const records = cardEntries
-          .map(({ card, matchType }) => parseCard(card, pageNumber, pageUrl, ordinal++, matchType))
-          .filter(isValidRecord);
-
-        sendResponse({ success: true, records, empty: records.length === 0, totalResults });
+        sendResponse({ success: true, ...parseDocument(result.doc, pageNumber, pageUrl) });
       } catch (err) {
         sendResponse({ success: false, error: err.message || String(err) });
       }

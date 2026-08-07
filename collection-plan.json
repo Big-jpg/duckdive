@@ -2,7 +2,7 @@
   "runId": "perth-house-sample-2026-07",
   "outputDirectory": "rea-collections",
   "profileDirectory": ".rea-collector/chromium-profile",
-  "headless": false,
+  "headless": true,
   "delayBetweenPagesMs": 5000,
   "slices": [
     {

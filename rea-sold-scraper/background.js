@@ -13,6 +13,8 @@ const STALL_MULTIPLIER    = 3;            // job stalled if no activity for dela
 const STALL_MIN_MS        = 20_000;       // floor: always stall-detect after 20s silence
 const RESULT_WINDOW_PAGES = 80;
 const RESULTS_PER_PAGE    = 25;
+const MAX_RECORDS_PER_PAGE = 50;           // exact + surrounding tiers
+const TARGET_RECORDS_PER_SECOND = 45;      // leave margin below the stated 50/s limit
 const POSTCODE_CSV_URL    =
   "https://raw.githubusercontent.com/matthewproctor/australianpostcodes/master/australian_postcodes.csv";
 
@@ -42,6 +44,11 @@ const rl = {
   backoffSchedule: [30_000, 60_000, 120_000],
   retiredCount:    0
 };
+
+// Shared request budget across all worker tabs. A page can contain both exact
+// and surrounding tiers, so reserve the worst-case 50 records before each
+// request rather than pacing tabs independently.
+const recordBudget = { nextAllowedAt: 0 };
 
 // ─── Persistence ─────────────────────────────────────────────────────────────
 const saveState = async () => {
@@ -146,6 +153,13 @@ const waitForCooldown = async () => {
     if (remain <= 0) return;
     await sleep(Math.min(remain, 500));
   }
+};
+
+const waitForRecordBudget = async () => {
+  const minimumIntervalMs = Math.ceil(1000 * MAX_RECORDS_PER_PAGE / TARGET_RECORDS_PER_SECOND);
+  const waitMs = recordBudget.nextAllowedAt - Date.now();
+  if (waitMs > 0) await sleep(waitMs);
+  recordBudget.nextAllowedAt = Date.now() + minimumIntervalMs;
 };
 
 // ─── Tab Management ──────────────────────────────────────────────────────────
@@ -319,6 +333,7 @@ const processJobOnTab = async (tabId, job) => {
     job.currentPage = page;
     touchActivity(job);
     await saveState(); broadcastState();
+    await waitForRecordBudget();
 
     // ── Fetch with 429 retry loop ──
     const pageKey = `${job.id}:${page}`;

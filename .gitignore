@@ -17,6 +17,7 @@ rea_sales_data_model/
 
 .vercel
 .rea-collector/
+rea-collections/
 .env*.local
 .env.motherduck
 .env*

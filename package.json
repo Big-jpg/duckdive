@@ -29,7 +29,8 @@
     "smoke:share": "tsx --env-file=.env.local scripts/smoke-share.ts",
     "access:add": "tsx --env-file=.env.local scripts/access.ts add",
     "access:revoke": "tsx --env-file=.env.local scripts/access.ts revoke",
-    "access:list": "tsx --env-file=.env.local scripts/access.ts list"
+    "access:list": "tsx --env-file=.env.local scripts/access.ts list",
+    "scrape:rea": "node rea-sold-scraper/headless.mjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.67",
@@ -59,6 +60,7 @@
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.0.0",
     "eslint-config-next": "16.2.10",
+    "playwright": "^1.55.0",
     "tsx": "^4.20.0",
     "typescript": "^5.9.0",
     "vitest": "^3.2.0"
