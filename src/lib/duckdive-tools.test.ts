@@ -5,7 +5,7 @@ const {runActive,verifyRevision}=vi.hoisted(()=>({runActive:vi.fn(),verifyRevisi
 vi.mock("./duckdive-db",()=>({duckDiveRunIsActive:runActive}));
 vi.mock("./duckdive-runtime",()=>({verifyDiveRevision:verifyRevision}));
 import {boundedDuckDiveResult,createDuckDiveTools,governedReadOnlyQuery} from "./duckdive-tools";
-import {duckDivePublicContract} from "./duckdive-contract";
+import {VIC_HOUSING_DATASET} from "./datasets";
 import {reportPurposeForStarter} from "./duckdive-report";
 
 describe("DuckDive controlled tools",()=>{
@@ -21,12 +21,12 @@ describe("DuckDive controlled tools",()=>{
   it("forces the active Dive and permits only one successful mutation",async()=>{
     const queryExecute=vi.fn().mockResolvedValue([{count:1}]),editExecute=vi.fn().mockResolvedValue({ok:true});
     const client={tools:vi.fn().mockResolvedValue({query:{execute:queryExecute},edit_dive_content:{execute:editExecute}})} as unknown as MCPClient;
-    const control=await createDuckDiveTools({client,runId:"run",diveId:"active-dive",username:"owner",before:{version:5,content:"before",hash:"aaa"},dataset:{key:"vic-housing",title:"VIC Housing",contractVersion:"vic-housing/v1",motherduckDatabase:"vic_house_data",serviceAccountUsername:"vic_house_lab"}});
+    const control=await createDuckDiveTools({client,runId:"run",diveId:"active-dive",username:"owner",before:{version:5,content:"before",hash:"aaa"},dataset:{key:"vic-housing",title:"VIC Housing",contractVersion:"vic-housing/v1",motherduckDatabase:"vic_house_data",motherduckShareUrl:"md:_share/vic/test",serviceAccountUsername:"vic_house_lab"},reportPolicy:VIC_HOUSING_DATASET.reportPolicy});
     const options={toolCallId:"call",messages:[],abortSignal:new AbortController().signal} as never;
     expect(control.tools.inspect_data.description).toContain("VIC Housing");
     await control.tools.inspect_data.execute!({purpose:"Count rows",sql:"SELECT count(*) AS count FROM suburb_dimension"},options);
     expect(queryExecute).toHaveBeenCalledWith(expect.objectContaining({database:"vic_house_data",sql:expect.stringContaining("LIMIT 200")}),options);
-    await control.tools.prepare_report_update.execute!({request:"Change title",interpretedIntent:"Change the report title",purpose:reportPurposeForStarter({starterKey:"market-pulse",title:"Market",description:"Market",contract:duckDivePublicContract}),capabilityIds:["sales-volume"],unsupportedRequests:[],materialClarification:null,added:[],changed:["Title"],removed:[],unchanged:[],validations:[]},options);
+    await control.tools.prepare_report_update.execute!({request:"Change title",interpretedIntent:"Change the report title",purpose:reportPurposeForStarter({title:"Market",description:"Market",policy:VIC_HOUSING_DATASET.reportPolicy}),capabilityIds:["sales-volume"],unsupportedRequests:[],materialClarification:null,added:[],changed:["Title"],removed:[],unchanged:[],validations:[]},options);
     await control.tools.save_dive_revision.execute!({summary:"Changed title",edits:[{old_string:"before",new_string:"after"}]},options);
     expect(editExecute).toHaveBeenCalledWith(expect.objectContaining({id:"active-dive"}),options);
     await expect(control.tools.save_dive_revision.execute!({summary:"Again",edits:[{old_string:"a",new_string:"b"}]},options)).rejects.toThrow("already been attempted");

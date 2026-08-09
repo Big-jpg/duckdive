@@ -8,9 +8,8 @@ import {aiModel,duckDiveModelName} from "@/lib/ai-provider";
 import {DuckDiveBusyError,finishDuckDiveRun,saveChatMessages,startDuckDiveRun} from "@/lib/duckdive-db";
 import {readDiveSnapshot} from "@/lib/duckdive-runtime";
 import {createDuckDiveTools} from "@/lib/duckdive-tools";
-import {STARTER_DIVES} from "@/lib/dive-provisioning";
 import {duckDiveRequestSchema,validateDuckDiveBrief} from "@/lib/duckdive-request";
-import {datasetContextForWorkspaceDiveRecord,datasetContractPrompt} from "@/lib/datasets";
+import {datasetContextForWorkspaceDiveRecord,datasetContractPrompt,datasetReportPolicyPrompt} from "@/lib/datasets";
 import {manifestForPlan} from "@/lib/duckdive-report";
 import {saveDiveReportVersion} from "@/lib/duckdive-report-db";
 
@@ -24,7 +23,7 @@ export async function POST(request:Request){
   const body=parsed.data,latest=[...body.messages].reverse().find(message=>message.role==="user");if(!latest)return Response.json({error:"Describe the change you want"},{status:400});
   const brief=validateDuckDiveBrief(latest);if(!brief.ok)return Response.json({error:brief.error},{status:400});const latestText=brief.text;
   const workspaceDive=await getOwnedWorkspaceDive(user.user_id,body.activeDiveId);if(!workspaceDive)return Response.json({error:"Access denied"},{status:403});
-  const datasetContext=datasetContextForWorkspaceDiveRecord(workspaceDive),starter=STARTER_DIVES.find(item=>item.key===datasetContext?.starterKey);
+  const datasetContext=datasetContextForWorkspaceDiveRecord(workspaceDive),starter=datasetContext?.dataset.starters.find(item=>item.key===datasetContext.starterKey);
   if(!datasetContext||!starter||!datasetContext.dataset.capabilities.editing)return Response.json({error:"This Dive is not editable"},{status:400});
   const before=await readDiveSnapshot(body.activeDiveId,workspaceDive.motherduck_username);
   if(before.version!==body.expectedVersion)return Response.json({error:`This Dive advanced to v${before.version}. Refresh before editing.`,currentVersion:before.version},{status:409});
@@ -34,7 +33,7 @@ export async function POST(request:Request){
   catch(error){if(error instanceof DuckDiveBusyError)return Response.json({error:error.message},{status:409});throw error;}
   try{
     await saveChatMessages(chatId,body.messages);
-    const client=await motherduckMcp(workspaceDive.motherduck_username),control=await createDuckDiveTools({client,runId:body.runId,diveId:body.activeDiveId,username:workspaceDive.motherduck_username,before,dataset:datasetContext.runtime,publicContract:datasetContext.dataset.publicContract});
+    const client=await motherduckMcp(workspaceDive.motherduck_username),control=await createDuckDiveTools({client,runId:body.runId,diveId:body.activeDiveId,username:workspaceDive.motherduck_username,before,dataset:datasetContext.runtime,reportPolicy:datasetContext.dataset.reportPolicy});
     const result=streamText({
       model:aiModel("gateway"),
       system:`You are DuckDive, a verified report-editing agent. You edit exactly one active MotherDuck Dive.
@@ -43,7 +42,7 @@ The application has already supplied the authoritative semantic contract and cur
 
 Apply a request automatically when it names an analytical, control, layout, chart, copy, or styling change that can be implemented safely. Style-only requests are valid. If the goal is genuinely ambiguous (for example, "make it better") or requires an unsupported measure, make no edit and ask exactly one focused clarification question.
 
-Always call prepare_report_update first. It is the authoritative structured intent and contract validation step. Use the returned capability IDs only. Never call save_dive_revision unless the preparation result explicitly accepts the update. Do not invent rental, valuation, forecast, safety, school, crime, or population outputs when they are absent from the contract.
+Always call prepare_report_update first. It is the authoritative structured intent and contract validation step. Use only capability IDs from the active dataset policy. Never call save_dive_revision unless the preparation result explicitly accepts the update. Do not invent outputs that the contract or policy does not support.
 
 Use inspect_data only when actual values are required to design the requested view. Preserve metric definitions, valid-sample caveats, REQUIRED_DATABASES, and DD_THEME_CSS. Use save_dive_revision once with the complete minimal edit. After it succeeds, give a concrete summary under 60 words. Never claim a save unless the tool reports a verified new version.
 
@@ -56,6 +55,9 @@ Current version: ${before.version}
 
 SEMANTIC CONTRACT
 ${datasetContractPrompt(datasetContext.dataset)}
+
+REPORT POLICY
+${datasetReportPolicyPrompt(datasetContext.dataset)}
 
 CURRENT DIVE SOURCE
 <current_dive_source>

@@ -42,8 +42,13 @@ export async function getOwnedWorkspaceDive(userId:string,diveId:string){const s
 export async function saveWorkspace(userId:string,username:string,diveIds:Record<string,string>,sourceDiveIds:Record<string,string>){
   const mappings=buildWorkspaceDives(diveIds,sourceDiveIds),sql=database();
   try{return await sql.begin(async tx=>{
-    const [row]=await tx<Workspace[]>`INSERT INTO app.workspace(user_id,motherduck_username,dive_ids,source_dive_ids) VALUES(${userId}::uuid,${username},${tx.json(diveIds)},${tx.json(sourceDiveIds)}) ON CONFLICT(user_id) DO UPDATE SET motherduck_username=excluded.motherduck_username,dive_ids=excluded.dive_ids,source_dive_ids=excluded.source_dive_ids,updated_at=now() RETURNING workspace_id,user_id,motherduck_username,dive_ids,source_dive_ids`;
-    for(const mapping of mappings)await tx`INSERT INTO app.workspace_dive(workspace_id,dataset_key,starter_key,dive_id,source_dive_id) VALUES(${row.workspace_id}::uuid,${mapping.dataset_key},${mapping.starter_key},${mapping.dive_id},${mapping.source_dive_id}) ON CONFLICT(workspace_id,starter_key) DO UPDATE SET dataset_key=excluded.dataset_key,dive_id=excluded.dive_id,source_dive_id=excluded.source_dive_id,updated_at=now()`;
+    const [row]=await tx<Workspace[]>`INSERT INTO app.workspace(user_id,motherduck_username,dive_ids,source_dive_ids) VALUES(${userId}::uuid,${username},${tx.json(diveIds)},${tx.json(sourceDiveIds)}) ON CONFLICT(user_id) DO UPDATE SET motherduck_username=excluded.motherduck_username,dive_ids=app.workspace.dive_ids||excluded.dive_ids,source_dive_ids=app.workspace.source_dive_ids||excluded.source_dive_ids,updated_at=now() RETURNING workspace_id,user_id,motherduck_username,dive_ids,source_dive_ids`;
+    for(const mapping of mappings){
+      const [inserted]=await tx<WorkspaceDive[]>`INSERT INTO app.workspace_dive(workspace_id,dataset_key,starter_key,dive_id,source_dive_id) VALUES(${row.workspace_id}::uuid,${mapping.dataset_key},${mapping.starter_key},${mapping.dive_id},${mapping.source_dive_id}) ON CONFLICT(workspace_id,starter_key) DO NOTHING RETURNING workspace_id,dataset_key,starter_key,dive_id,source_dive_id`;
+      if(inserted)continue;
+      const [existing]=await tx<WorkspaceDive[]>`SELECT workspace_id,dataset_key,starter_key,dive_id,source_dive_id FROM app.workspace_dive WHERE workspace_id=${row.workspace_id}::uuid AND starter_key=${mapping.starter_key}`;
+      if(!existing||existing.dataset_key!==mapping.dataset_key||existing.dive_id!==mapping.dive_id||existing.source_dive_id!==mapping.source_dive_id)throw new Error(`Workspace Dive mapping conflicts with ${mapping.starter_key}`);
+    }
     return row;
   });}finally{await sql.end();}
 }

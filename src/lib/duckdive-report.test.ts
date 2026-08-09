@@ -1,36 +1,59 @@
 import {describe,expect,it} from "vitest";
-import {duckDivePublicContract} from "./duckdive-contract";
-import {capabilitiesForContract,reportPurposeForStarter,reportUpdatePlanSchema,validateReportUpdatePlan} from "./duckdive-report";
+import {VIC_HOUSING_DATASET} from "./datasets";
+import type {DatasetReportPolicy} from "./dataset-types";
+import {capabilitiesForPolicy,normalizeReportPurpose,reportPurposeForStarter,reportUpdatePlanSchema,validateReportUpdatePlan} from "./duckdive-report";
 import {reportMetadataSchemaUnavailable,starterReportVersion} from "./duckdive-report-db";
 
+const policy=VIC_HOUSING_DATASET.reportPolicy;
+const purpose=()=>reportPurposeForStarter({title:"Matchup",description:"Compare places",policy});
+
 describe("DuckDive report explanation contract",()=>{
-  it("derives capabilities from the governed contract",()=>{
-    const ids=capabilitiesForContract(duckDivePublicContract).map(item=>item.id);
-    expect(ids).toContain("sales-volume");expect(ids).toContain("median-price");expect(ids).toContain("bedroom-segments");
+  it("derives capabilities and limitations from the active dataset policy",()=>{
+    const ids=capabilitiesForPolicy(policy).map(item=>item.id);
+    expect(ids).toContain("sales-volume");
+    expect(ids).toContain("median-price");
+    expect(ids).toContain("bedroom-segments");
+    expect(purpose().limitations).toEqual(expect.arrayContaining([expect.objectContaining({id:"no-rental-data",label:"Rental prices"})]));
   });
 
-  it("uses curated limitations rather than an unbounded absent-data list",()=>{
-    const purpose=reportPurposeForStarter({starterKey:"market-matchup",title:"Matchup",description:"Compare places",contract:duckDivePublicContract});
-    expect(purpose.limitations).toEqual(expect.arrayContaining([expect.objectContaining({id:"no-rental-data",label:"Rental prices"})]));
+  it("changes report policy without housing-specific report code",()=>{
+    const airPolicy:DatasetReportPolicy={
+      capabilities:[{id:"pollution-trend",label:"Compare pollution trends",examples:["Compare two stations"]}],
+      limitations:[{id:"no-health-advice",label:"Health advice",reason:"The dataset contains readings, not clinical guidance."}],
+      assumptions:[{id:"hourly-average",label:"Use hourly averages",source:"report-default",material:false}],
+      scopeItems:[{id:"station",label:"Station",values:["North","South"]}],
+      dateRange:{start:"2025-01-01",end:"2025-12-31",basis:"calendar-year"},
+    };
+    const air=reportPurposeForStarter({title:"Air quality",description:"Compare sensors",policy:airPolicy});
+    expect(air).toMatchObject({schemaVersion:"report-purpose/v2",capabilities:[{id:"pollution-trend"}],limitations:[{id:"no-health-advice"}],scope:{items:[{id:"station"}],dateRange:{start:"2025-01-01",end:"2025-12-31"}}});
+    expect(JSON.stringify(air)).not.toMatch(/housing|suburb|property/i);
   });
 
-  it("downgrades confidence when a material default is used",()=>{
-    const purpose=reportPurposeForStarter({starterKey:"market-matchup",title:"Matchup",description:"Compare places",contract:duckDivePublicContract});
-    const plan={request:"Compare houses",interpretedIntent:"Compare suburbs",purpose:{...purpose,assumptions:[...purpose.assumptions,{id:"property-type",label:"Houses means detached houses",source:"report-default",material:true}]},capabilityIds:["suburb-comparison"],unsupportedRequests:[],materialClarification:null,added:[],changed:[],removed:[],unchanged:[],validations:[]};
-    const result=validateReportUpdatePlan(plan,duckDivePublicContract);expect(result.ok).toBe(true);if(result.ok)expect(result.plan.purpose.confidence.level).toBe("medium");
+  it("normalizes legacy housing scope to generic v2 items",()=>{
+    const current=purpose();
+    const fields={title:current.title,summary:current.summary,goal:current.goal,focusAreas:current.focusAreas,capabilities:current.capabilities,limitations:current.limitations,assumptions:current.assumptions,confidence:current.confidence};
+    const normalized=normalizeReportPurpose({...fields,scope:{locations:["Yarraville","Footscray"],propertyTypes:["House"],dateRange:{start:"2019",end:"2025",basis:"calendar-year"}}});
+    expect(normalized).toMatchObject({schemaVersion:"report-purpose/v2",scope:{items:[{id:"locations",values:["Yarraville","Footscray"]},{id:"property-types",values:["House"]}],dateRange:{start:"2019",end:"2025"}}});
   });
 
-  it("rejects a capability absent from the active contract",()=>{
-    const purpose=reportPurposeForStarter({starterKey:"market-matchup",title:"Matchup",description:"Compare places",contract:duckDivePublicContract});
-    const plan={request:"Show rentals",interpretedIntent:"Compare rentals",purpose,capabilityIds:["rental-prices"],unsupportedRequests:["rental prices"],materialClarification:null,added:[],changed:[],removed:[],unchanged:[],validations:[]};
-    expect(validateReportUpdatePlan(plan,duckDivePublicContract).ok).toBe(false);
+  it("downgrades confidence deterministically when a material default is used",()=>{
+    const base=purpose();
+    const plan={request:"Compare houses",interpretedIntent:"Compare suburbs",purpose:{...base,assumptions:[...base.assumptions,{id:"property-type",label:"Houses means detached houses",source:"report-default" as const,material:true}]},capabilityIds:["suburb-comparison"],unsupportedRequests:[],materialClarification:null,added:[],changed:[],removed:[],unchanged:[],validations:[]};
+    const result=validateReportUpdatePlan(plan,policy);
+    expect(result.ok).toBe(true);
+    if(result.ok)expect(result.plan.purpose.confidence).toEqual({level:"medium",reason:"A material default or model inference affects the interpretation."});
+  });
+
+  it("rejects a capability absent from the active dataset policy",()=>{
+    const plan={request:"Show rentals",interpretedIntent:"Compare rentals",purpose:purpose(),capabilityIds:["rental-prices"],unsupportedRequests:["rental prices"],materialClarification:null,added:[],changed:[],removed:[],unchanged:[],validations:[]};
+    expect(validateReportUpdatePlan(plan,policy).ok).toBe(false);
   });
 
   it("keeps the structured plan schema machine-readable",()=>expect(reportUpdatePlanSchema.safeParse({}).success).toBe(false));
 
   it("can regenerate only a deterministic registered-starter explanation without persistence",()=>{
-    const report=starterReportVersion({workspaceId:"workspace",diveId:"dive",version:3,sourceHash:"hash",starterKey:"market-pulse",title:"Market pulse",description:"Statewide signals",contract:duckDivePublicContract});
-    expect(report).toMatchObject({version:3,runId:null,purpose:{title:"Market pulse"},manifest:{version:3}});
+    const report=starterReportVersion({workspaceId:"workspace",diveId:"dive",version:3,sourceHash:"hash",title:"Market pulse",description:"Statewide signals",policy});
+    expect(report).toMatchObject({version:3,runId:null,purpose:{schemaVersion:"report-purpose/v2",title:"Market pulse"},manifest:{version:3}});
     expect(reportMetadataSchemaUnavailable({code:"42P01"})).toBe(true);
     expect(reportMetadataSchemaUnavailable({code:"23505"})).toBe(false);
   });

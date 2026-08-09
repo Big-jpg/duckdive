@@ -1,7 +1,6 @@
 import {currentUser} from "@/lib/auth";
 import {audit,createDiveShare,getActiveDiveShare,getOwnedWorkspaceDive,revokeDiveShare} from "@/lib/app-db";
 import {assertSameOrigin} from "@/lib/csrf";
-import {STARTER_DIVES} from "@/lib/dive-provisioning";
 import {datasetContextForWorkspaceDiveRecord} from "@/lib/datasets";
 
 function publicUrl(request:Request,slug:string){
@@ -12,7 +11,7 @@ function publicUrl(request:Request,slug:string){
 async function owned(request:Request,diveId:string){
   const user=await currentUser(request);if(!user)return {error:Response.json({error:"Authentication required"},{status:401})};
   const workspaceDive=await getOwnedWorkspaceDive(user.user_id,diveId);if(!workspaceDive)return {error:Response.json({error:"Access denied"},{status:403})};
-  const dataset=datasetContextForWorkspaceDiveRecord(workspaceDive),starter=STARTER_DIVES.find(item=>item.key===workspaceDive.starter_key);if(!dataset||!dataset.dataset.capabilities.publicShare||!starter)return {error:Response.json({error:"Dive is not publishable"},{status:400})};
+  const dataset=datasetContextForWorkspaceDiveRecord(workspaceDive),starter=dataset?.dataset.starters.find(item=>item.key===workspaceDive.starter_key);if(!dataset||!dataset.dataset.capabilities.publicShare||!starter)return {error:Response.json({error:"Dive is not publishable"},{status:400})};
   return {user,workspaceDive,starter};
 }
 

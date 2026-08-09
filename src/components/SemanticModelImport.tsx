@@ -119,7 +119,7 @@ export default function SemanticModelImport(){
   }
 
   return <main id="main-content" className="byod-page">
-    <header className="lab-header"><AppBrand/><nav aria-label="Primary navigation"><Link href="/workspace">VIC workspace</Link><span>Semantic evidence</span></nav></header>
+    <header className="lab-header"><AppBrand/><nav aria-label="Primary navigation"><Link href="/workspace">Workspace</Link><span>Semantic evidence</span></nav></header>
     <section className="byod-intro">
       <p className="lab-kicker">Bring your own semantic model</p><h1>Start with the model your organisation already trusts.</h1>
       <p>The ZIP is opened and decomposed in this browser tab. Nothing is uploaded until you review the derived semantic contract and choose Save.</p>

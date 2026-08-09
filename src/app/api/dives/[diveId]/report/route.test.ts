@@ -5,14 +5,13 @@ vi.mock("@/lib/auth",()=>({currentUser:mocks.currentUser}));
 vi.mock("@/lib/app-db",()=>({getOwnedWorkspaceDive:mocks.owned}));
 vi.mock("@/lib/duckdive-runtime",()=>({readDiveSnapshot:mocks.snapshot}));
 vi.mock("@/lib/datasets",()=>({datasetContextForWorkspaceDiveRecord:mocks.context}));
-vi.mock("@/lib/dive-provisioning",()=>({STARTER_DIVES:[{key:"market-pulse",title:"Market pulse",description:"Statewide signals"}]}));
 vi.mock("@/lib/duckdive-report-db",async importOriginal=>{const actual=await importOriginal<typeof import("@/lib/duckdive-report-db")>();return {...actual,getDiveReportVersion:mocks.getReport,saveDiveReportVersion:mocks.saveReport};});
 import {GET} from "./route";
 
-const params={params:Promise.resolve({diveId:"dive"})},contract={scope:"Sales",grains:[{name:"sales",grain:"One sale"}],measures:{volume:"Sales"},dimensions:["suburb"],caveats:["Historical only"]};
+const params={params:Promise.resolve({diveId:"dive"})},reportPolicy={capabilities:[{id:"sales-volume",label:"Sales volume",examples:["Count sales"]}],limitations:[],assumptions:[],scopeItems:[{id:"region",label:"Region",values:["Victoria"]}]};
 
 describe("Dive report metadata route",()=>{
-  beforeEach(()=>{vi.clearAllMocks();mocks.currentUser.mockResolvedValue({user_id:"user"});mocks.owned.mockResolvedValue({workspace_id:"workspace",starter_key:"market-pulse",source_dive_id:"source",motherduck_username:"owner"});mocks.context.mockReturnValue({dataset:{publicContract:contract}});});
+  beforeEach(()=>{vi.clearAllMocks();mocks.currentUser.mockResolvedValue({user_id:"user"});mocks.owned.mockResolvedValue({workspace_id:"workspace",starter_key:"market-pulse",source_dive_id:"source",motherduck_username:"owner"});mocks.context.mockReturnValue({dataset:{starters:[{key:"market-pulse",title:"Market pulse",description:"Statewide signals"}],reportPolicy}});});
 
   it("returns a deterministic starter explanation when the metadata table is not migrated",async()=>{
     mocks.snapshot.mockResolvedValueOnce({version:3,hash:"same",content:"owned"}).mockResolvedValueOnce({version:8,hash:"same",content:"source"});
@@ -26,5 +25,12 @@ describe("Dive report metadata route",()=>{
     mocks.getReport.mockRejectedValue(Object.assign(new Error("missing relation"),{code:"42P01"}));
     const response=await GET(new Request("https://duckdive.gold/api/dives/dive/report"),params),body=await response.json();
     expect(response.status).toBe(200);expect(body).toEqual({report:null,persisted:false,reason:"legacy-version"});
+  });
+
+  it("denies a Dive that is not owned by the authenticated user",async()=>{
+    mocks.owned.mockResolvedValue(null);
+    const response=await GET(new Request("https://duckdive.gold/api/dives/dive/report"),params);
+    expect(response.status).toBe(403);
+    expect(mocks.snapshot).not.toHaveBeenCalled();
   });
 });

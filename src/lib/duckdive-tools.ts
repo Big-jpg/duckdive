@@ -3,8 +3,7 @@ import {z} from "zod";
 import type {MCPClient} from "@ai-sdk/mcp";
 import {duckDiveRunIsActive} from "./duckdive-db";
 import {verifyDiveRevision,type DiveSnapshot} from "./duckdive-runtime";
-import type {DatasetRuntime} from "./datasets";
-import {duckDivePublicContract} from "./duckdive-contract";
+import type {DatasetReportPolicy,DatasetRuntime} from "./datasets";
 import {validateReportUpdatePlan,type ReportUpdatePlan} from "./duckdive-report";
 
 export type VerifiedMutation={before:DiveSnapshot;after:DiveSnapshot;summary:string};
@@ -21,7 +20,7 @@ export function governedReadOnlyQuery(sql:string){
   return `SELECT * FROM (${statement}) AS duckdive_inspection LIMIT 200`;
 }
 
-export async function createDuckDiveTools(input:{client:MCPClient;runId:string;diveId:string;username:string;before:DiveSnapshot;dataset:DatasetRuntime;publicContract?:Parameters<typeof validateReportUpdatePlan>[1]}){
+export async function createDuckDiveTools(input:{client:MCPClient;runId:string;diveId:string;username:string;before:DiveSnapshot;dataset:DatasetRuntime;reportPolicy:DatasetReportPolicy}){
   const mcp=await input.client.tools(),query=mcp.query,edit=mcp.edit_dive_content;
   if(!query?.execute||!edit?.execute)throw new Error("MotherDuck editing tools are unavailable");
   let mutation:VerifiedMutation|null=null,mutationAttempted=false,plan:ReportUpdatePlan|null=null;
@@ -31,7 +30,7 @@ export async function createDuckDiveTools(input:{client:MCPClient;runId:string;d
       inputSchema:z.any(),
       execute:async(value)=>{
         if(!await duckDiveRunIsActive(input.runId))throw new Error("DuckDive run is no longer active");
-        const checked=validateReportUpdatePlan(value,input.publicContract||duckDivePublicContract);if(!checked.ok){plan=null;return {accepted:false,error:checked.error};}
+        const checked=validateReportUpdatePlan(value,input.reportPolicy);if(!checked.ok){plan=null;return {accepted:false,error:checked.error};}
         plan=checked.plan;return {accepted:!plan.unsupportedRequests.length&&!plan.materialClarification,unsupportedRequests:plan.unsupportedRequests,materialClarification:plan.materialClarification,capabilityIds:plan.capabilityIds};
       },
     }),

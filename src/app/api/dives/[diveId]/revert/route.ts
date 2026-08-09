@@ -1,2 +1,29 @@
-import {currentUser} from "@/lib/auth";import {getOwnedWorkspaceDive,audit} from "@/lib/app-db";import {motherduckServiceSql} from "@/lib/motherduck-access";import {mdString,positiveInteger} from "@/lib/sql-literal";import {assertSameOrigin} from "@/lib/csrf";import {STARTER_DIVES} from "@/lib/dive-provisioning";import {datasetContextForWorkspaceDiveRecord} from "@/lib/datasets";import {getDiveReportVersionForWorkspace,saveDiveReportVersion} from "@/lib/duckdive-report-db";import {reportPurposeForStarter,type ReportChangeManifest} from "@/lib/duckdive-report";import {readDiveSnapshot} from "@/lib/duckdive-runtime";
-export async function POST(request:Request,{params}:{params:Promise<{diveId:string}>}){const csrf=assertSameOrigin(request);if(csrf)return csrf;const user=await currentUser(request),{diveId}=await params;if(!user)return Response.json({error:"Authentication required"},{status:401});const owned=await getOwnedWorkspaceDive(user.user_id,diveId);if(!owned)return Response.json({error:"Access denied"},{status:403});let version:string;try{version=positiveInteger((await request.json()).version);}catch(error){return Response.json({error:error instanceof Error?error.message:"Invalid version"},{status:400});}const sql=await motherduckServiceSql(),rows=await sql.unsafe(`SELECT content FROM MD_GET_DIVE_VERSION(id = ${mdString(diveId)}, version = ${version})`);if(!rows[0])return Response.json({error:"Version not found"},{status:404});await sql.unsafe(`SELECT * FROM MD_UPDATE_DIVE_CONTENT(id = ${mdString(diveId)}, content = ${mdString(String(rows[0].content))})`);const after=await readDiveSnapshot(diveId,owned.motherduck_username),context=datasetContextForWorkspaceDiveRecord(owned),starter=context&&STARTER_DIVES.find(item=>item.key===owned.starter_key);if(!context||!starter)return Response.json({error:"Report metadata unavailable"},{status:503});const target=await getDiveReportVersionForWorkspace(owned.workspace_id,diveId,Number(version)),purpose=target?.purpose||reportPurposeForStarter({starterKey:starter.key,title:starter.title,description:starter.description,contract:context.dataset.publicContract}),manifest:ReportChangeManifest=target?{...target.manifest,version:after.version,generatedAt:new Date().toISOString()}:{request:"Reverted report",interpretedIntent:purpose.goal,requested:{added:[],changed:["Restore a previous report version"],removed:[],unchanged:[]},applied:{added:[],changed:["Verified restored Dive source"],removed:[],unchanged:["Governed data contract"]},validations:[{id:"revert-version",label:"Selected report version was found",status:"passed"}],version:after.version,generatedAt:new Date().toISOString()};const report=await saveDiveReportVersion({workspaceId:owned.workspace_id,diveId,version:after.version,sourceHash:after.hash,purpose,manifest});await audit("dive.reverted",user.user_id,diveId,{version:Number(version),afterVersion:after.version});return Response.json({ok:true,report});}
+import {currentUser} from "@/lib/auth";
+import {getOwnedWorkspaceDive,audit} from "@/lib/app-db";
+import {motherduckServiceSql} from "@/lib/motherduck-access";
+import {mdString,positiveInteger} from "@/lib/sql-literal";
+import {assertSameOrigin} from "@/lib/csrf";
+import {datasetContextForWorkspaceDiveRecord} from "@/lib/datasets";
+import {getDiveReportVersionForWorkspace,saveDiveReportVersion} from "@/lib/duckdive-report-db";
+import {reportPurposeForStarter,type ReportChangeManifest} from "@/lib/duckdive-report";
+import {readDiveSnapshot} from "@/lib/duckdive-runtime";
+
+export async function POST(request:Request,{params}:{params:Promise<{diveId:string}>}){
+  const csrf=assertSameOrigin(request);if(csrf)return csrf;
+  const user=await currentUser(request),{diveId}=await params;if(!user)return Response.json({error:"Authentication required"},{status:401});
+  const owned=await getOwnedWorkspaceDive(user.user_id,diveId);if(!owned)return Response.json({error:"Access denied"},{status:403});
+  const context=datasetContextForWorkspaceDiveRecord(owned),starter=context?.dataset.starters.find(item=>item.key===owned.starter_key);if(!context||!starter)return Response.json({error:"Report unavailable"},{status:404});
+  let version:string;try{version=positiveInteger((await request.json()).version);}catch(error){return Response.json({error:error instanceof Error?error.message:"Invalid version"},{status:400});}
+  const sql=await motherduckServiceSql(owned.motherduck_username),rows=await sql.unsafe(`SELECT content FROM MD_GET_DIVE_VERSION(id = ${mdString(diveId)}, version = ${version})`);
+  if(!rows[0])return Response.json({error:"Version not found"},{status:404});
+  await sql.unsafe(`SELECT * FROM MD_UPDATE_DIVE_CONTENT(id = ${mdString(diveId)}, content = ${mdString(String(rows[0].content))})`);
+  const after=await readDiveSnapshot(diveId,owned.motherduck_username);
+  let report=null;
+  try{
+    const target=await getDiveReportVersionForWorkspace(owned.workspace_id,diveId,Number(version)),purpose=target?.purpose||reportPurposeForStarter({title:starter.title,description:starter.description,policy:context.dataset.reportPolicy});
+    const manifest:ReportChangeManifest=target?{...target.manifest,version:after.version,generatedAt:new Date().toISOString()}:{request:"Reverted report",interpretedIntent:purpose.goal,requested:{added:[],changed:["Restore a previous report version"],removed:[],unchanged:[]},applied:{added:[],changed:["Verified restored Dive source"],removed:[],unchanged:["Governed data contract"]},validations:[{id:"revert-version",label:"Selected report version was found",status:"passed"}],version:after.version,generatedAt:new Date().toISOString()};
+    report=await saveDiveReportVersion({workspaceId:owned.workspace_id,diveId,version:after.version,sourceHash:after.hash,purpose,manifest});
+  }catch(error){console.error("Revert report metadata persistence failed",error);}
+  try{await audit("dive.reverted",user.user_id,diveId,{version:Number(version),afterVersion:after.version});}catch(error){console.error("Dive revert audit failed",error);}
+  return Response.json({ok:true,report});
+}
