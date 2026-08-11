@@ -9,7 +9,7 @@ describe("authenticated report gallery route",()=>{
   beforeEach(()=>{
     vi.clearAllMocks();
     mocks.currentUser.mockResolvedValue({user_id:"user",email:"owner@example.com"});
-    mocks.preview.mockResolvedValue({dataset:{key:"vic-housing"},dive:{key:"market-pulse",diveId:"dive",session:{token:"session"}}});
+    mocks.preview.mockResolvedValue({dataset:{key:"wa-vehicle-market"},dive:{key:"vehicle-market-atlas",diveId:"dive",session:{token:"session"}}});
   });
 
   it("fails closed before provisioning for an unknown starter",async()=>{
@@ -19,16 +19,16 @@ describe("authenticated report gallery route",()=>{
   });
 
   it("prepares exactly the one requested starter",async()=>{
-    const response=await GET(new Request("https://duckdive.gold/api/gallery?starter=market-pulse"));
+    const response=await GET(new Request("https://duckdive.gold/api/gallery?starter=vehicle-market-atlas"));
     expect(response.status).toBe(200);
     expect(mocks.preview).toHaveBeenCalledOnce();
-    expect(mocks.preview).toHaveBeenCalledWith(expect.objectContaining({user_id:"user"}),"market-pulse");
-    await expect(response.json()).resolves.toMatchObject({dataset:{key:"vic-housing"},dive:{key:"market-pulse",diveId:"dive"}});
+    expect(mocks.preview).toHaveBeenCalledWith(expect.objectContaining({user_id:"user"}),"vehicle-market-atlas");
+    await expect(response.json()).resolves.toMatchObject({dataset:{key:"wa-vehicle-market"},dive:{key:"vehicle-market-atlas",diveId:"dive"}});
   });
 
   it("requires authentication",async()=>{
     mocks.currentUser.mockResolvedValue(null);
-    const response=await GET(new Request("https://duckdive.gold/api/gallery?starter=market-pulse"));
+    const response=await GET(new Request("https://duckdive.gold/api/gallery?starter=vehicle-market-atlas"));
     expect(response.status).toBe(401);
     expect(mocks.preview).not.toHaveBeenCalled();
   });

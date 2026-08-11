@@ -1,57 +1,65 @@
 # Next session handoff
 
-Updated: 2026-08-06 (Australia/Perth)
+Updated: 2026-08-11 (Australia/Perth)
 
 ## Start here
 
-- Work on `main` from its current successor to `bca8686`.
-- Start from the next owner-visible product outcome. There is no active phased delivery plan.
-- The local CSV product slice and UI baseline are not deployed. Reverify production before making release claims.
+- Work on `codex/wa-vehicle-market` unless the branch has since been merged.
+- Treat `C:\Users\rossf\Downloads\WA_Vehicle_Market_Validated_Codex_Handoff.md` as the source/data authority.
+- Use `.agents/skills/vic-house-platform-operator/SKILL.md` before credential, Neon, Blob, MotherDuck, Dive, deployment, or cleanup work.
+- Reverify external state before mutation.
 
-## Product state
+## Verified external state
 
-DuckDive currently has:
+- Existing Vercel project: `vic-house-data-lab` in the existing `big-team`.
+- Production URL: `https://duckdive.gold`.
+- Production branch: `main`.
+- Verified production commit: `e10181b623e299f7dc550eeafe0dfd3c727cdc10`.
+- Git was reconnected after an unnecessary temporary disconnection.
+- No WA Vercel branch deployment was retained.
+- Do not create a second Vercel project/team, Neon project, Blob store, MotherDuck organization, auth estate, or human seat.
 
-- `/` redirecting directly to the authenticated `/workspace` product
-- the production VIC Housing workspace with governed Dives, editing, versions, reset, revert, embeds, and unlisted sharing
-- an authenticated `/datasets/csv` slice that reads one CSV of up to 1 MiB only after explicit selection and derives an owner-scoped local Dive with profiling, a bounded chart, row preview, SHA-256 provenance, refresh restoration, replacement, and confirmed deletion
-- browser-local semantic-model inspection with private reviewed evidence
-- owner-scoped operational dataset registration
-- a shared design-token baseline across the product UI
+## Product and retention decision
 
-The CSV slice stores only its derived profile and bounded preview in owner-scoped `sessionStorage`. It fails closed across owner scopes and clears local CSV Dives on sign-out. It does not upload or durably ingest the CSV, create a MotherDuck table, or create an Embedded Dive.
+The WA dataset is a temporary private lens for existing vetted users, not a public product. Private fixture replay, a bounded live smoke, and a private full observation are approved based on the stated usage. Public sharing is unnecessary and remains disabled. Vehicle-market data must not persist beyond 2026-08-18 Australia/Perth; use `docs/WA_VEHICLE_MARKET_RETENTION.md` for explicit disposal and verification.
 
-One bounded MotherDuck probe Flight created on 2026-08-06 remains an external resource. It is disconnected from the repository and application runtime. Do not rerun, modify, schedule, or delete it without explicit approval.
+## Existing-infrastructure boundary
 
-Historical phase records, smoke details, and retired design alternatives remain available in Git history. Do not reconstruct them into the active plan unless they answer a current question.
+Reuse the current Vercel project/domain, Neon control plane and Auth, private Blob store, MotherDuck organization, allowlist, workspaces, Dives, editing, embeds, and release operations. Add only:
 
-## Current direction
+- additive Neon migration 019 and temporary operational rows;
+- the dedicated private Blob prefix `vehicle-market/source=autotrader/market=wa-used/`;
+- the `wa_vehicle_market` managed DuckLake/database and restricted share inside the existing MotherDuck organization;
+- WA dataset selectors and starter Dives on the WA branch.
 
-The next release gate is an authenticated owner walkthrough of `/datasets/csv`: import a representative CSV, inspect the derived chart/profile/table, refresh and confirm restoration, replace it, delete it, sign out and confirm cleanup, then sign in as another owner and confirm the first owner’s result is unavailable.
+Reuse the current DuckDive service-account convention where permissions satisfy the governed share. Do not create a new identity merely for naming symmetry.
 
-For subsequent work:
+## Implemented local state
 
-1. State the exact owner-visible result.
-2. Inspect the smallest reusable seams.
-3. Build the end-to-end behavior.
-4. Test the result and its obvious denial or failure case.
-5. Generalize only after the result is useful.
+- canonical gated adapter, strict filter grammar, sequential pagination/retry, raw persistence before parse, shared replay, exact reconciliation, dated fixtures, deterministic dimensional model, and first/adjacent-run claim rules;
+- private Blob fixture seeding through `vehicle:seed-blob`;
+- managed DuckLake initialization through `vehicle:ducklake:init -- --execute`;
+- executable raw-lineage-verifying staging and publication through `vehicle:publish -- --run <run-id> --execute --record-neon`;
+- WA preflight no longer requires the unrelated dormant WHO service-account identity;
+- explicit 2026-08-18 disposal runbook.
 
-Durable CSV ingestion, MotherDuck publication, and Embedded Dive generation are separate product and operational decisions, not implied next steps.
+## Next release boundary
+
+1. Pass focused and full local validation without source or cloud access.
+2. Push the completed branch and allow the existing Vercel project to create a fresh preview.
+3. Reverify that every credential and URL resolves to the existing approved DuckDive resources before mutation.
+4. Apply migration 019 to the existing Neon project after explicit approval.
+5. Seed and replay the sanitized fixture through the existing private Blob store without source access.
+6. Initialize `wa_vehicle_market` and apply DuckLake DDL after explicit MotherDuck approval.
+7. Run the bounded source smoke with source gate true and full gate false.
+8. Reconcile before invoking the separately gated full collection.
+9. Publish only a `COMPLETE` run and perform authenticated owner plus denial smokes.
 
 ## Hard boundaries
 
-- Never expose Neon, MotherDuck, authentication, email, AI-provider, or embed credentials to the browser, repository, logs, or chat.
-- Preserve authenticated owner and workspace isolation. Unknown or cross-owner access must fail closed.
-- Keep the VIC estate isolated from unrelated datasets and workloads.
-- Reviewed semantic evidence is not automatically executable authority.
-- Ask before production deployment, external resource creation, credential changes, MotherDuck mutations, destructive data changes, or retained production test data.
-- Treat migrations already applied in production as additive history.
-
-## Working style
-
-- Prefer focused tests while iterating and full validation for release-affecting changes.
-- Do not confuse a passing build or Vercel `Ready` state with a verified production release.
-- Keep this handoff short and current. Replace stale direction instead of appending chronology.
-
-For production operations, credentials, Neon, MotherDuck, ingestion, deployment, or incident response, read `.agents/skills/vic-house-platform-operator/SKILL.md` before acting.
+- Do not mutate or delete existing VIC analytical data merely to enable the WA lens.
+- Do not enable source gates in Vercel application configuration.
+- Do not compare through non-`COMPLETE` runs and never infer sale.
+- Keep descriptions and feature strings out of the observation fact; keep the physical feature bridge deferred.
+- Never expose Neon, Blob, MotherDuck, authentication, email, AI-provider, or embed credentials.
+- External mutations and final disposal require explicit approval and exact-target verification.

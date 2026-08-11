@@ -1,6 +1,7 @@
 import {database} from "../src/lib/db";
+import {defaultDataset} from "../src/lib/datasets";
 
-const sql=database(process.env.DATABASE_URL_UNPOOLED??process.env.DATABASE_URL);
+const sql=database(process.env.DATABASE_URL_UNPOOLED??process.env.DATABASE_URL),dataset=defaultDataset(),starterKeys=dataset.starters.map(starter=>starter.key);
 try {
   const [actual]=await sql<{
     workspaces:number;legacy_owned_rows:number;legacy_source_rows:number;relational_rows:number;
@@ -31,9 +32,9 @@ try {
       (SELECT count(*) FROM app.workspace_dive)::int relational_rows,
       (SELECT count(*) FROM comparison WHERE legacy_workspace_id IS NULL OR relational_workspace_id IS NULL
         OR legacy_dive_id<>relational_dive_id OR legacy_source_dive_id<>relational_source_dive_id
-        OR dataset_key<>'vic-housing')::int mismatched_rows,
+        OR dataset_key<>${dataset.key})::int mismatched_rows,
       (SELECT count(*) FROM (SELECT dive_id FROM app.workspace_dive GROUP BY dive_id HAVING count(*)>1) duplicates)::int duplicate_dive_ids,
-      (SELECT count(*) FROM app.workspace_dive WHERE starter_key NOT IN ('market-pulse','suburb-story','market-matchup'))::int unknown_starter_rows,
+      (SELECT count(*) FROM app.workspace_dive WHERE NOT(starter_key=ANY(${starterKeys})))::int unknown_starter_rows,
       (SELECT count(*) FROM app.workspace w JOIN app.workspace_dive wd USING(workspace_id))::int owned_lookup_rows,
       (SELECT count(*) FROM app.workspace requester
         JOIN app.workspace_dive foreign_dive ON foreign_dive.workspace_id<>requester.workspace_id

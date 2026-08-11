@@ -30,7 +30,14 @@
     "access:add": "tsx --env-file=.env.local scripts/access.ts add",
     "access:revoke": "tsx --env-file=.env.local scripts/access.ts revoke",
     "access:list": "tsx --env-file=.env.local scripts/access.ts list",
-    "scrape:rea": "node rea-sold-scraper/headless.mjs"
+    "scrape:rea": "node rea-sold-scraper/headless.mjs",
+    "vehicle:replay": "tsx --env-file=.env.local scripts/vehicle-market.ts replay",
+    "vehicle:seed-blob": "tsx --env-file=.env.local scripts/vehicle-market.ts seed-blob",
+    "vehicle:smoke": "tsx --env-file=.env.local scripts/vehicle-market.ts smoke",
+    "vehicle:collect": "tsx --env-file=.env.local scripts/vehicle-market.ts collect",
+    "vehicle:ducklake:init": "tsx --env-file=.env.local scripts/vehicle-market.ts ducklake-init",
+    "vehicle:publish": "tsx --env-file=.env.local scripts/vehicle-market.ts publish",
+    "vehicle:status": "tsx scripts/vehicle-market.ts status"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.67",
@@ -41,7 +48,7 @@
     "@neondatabase/auth": "0.4.2-beta",
     "@neondatabase/serverless": "^1.1.0",
     "@vercel/analytics": "^2.0.1",
-    "@vercel/blob": "^2.0.0",
+    "@vercel/blob": "^2.6.1",
     "@vercel/speed-insights": "^2.0.0",
     "ai": "^6.0.149",
     "csv-parse": "^6.1.0",

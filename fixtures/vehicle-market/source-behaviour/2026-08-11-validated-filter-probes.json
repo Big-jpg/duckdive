@@ -1,0 +1,13 @@
+{
+  "validated_at": "2026-08-11",
+  "probe_scope": {"state": "wa"},
+  "validation_rule": "Aggregate movement plus returned-row predicate validation; HTTP 200 alone is insufficient.",
+  "probes": [
+    {"parameter": "fuel_type", "value": "Diesel", "total": 6227, "sample_values": ["Diesel"]},
+    {"parameter": "fuel_type", "value": "Hybrid", "total": 1283, "sample_values": ["Hybrid"]},
+    {"parameter": "transmission_type", "value": "Automatic", "total": 14929, "sample_values": ["Automatic"]},
+    {"parameter": "drive_type", "value": "All Wheel Drive", "total": 2989, "sample_values": ["All Wheel Drive"]},
+    {"parameter": "body_type_group", "value": "SUV", "total": 8637, "sample_values": ["SUV"]},
+    {"parameter": "condition", "value": "Used", "total": 14749, "sample_values": ["Used"]}
+  ]
+}

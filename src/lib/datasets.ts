@@ -1,4 +1,5 @@
 import {VIC_HOUSING_DATASET} from "./dataset-definitions/vic-housing";
+import {WA_VEHICLE_MARKET_DATASET} from "./dataset-definitions/wa-vehicle-market";
 import type {DatasetDefinition,DatasetRuntime,DatasetWorkspaceManifest} from "./dataset-types";
 
 export type {
@@ -12,8 +13,8 @@ export type {
   DatasetWorkspaceManifest,
 } from "./dataset-types";
 
-export const DATASETS:readonly DatasetDefinition[]=[VIC_HOUSING_DATASET];
-export {VIC_HOUSING_DATASET};
+export const DATASETS:readonly DatasetDefinition[]=[WA_VEHICLE_MARKET_DATASET];
+export {VIC_HOUSING_DATASET,WA_VEHICLE_MARKET_DATASET};
 export type RegisteredDataset=DatasetDefinition;
 
 function nestedKeys(value:unknown):string[]{

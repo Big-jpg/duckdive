@@ -10,7 +10,7 @@ import {datasetForStarterKey,datasetWorkspaceManifest,defaultDataset,resolveData
 
 type Provisioned=DatasetStarterDefinition&{diveId:string};
 export type StarterEntry=Omit<DatasetStarterDefinition,"file">&{datasetKey:string;datasetTitle:string};
-export type WorkspaceEditorDive=StarterEntry&{diveId:string;contractVersion:string;publicContract:DatasetDefinition["publicContract"]};
+export type WorkspaceEditorDive=StarterEntry&{diveId:string;contractVersion:string;publicContract:DatasetDefinition["publicContract"];publicShare:boolean};
 
 function starterEntry(dataset:DatasetDefinition,starter:DatasetStarterDefinition):StarterEntry{
   return {key:starter.key,title:starter.title,label:starter.label,description:starter.description,outcome:starter.outcome,entryPrompt:starter.entryPrompt,questions:starter.questions,accent:starter.accent,datasetKey:dataset.key,datasetTitle:dataset.title};
@@ -107,7 +107,7 @@ export function buildWorkspaceEditorDives(owned:readonly WorkspaceDive[],dataset
   return dataset.starters.map(starter=>{
     const mapping=owned.find(dive=>dive.dataset_key===dataset.key&&dive.starter_key===starter.key);
     if(!mapping)throw new Error(`Workspace is missing registered ownership for ${starter.key}`);
-    return {...starterEntry(dataset,starter),diveId:mapping.dive_id,contractVersion:dataset.contractVersion,publicContract:dataset.publicContract} satisfies WorkspaceEditorDive;
+    return {...starterEntry(dataset,starter),diveId:mapping.dive_id,contractVersion:dataset.contractVersion,publicContract:dataset.publicContract,publicShare:dataset.capabilities.publicShare} satisfies WorkspaceEditorDive;
   });
 }
 

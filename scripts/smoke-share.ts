@@ -1,9 +1,11 @@
 import {database} from "../src/lib/db";
 import {createDiveShare,getWorkspace,revokeDiveShare,type AppUser,type Workspace} from "../src/lib/app-db";
 import {buildWorkspaceDives} from "../src/lib/workspace-dives";
+import {defaultDataset} from "../src/lib/datasets";
 
 const QA_EMAIL="qa-share-link@invalid.local";
 const action=process.argv.slice(2).find(value=>value!=="--")||"create";
+if(action!=="cleanup"&&!defaultDataset().capabilities.publicShare)throw new Error("Public sharing is disabled for the active dataset; licensing confirmation is required before this smoke can run");
 const sql=database(process.env.DATABASE_URL_UNPOOLED||process.env.DATABASE_URL,process.env.DATABASE_URL_UNPOOLED?"DATABASE_URL_UNPOOLED":"DATABASE_URL");
 
 try{

@@ -1,0 +1,10 @@
+{
+  "validated_at": "2026-08-11",
+  "scope": {"state": "wa", "condition": "Used"},
+  "sort": {"field": "listing_created", "order": "asc"},
+  "page_size": 50,
+  "source_total": 14749,
+  "last_page": 295,
+  "last_page_rows": 49,
+  "page_after_last_rows": 0
+}

@@ -1,0 +1,12 @@
+{
+  "current_page": 1,
+  "last_page": 1,
+  "per_page": 50,
+  "total": 4,
+  "data": [
+    {"id": 1, "condition": "Used", "location_state": "VIC", "created_at": "2026-08-11 00:00:00"},
+    {"id": 2, "condition": "New", "location_state": "WA", "created_at": "2026-08-11 00:01:00"},
+    {"id": null, "condition": "Used", "location_state": "WA", "created_at": "2026-08-11 00:02:00"},
+    {"id": 4, "condition": "Used", "location_state": "WA", "vehicle_class": null, "created_at": "2026-08-11 00:03:00"}
+  ]
+}

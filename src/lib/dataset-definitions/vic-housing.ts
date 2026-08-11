@@ -4,7 +4,7 @@ import type {DatasetDefinition} from "../dataset-types";
 
 export const VIC_HOUSING_DATASET={
   key:"vic-housing",
-  default:true,
+  default:false,
   title:"VIC Housing",
   description:"Completed Victorian detached-house sales with governed price, land and volume semantics.",
   kind:"historical",
