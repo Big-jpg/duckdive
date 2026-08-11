@@ -1,0 +1,11 @@
+{
+  "scopeVersion": "wa-used-listings/v1",
+  "state": "wa",
+  "condition": "Used",
+  "sortBy": "listing_created",
+  "orderBy": "asc",
+  "pageSize": 50,
+  "make": "Subaru",
+  "yearFrom": 2020,
+  "yearTo": 2022
+}

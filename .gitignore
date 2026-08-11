@@ -18,6 +18,7 @@ rea_sales_data_model/
 .vercel
 .rea-collector/
 rea-collections/
+.vehicle-market-evidence/
 .env*.local
 .env.motherduck
 .env*

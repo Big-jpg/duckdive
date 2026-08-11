@@ -1,11 +1,11 @@
 import {describe,expect,it} from "vitest";
 import type {DatasetDefinition} from "./dataset-types";
 import {
-  DATASETS,VIC_HOUSING_DATASET,datasetByKey,datasetContextForWorkspaceDive,datasetContextForWorkspaceDiveRecord,datasetContractPrompt,datasetForStarterKey,datasetWorkspaceManifest,defaultDataset,resolveDatasetRuntime,validateDatasetRegistry,
+  DATASETS,VIC_HOUSING_DATASET,WA_VEHICLE_MARKET_DATASET,datasetByKey,datasetContextForWorkspaceDive,datasetContextForWorkspaceDiveRecord,datasetContractPrompt,datasetForStarterKey,datasetWorkspaceManifest,defaultDataset,resolveDatasetRuntime,validateDatasetRegistry,
 } from "./datasets";
 import {renderDiveSource} from "./dive-provisioning";
 
-const env={MOTHERDUCK_DATABASE:"vic_house_data",MOTHERDUCK_SHARE_URL:"md:_share/vic/test",MOTHERDUCK_SHARED_SERVICE_ACCOUNT_USERNAME:"vic_house_lab"};
+const env={MOTHERDUCK_DATABASE:"vic_house_data",MOTHERDUCK_SHARE_URL:"md:_share/vic/test",MOTHERDUCK_SHARED_SERVICE_ACCOUNT_USERNAME:"vic_house_lab",WA_VEHICLE_MARKET_MOTHERDUCK_DATABASE:"wa_vehicle_market",WA_VEHICLE_MARKET_SHARE_URL:"md:_share/wa/vehicles",WA_VEHICLE_MARKET_SERVICE_ACCOUNT_USERNAME:"wa_vehicle_lab"};
 const nonHousingDataset:DatasetDefinition={
   ...VIC_HOUSING_DATASET,
   key:"service-operations",
@@ -23,17 +23,17 @@ const nonHousingDataset:DatasetDefinition={
 
 describe("dataset registry",()=>{
   it("registers exactly one default included dataset and every current starter once",()=>{
-    expect(DATASETS.map(dataset=>dataset.key)).toEqual(["vic-housing"]);
-    expect(defaultDataset()).toBe(VIC_HOUSING_DATASET);
-    expect(VIC_HOUSING_DATASET.starters.map(starter=>starter.key)).toEqual(["market-pulse","suburb-story","market-matchup"]);
-    for(const starter of VIC_HOUSING_DATASET.starters)expect(datasetForStarterKey(starter.key)?.key).toBe("vic-housing");
-    expect(datasetByKey("vic-housing")).toBe(VIC_HOUSING_DATASET);
+    expect(DATASETS.map(dataset=>dataset.key)).toEqual(["wa-vehicle-market"]);
+    expect(defaultDataset()).toBe(WA_VEHICLE_MARKET_DATASET);
+    expect(WA_VEHICLE_MARKET_DATASET.starters.map(starter=>starter.key)).toEqual(["vehicle-market-atlas","vehicle-lens","data-observatory"]);
+    for(const starter of WA_VEHICLE_MARKET_DATASET.starters)expect(datasetForStarterKey(starter.key)?.key).toBe("wa-vehicle-market");
+    expect(datasetByKey("vic-housing")).toBeNull();
   });
 
   it("resolves an owned Dive to its dataset and approved runtime configuration",()=>{
-    const context=datasetContextForWorkspaceDive({"market-pulse":"owned-dive"},"owned-dive",env);
-    expect(context).toMatchObject({starterKey:"market-pulse",dataset:{key:"vic-housing",contractVersion:"vic-housing/v1"},runtime:{motherduckDatabase:"vic_house_data",motherduckShareUrl:"md:_share/vic/test",serviceAccountUsername:"vic_house_lab"}});
-    expect(datasetContextForWorkspaceDive({"market-pulse":"owned-dive"},"another-dive",env)).toBeNull();
+    const context=datasetContextForWorkspaceDive({"vehicle-market-atlas":"owned-dive"},"owned-dive",env);
+    expect(context).toMatchObject({starterKey:"vehicle-market-atlas",dataset:{key:"wa-vehicle-market",contractVersion:"wa-vehicle-market/v1"},runtime:{motherduckDatabase:"wa_vehicle_market",motherduckShareUrl:"md:_share/wa/vehicles",serviceAccountUsername:"wa_vehicle_lab"}});
+    expect(datasetContextForWorkspaceDive({"vehicle-market-atlas":"owned-dive"},"another-dive",env)).toBeNull();
     expect(datasetContextForWorkspaceDive({"unknown-starter":"owned-dive"},"owned-dive",env)).toBeNull();
   });
 
@@ -45,16 +45,16 @@ describe("dataset registry",()=>{
   });
 
   it("resolves relational ownership and rejects a mismatched dataset/starter pair",()=>{
-    expect(datasetContextForWorkspaceDiveRecord({dataset_key:"vic-housing",starter_key:"market-pulse"},env)?.dataset.key).toBe("vic-housing");
-    expect(datasetContextForWorkspaceDiveRecord({dataset_key:"unknown",starter_key:"market-pulse"},env)).toBeNull();
-    expect(datasetContextForWorkspaceDiveRecord({dataset_key:"vic-housing",starter_key:"unknown"},env)).toBeNull();
+    expect(datasetContextForWorkspaceDiveRecord({dataset_key:"wa-vehicle-market",starter_key:"vehicle-market-atlas"},env)?.dataset.key).toBe("wa-vehicle-market");
+    expect(datasetContextForWorkspaceDiveRecord({dataset_key:"unknown",starter_key:"vehicle-market-atlas"},env)).toBeNull();
+    expect(datasetContextForWorkspaceDiveRecord({dataset_key:"wa-vehicle-market",starter_key:"unknown"},env)).toBeNull();
   });
 
   it("rejects ambiguous defaults, dataset keys and starter keys",()=>{
-    expect(()=>validateDatasetRegistry([VIC_HOUSING_DATASET,{...VIC_HOUSING_DATASET}])).toThrow("Duplicate dataset key");
-    expect(()=>validateDatasetRegistry([{...VIC_HOUSING_DATASET,default:false}])).toThrow("exactly one default");
-    expect(()=>validateDatasetRegistry([VIC_HOUSING_DATASET,{...nonHousingDataset,default:true}])).toThrow("exactly one default");
-    expect(()=>validateDatasetRegistry([VIC_HOUSING_DATASET,{...nonHousingDataset,default:false,starters:[{...nonHousingDataset.starters[0],key:"market-pulse"}]}])).toThrow("Duplicate starter key");
+    expect(()=>validateDatasetRegistry([WA_VEHICLE_MARKET_DATASET,{...WA_VEHICLE_MARKET_DATASET}])).toThrow("Duplicate dataset key");
+    expect(()=>validateDatasetRegistry([{...WA_VEHICLE_MARKET_DATASET,default:false}])).toThrow("exactly one default");
+    expect(()=>validateDatasetRegistry([WA_VEHICLE_MARKET_DATASET,{...nonHousingDataset,default:true}])).toThrow("exactly one default");
+    expect(()=>validateDatasetRegistry([WA_VEHICLE_MARKET_DATASET,{...nonHousingDataset,default:false,starters:[{...nonHousingDataset.starters[0],key:"vehicle-market-atlas"}]}])).toThrow("Duplicate starter key");
     expect(()=>validateDatasetRegistry([{...nonHousingDataset,motherduck:{...nonHousingDataset.motherduck,shareUrlEnv:"MOTHERDUCK_SHARE_URL;DROP"}}])).toThrow("unsafe runtime selector");
     expect(()=>validateDatasetRegistry([{...nonHousingDataset,starters:[{...nonHousingDataset.starters[0],file:"../vic.tsx"}]}])).toThrow("unsafe source file");
     expect(()=>validateDatasetRegistry([nonHousingDataset])).not.toThrow();
@@ -70,7 +70,7 @@ describe("dataset registry",()=>{
   });
 
   it("serializes the registered contract without runtime configuration",()=>{
-    const prompt=datasetContractPrompt(VIC_HOUSING_DATASET);
-    expect(prompt).toContain("suburb_sale_facts");expect(prompt).toContain("Unpriced sales remain in volume");expect(prompt).not.toMatch(/token|password|motherduck_share_url|serviceAccount/i);
+    const prompt=datasetContractPrompt(WA_VEHICLE_MARKET_DATASET);
+    expect(prompt).toContain("fact_listing_observation");expect(prompt).toContain("saleInference");expect(prompt).not.toMatch(/token|password|motherduck_share_url|serviceAccount/i);
   });
 });

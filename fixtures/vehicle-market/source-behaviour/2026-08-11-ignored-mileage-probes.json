@@ -1,0 +1,11 @@
+{
+  "validated_at": "2026-08-11",
+  "scope": {"state": "wa", "make": "Subaru"},
+  "unconstrained_total": 537,
+  "probes": [
+    {"parameters": {"kmsTo": 100000}, "total": 537},
+    {"parameters": {"kmsFrom": 50000, "kmsTo": 100000}, "total": 537}
+  ],
+  "returned_counterexample_odometer_km": 203000,
+  "adapter_disposition": "reject"
+}
