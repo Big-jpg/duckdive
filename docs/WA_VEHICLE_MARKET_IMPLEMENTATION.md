@@ -118,6 +118,8 @@ The sanitized two-row fixture produces:
 
 The dated `2026-08-11-wa-used.expected.json` fixture preserves the separately validated 14,749-row, 295-page source behaviour. It is evidence, not a production assertion.
 
+For the temporary MVP current-market lens, a fully enumerated `CHANGED_DURING_CAPTURE` run may be published when every expected page is present, raw hits are unique, and duplicate and scope-violation counts are zero. The operational status remains truthful. Such a run is available to current-market views but is excluded from periodic listing-event comparisons, which continue to require `COMPLETE` observations.
+
 ## Release gates
 
 Before applying shared-infrastructure mutations, verify the exact existing resource identity and obtain explicit approval for the named operation. Apply migration 019 additively; use the dedicated Blob prefix; create only `wa_vehicle_market` in MotherDuck; keep existing owner/workspace authority fail-closed.

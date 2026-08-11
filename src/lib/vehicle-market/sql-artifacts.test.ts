@@ -7,6 +7,8 @@ describe("vehicle-market SQL artifacts",()=>{
     const sql=await readFile(path.resolve("db/ducklake/wa_vehicle_market.sql"),"utf8"),statements=sql.replace(/--.*$/gm,"");
     expect(statements).not.toMatch(/\b(?:PRIMARY KEY|FOREIGN KEY|UNIQUE|CHECK)\b/i);
     for(const view of ["vehicle_market_current","vehicle_market_history","listing_lifecycle","listing_events","market_timeseries","vehicle_screen","observation_run_quality"])expect(sql).toContain(`contract.${view}`);
+    expect(sql).toContain("run_status IN ('COMPLETE','CHANGED_DURING_CAPTURE')");
+    expect(sql).toContain("FROM core.dim_observation_run WHERE run_status='COMPLETE'");
     expect(sql).not.toMatch(/CREATE TABLE[^;]*feature_bridge/is);
   });
 

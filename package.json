@@ -31,10 +31,10 @@
     "access:revoke": "tsx --env-file=.env.local scripts/access.ts revoke",
     "access:list": "tsx --env-file=.env.local scripts/access.ts list",
     "scrape:rea": "node rea-sold-scraper/headless.mjs",
-    "vehicle:replay": "tsx scripts/vehicle-market.ts replay",
+    "vehicle:replay": "tsx --env-file=.env.local scripts/vehicle-market.ts replay",
     "vehicle:seed-blob": "tsx --env-file=.env.local scripts/vehicle-market.ts seed-blob",
-    "vehicle:smoke": "tsx scripts/vehicle-market.ts smoke",
-    "vehicle:collect": "tsx scripts/vehicle-market.ts collect",
+    "vehicle:smoke": "tsx --env-file=.env.local scripts/vehicle-market.ts smoke",
+    "vehicle:collect": "tsx --env-file=.env.local scripts/vehicle-market.ts collect",
     "vehicle:ducklake:init": "tsx --env-file=.env.local scripts/vehicle-market.ts ducklake-init",
     "vehicle:publish": "tsx --env-file=.env.local scripts/vehicle-market.ts publish",
     "vehicle:status": "tsx scripts/vehicle-market.ts status"

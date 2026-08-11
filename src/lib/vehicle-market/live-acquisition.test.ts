@@ -1,5 +1,5 @@
 import {describe,expect,it,vi} from "vitest";
-import {assertLiveAcquisitionAuthorized,captureLiveVehicleMarket,VehicleMarketAuthorizationError} from "./live-acquisition";
+import {assertLiveAcquisitionAuthorized,captureLiveVehicleMarket,VEHICLE_MARKET_USER_AGENT,VehicleMarketAuthorizationError} from "./live-acquisition";
 import type {RawObjectInput,RawObjectStore} from "./raw-object-store";
 import {sha256Hex} from "./contracts";
 
@@ -20,7 +20,7 @@ describe("live vehicle-market acquisition gate",()=>{
 
   it("enumerates a bounded population sequentially and probes page one at the end",async()=>{
     const store=new MemoryStore(),requested:number[]=[];
-    const fetchImpl=vi.fn(async(input:string|URL|Request)=>{const page=Number(new URL(String(input)).searchParams.get("page"));requested.push(page);return response(page);}) as unknown as typeof fetch;
+    const fetchImpl=vi.fn(async(input:string|URL|Request,init?:RequestInit)=>{expect(new Headers(init?.headers).get("user-agent")).toBe(VEHICLE_MARKET_USER_AGENT);const page=Number(new URL(String(input)).searchParams.get("page"));requested.push(page);return response(page);}) as unknown as typeof fetch;
     const result=await captureLiveVehicleMarket({mode:"smoke",store,fetchImpl,env:{VEHICLE_MARKET_SOURCE_ENABLED:"true"},delayMs:0,sleep:async()=>{},now:(()=>{let tick=0;return ()=>new Date(Date.UTC(2026,7,11,0,0,0,tick++));})()});
     expect(requested).toEqual([1,2,1]);
     expect(result.quality).toMatchObject({pagesExpected:2,pagesFetched:2,rawHits:2,runStatus:"COMPLETE"});

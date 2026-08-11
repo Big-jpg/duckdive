@@ -17,7 +17,17 @@ type StageRows={
 };
 
 export type VehicleMarketStageBatch={loadId:string;runKey:string;rawManifestSha256:string;rows:StageRows};
-export type PublishedVehicleMarketRun={runId:string;runKey:string;runStatus:"COMPLETE";sourceRows:number;factRows:number;dimensionCounts:{listings:number;vehicleSpecs:number;sellerVersions:number;locations:number;contents:number};rawManifestSha256:string};
+export type PublishedVehicleMarketRun={runId:string;runKey:string;runStatus:"COMPLETE"|"CHANGED_DURING_CAPTURE";sourceRows:number;factRows:number;dimensionCounts:{listings:number;vehicleSpecs:number;sellerVersions:number;locations:number;contents:number};rawManifestSha256:string};
+
+export function isVehicleMarketRunPublishable(run:ProcessedVehicleMarketRun){
+  const quality=run.quality;
+  if(quality.runStatus==="COMPLETE")return true;
+  return quality.runStatus==="CHANGED_DURING_CAPTURE"
+    &&quality.pagesFetched===quality.pagesExpected
+    &&quality.rawHits===quality.uniqueListingIds
+    &&quality.duplicateHits===0
+    &&quality.scopeViolations===0;
+}
 
 function timestamp(value:string|null|undefined){
   if(!value)return null;
@@ -29,7 +39,7 @@ function dateOnly(value:string|null|undefined){const parsed=timestamp(value);ret
 function rowValues<T>(values:Map<string,T>){return [...values.values()];}
 
 export async function buildVehicleMarketStageBatch(run:ProcessedVehicleMarketRun,store:RawObjectStore,adapter=new AutotraderVehicleMarketAdapter()):Promise<VehicleMarketStageBatch>{
-  if(run.quality.runStatus!=="COMPLETE")throw new Error("Only a COMPLETE vehicle-market run may be published");
+  if(!isVehicleMarketRunPublishable(run))throw new Error("Vehicle-market run is not publishable under the stable or bounded-drift policy");
   const lineage=new Map<string,{rawPayloadSha256:string;rawObjectReference:string;rawPageNumber:number}>(),rawObservations=new Map<string,ProcessedVehicleMarketRun["observations"][number]>();
   for(const page of run.rawPages.filter(item=>item.requestRole==="capture"&&item.httpStatus>=200&&item.httpStatus<300&&item.sourceCurrentPage===item.pageNumber)){
     const bytes=await store.read(page.objectPath);
@@ -55,7 +65,7 @@ export async function buildVehicleMarketStageBatch(run:ProcessedVehicleMarketRun
 }
 
 function motherduckDatabase(){const value=process.env.WA_VEHICLE_MARKET_MOTHERDUCK_DATABASE??"wa_vehicle_market";if(value!=="wa_vehicle_market")throw new Error("WA_VEHICLE_MARKET_MOTHERDUCK_DATABASE must be wa_vehicle_market");return value;}
-function connection(database:string){const token=process.env.MOTHERDUCK_TOKEN;if(!token)throw new Error("MOTHERDUCK_TOKEN is required");return postgres({host:process.env.MOTHERDUCK_PG_HOST||"pg.us-east-1-aws.motherduck.com",port:5432,database,username:"ducky",password:token,ssl:"require",max:2,prepare:false});}
+function connection(database:string){const token=process.env.MOTHERDUCK_TOKEN;if(!token)throw new Error("MOTHERDUCK_TOKEN is required");return postgres({host:process.env.MOTHERDUCK_PG_HOST||"pg.us-east-1-aws.motherduck.com",port:5432,database,username:"ducky",password:token,ssl:"require",max:1,prepare:false});}
 type StageTable="stage.dim_observation_run"|"stage.dim_listing"|"stage.dim_vehicle_spec"|"stage.dim_seller_version"|"stage.dim_location"|"stage.dim_listing_content"|"stage.fact_listing_observation";
 async function insertChunks(tx:TransactionSql,table:StageTable,rows:Record<string,unknown>[],size=1000){
   for(let index=0;index<rows.length;index+=size){
@@ -75,7 +85,8 @@ export async function initializeVehicleMarketDuckLake(){
   try{await catalog.unsafe(`CREATE DATABASE IF NOT EXISTS ${name} (TYPE DUCKLAKE)`);}finally{await catalog.end();}
   const target=connection(`md:${name}`);
   try{
-    await target.unsafe(await readFile(path.resolve("db/ducklake/wa_vehicle_market.sql"),"utf8"));
+    const bootstrap=await readFile(path.resolve("db/ducklake/wa_vehicle_market.sql"),"utf8");
+    for(const statement of bootstrap.split(";").map(value=>value.trim()).filter(Boolean))await target.unsafe(statement);
     await target.unsafe("CREATE SHARE IF NOT EXISTS wa_vehicle_market_app FROM wa_vehicle_market (ACCESS RESTRICTED, VISIBILITY DISCOVERABLE, UPDATE AUTOMATIC)");
     await target.unsafe("GRANT READ ON SHARE wa_vehicle_market_app TO ROLE explorer");
   }finally{await target.end();}
@@ -91,6 +102,7 @@ export async function publishVehicleMarketRun(run:ProcessedVehicleMarketRun,stor
     const promotion=(await readFile(path.resolve("db/ducklake/load_vehicle_market_run.sql"),"utf8")).replaceAll("__LOAD_ID__",batch.loadId);await target.unsafe(promotion);
     const [counts]=await target<{facts:number;runs:number}[]>`SELECT (SELECT count(*) FROM core.fact_listing_observation WHERE run_key=${batch.runKey})::BIGINT AS facts,(SELECT count(*) FROM core.dim_observation_run WHERE run_key=${batch.runKey})::BIGINT AS runs`;
     if(Number(counts?.facts)!==run.quality.uniqueListingIds||Number(counts?.runs)!==1)throw new Error("Published DuckLake rows do not reconcile to the COMPLETE run");
-    return {runId:run.runId,runKey:batch.runKey,runStatus:"COMPLETE",sourceRows:run.quality.uniqueListingIds,factRows:Number(counts.facts),dimensionCounts:{listings:batch.rows.dimListing.length,vehicleSpecs:batch.rows.dimVehicleSpec.length,sellerVersions:batch.rows.dimSellerVersion.length,locations:batch.rows.dimLocation.length,contents:batch.rows.dimListingContent.length},rawManifestSha256:batch.rawManifestSha256};
+    const runStatus:PublishedVehicleMarketRun["runStatus"]=run.quality.runStatus==="COMPLETE"?"COMPLETE":"CHANGED_DURING_CAPTURE";
+    return {runId:run.runId,runKey:batch.runKey,runStatus,sourceRows:run.quality.uniqueListingIds,factRows:Number(counts.facts),dimensionCounts:{listings:batch.rows.dimListing.length,vehicleSpecs:batch.rows.dimVehicleSpec.length,sellerVersions:batch.rows.dimSellerVersion.length,locations:batch.rows.dimLocation.length,contents:batch.rows.dimListingContent.length},rawManifestSha256:batch.rawManifestSha256};
   }finally{await target.end();}
 }

@@ -1,6 +1,6 @@
 import {describe,expect,it} from "vitest";
 import {replayVehicleMarketManifest} from "./pipeline";
-import {buildVehicleMarketStageBatch} from "./motherduck-publisher";
+import {buildVehicleMarketStageBatch,isVehicleMarketRunPublishable} from "./motherduck-publisher";
 import {sha256Hex} from "./contracts";
 import type {RawObjectInput,RawObjectStore} from "./raw-object-store";
 
@@ -22,7 +22,16 @@ describe("vehicle-market DuckLake staging",()=>{
 
   it("denies publication staging for incomplete evidence",async()=>{
     const store=new MemoryStore(),run=await replayVehicleMarketManifest("fixtures/vehicle-market/replay/wa-used-sanitized.manifest.json",store);run.quality.runStatus="PARTIAL";
-    await expect(buildVehicleMarketStageBatch(run,store)).rejects.toThrow("Only a COMPLETE");
+    await expect(buildVehicleMarketStageBatch(run,store)).rejects.toThrow("not publishable");
+  });
+
+  it("allows fully enumerated changed populations for current-market publication",async()=>{
+    const store=new MemoryStore(),run=await replayVehicleMarketManifest("fixtures/vehicle-market/replay/wa-used-sanitized.manifest.json",store);
+    run.quality={...run.quality,runStatus:"CHANGED_DURING_CAPTURE",sourceTotalStart:1,sourceTotalEnd:2,sourceTotal:1};
+    expect(isVehicleMarketRunPublishable(run)).toBe(true);
+    await expect(buildVehicleMarketStageBatch(run,store)).resolves.toMatchObject({rows:{factListingObservation:[{},{}]}});
+    run.quality.pagesFetched=0;
+    expect(isVehicleMarketRunPublishable(run)).toBe(false);
   });
 
   it("fails closed when a retained raw object no longer matches its hash",async()=>{

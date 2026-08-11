@@ -130,7 +130,7 @@ CREATE TABLE IF NOT EXISTS stage.fact_listing_observation AS SELECT NULL::UUID A
 
 CREATE OR REPLACE VIEW contract.vehicle_market_history AS
 SELECT
-  r.run_id,r.observation_date,r.observed_at,r.scope_fingerprint,
+  r.run_id,r.observation_date,r.observed_at,r.run_status,r.scope_fingerprint,
   l.listing_key,l.source_listing_id,l.source_ref_id,l.canonical_url,l.source_created_at,
   date_diff('day',CAST(l.source_created_at AS DATE),r.observation_date) AS listing_age_days,
   v.vehicle_spec_key,v.manufacturer_year,v.make,v.model,v.series,v.variant,v.vehicle_class,v.body_type,v.body_type_group,v.segment,
@@ -149,12 +149,12 @@ JOIN core.dim_vehicle_spec v USING(vehicle_spec_key)
 JOIN core.dim_seller_version s USING(seller_version_key)
 JOIN core.dim_location loc USING(location_key)
 JOIN core.dim_listing_content c USING(content_key)
-WHERE r.run_status='COMPLETE';
+WHERE r.run_status IN ('COMPLETE','CHANGED_DURING_CAPTURE');
 
 CREATE OR REPLACE VIEW contract.vehicle_market_current AS
 WITH latest AS (
   SELECT scope_fingerprint,max(observed_at) AS observed_at
-  FROM core.dim_observation_run WHERE run_status='COMPLETE' GROUP BY scope_fingerprint
+  FROM core.dim_observation_run WHERE run_status IN ('COMPLETE','CHANGED_DURING_CAPTURE') GROUP BY scope_fingerprint
 )
 SELECT h.*
 FROM contract.vehicle_market_history h
@@ -177,7 +177,7 @@ WITH ordered_runs AS (
   SELECT * FROM ordered_runs WHERE prior_run_key IS NOT NULL
 ), same_listing AS (
   SELECT c.run_key,c.prior_run_key,n.listing_key,n.observed_at,
-         p.advertised_price AS prior_price,n.advertised_price,
+         p.advertised_price AS prior_price,n.advertised_price AS current_price,
          p.odometer_km AS prior_odometer_km,n.odometer_km,
          p.content_key AS prior_content_key,n.content_key,
          p.seller_version_key AS prior_seller_version_key,n.seller_version_key,
@@ -205,10 +205,10 @@ WITH ordered_runs AS (
 SELECT * FROM newly_observed UNION ALL SELECT * FROM no_longer_observed UNION ALL SELECT * FROM changes;
 
 CREATE OR REPLACE VIEW contract.market_timeseries AS
-SELECT observation_date,scope_fingerprint,count(*) AS listing_count,
+SELECT run_id,observation_date,observed_at,run_status,scope_fingerprint,count(*) AS listing_count,
        median(advertised_price) FILTER(WHERE advertised_price IS NOT NULL) AS median_asking_price,
        median(odometer_km) FILTER(WHERE odometer_km IS NOT NULL) AS median_odometer_km
-FROM contract.vehicle_market_history GROUP BY observation_date,scope_fingerprint;
+FROM contract.vehicle_market_history GROUP BY run_id,observation_date,observed_at,run_status,scope_fingerprint;
 
 CREATE OR REPLACE VIEW contract.vehicle_screen AS
 WITH cohort AS (
