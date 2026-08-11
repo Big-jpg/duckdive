@@ -1,13 +1,12 @@
 import {defaultDataset,resolveDatasetRuntime} from "../src/lib/datasets";
 
 const errors:string[]=[],warnings:string[]=[],dataset=defaultDataset();
-const required=["DATABASE_URL","DATABASE_URL_UNPOOLED","BLOB_READ_WRITE_TOKEN","MOTHERDUCK_TOKEN","WA_VEHICLE_MARKET_MOTHERDUCK_DATABASE","WA_VEHICLE_MARKET_SHARE_URL","WA_VEHICLE_MARKET_SERVICE_ACCOUNT_USERNAME","MOTHERDUCK_WHO_SERVICE_ACCOUNT_USERNAME","NEON_AUTH_BASE_URL","NEON_AUTH_COOKIE_SECRET","RESEND_API_KEY","AUTH_EMAIL_FROM","INGEST_SECRET","NEXT_PUBLIC_SITE_URL","VEHICLE_MARKET_SOURCE_ENABLED","VEHICLE_MARKET_ALLOW_FULL_WA_COLLECTION"] as const;
+const required=["DATABASE_URL","DATABASE_URL_UNPOOLED","BLOB_READ_WRITE_TOKEN","MOTHERDUCK_TOKEN","WA_VEHICLE_MARKET_MOTHERDUCK_DATABASE","WA_VEHICLE_MARKET_SHARE_URL","WA_VEHICLE_MARKET_SERVICE_ACCOUNT_USERNAME","NEON_AUTH_BASE_URL","NEON_AUTH_COOKIE_SECRET","RESEND_API_KEY","AUTH_EMAIL_FROM","INGEST_SECRET","NEXT_PUBLIC_SITE_URL","VEHICLE_MARKET_SOURCE_ENABLED","VEHICLE_MARKET_ALLOW_FULL_WA_COLLECTION"] as const;
 for(const key of required)if(!process.env[key]?.trim())errors.push(`${key} is required`);
 let runtime:null|ReturnType<typeof resolveDatasetRuntime>=null;
 try{runtime=resolveDatasetRuntime(dataset);}catch(error){errors.push(error instanceof Error?error.message:"Dataset runtime is invalid");}
-if(dataset.key!=="wa-vehicle-market")errors.push("The isolated WA deployment must have wa-vehicle-market as its only active default dataset");
+if(dataset.key!=="wa-vehicle-market")errors.push("The WA branch must have wa-vehicle-market as its only active default dataset");
 if(runtime?.motherduckDatabase!=="wa_vehicle_market")errors.push("WA_VEHICLE_MARKET_MOTHERDUCK_DATABASE must be wa_vehicle_market for this deployment");
-if(process.env.MOTHERDUCK_WHO_SERVICE_ACCOUNT_USERNAME===process.env.WA_VEHICLE_MARKET_SERVICE_ACCOUNT_USERNAME)errors.push("MOTHERDUCK_WHO_SERVICE_ACCOUNT_USERNAME must differ from the WA vehicle-market service account");
 for(const key of ["VEHICLE_MARKET_SOURCE_ENABLED","VEHICLE_MARKET_ALLOW_FULL_WA_COLLECTION"] as const)if(process.env[key]&&!/^(?:true|false)$/.test(process.env[key]))errors.push(`${key} must be exactly true or false`);
 if(process.env.VEHICLE_MARKET_ALLOW_FULL_WA_COLLECTION==="true"&&process.env.VEHICLE_MARKET_SOURCE_ENABLED!=="true")errors.push("VEHICLE_MARKET_ALLOW_FULL_WA_COLLECTION cannot be true while VEHICLE_MARKET_SOURCE_ENABLED is false");
 if(process.env.VEHICLE_MARKET_SOURCE_ENABLED==="true")warnings.push("Live source access is enabled; application startup still cannot initiate acquisition, but confirm this is intentional");

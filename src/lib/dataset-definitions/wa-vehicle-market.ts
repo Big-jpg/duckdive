@@ -47,7 +47,7 @@ export const WA_VEHICLE_MARKET_DATASET={
     databaseDefault:"wa_vehicle_market",
     shareUrlEnv:"WA_VEHICLE_MARKET_SHARE_URL",
     serviceAccountEnv:"WA_VEHICLE_MARKET_SERVICE_ACCOUNT_USERNAME",
-    serviceAccountDefault:"duckdive_wa_vehicle_lab",
+    serviceAccountDefault:"vic_house_lab",
   },
   sourceTemplateValues:runtime=>({"__MOTHERDUCK_SHARE_URL__":runtime.motherduckShareUrl}),
   capabilities:{agentQuery:true,editing:true,publicShare:false},

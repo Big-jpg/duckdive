@@ -18,6 +18,10 @@ export interface RawObjectStore{
   read(objectPath:string):Promise<Buffer>;
 }
 
+export interface RawManifestStore extends RawObjectStore{
+  putManifest(runId:string,observationDate:string,bytes:Buffer):Promise<StoredRawObject>;
+}
+
 function safeSegment(value:string,label:string){
   if(!/^[A-Za-z0-9._-]+$/.test(value))throw new Error(`Unsafe ${label}`);
   return value;
@@ -50,7 +54,7 @@ export class LocalRawObjectStore implements RawObjectStore{
 }
 
 export class VercelBlobRawObjectStore implements RawObjectStore{
-  constructor(private readonly token=process.env.BLOB_READ_WRITE_TOKEN){if(!token)throw new Error("HUMAN ACTION REQUIRED\n\nPurpose:\nUse the approved private Blob store for immutable raw evidence.\n\nAction:\nProvide BLOB_READ_WRITE_TOKEN from the isolated WA estate.\n\nThen reply:\nready");}
+  constructor(private readonly token=process.env.BLOB_READ_WRITE_TOKEN){if(!token)throw new Error("HUMAN ACTION REQUIRED\n\nPurpose:\nUse the existing DuckDive private Blob store for immutable vehicle-market evidence.\n\nAction:\nProvide BLOB_READ_WRITE_TOKEN through the ignored operator environment.\n\nThen reply:\nready");}
 
   private pathname(input:RawObjectInput,hash:string){
     const run=safeSegment(input.runId,"run ID"),date=safeSegment(input.observationDate,"observation date"),role=input.requestRole==="capture"?`page=${String(input.pageNumber).padStart(6,"0")}`:`probe=page-${String(input.pageNumber).padStart(6,"0")}`;

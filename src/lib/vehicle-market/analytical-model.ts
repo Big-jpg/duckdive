@@ -4,7 +4,8 @@ import {valueHash,type CanonicalListingObservationV1,type ProcessedVehicleMarket
 export type VehicleMarketFactRow={
   runKey:string;listingKey:string;vehicleSpecKey:string;sellerVersionKey:string;locationKey:string;contentKey:string;
   observedAt:string;advertisedPrice:number|null;driveawayPrice:number|null;odometerKm:number|null;sourceStatus:string|null;
-  sourceUpdatedAt:string|null;sourcePriorAdvertisedPrice:number|null;sourcePriorPriceEndedAt:string|null;sourceRecordHash:string;
+  sourceUpdatedAt:string|null;regoExpiry:string|null;colour:string|null;isRegistered:boolean|null;isTopAd:boolean|null;isAuction:boolean|null;
+  sourcePriorAdvertisedPrice:number|null;sourcePriorPriceEndedAt:string|null;sourceRecordHash:string;
 };
 
 export type VehicleMarketAnalyticalBatch={
@@ -20,7 +21,7 @@ export type VehicleMarketAnalyticalBatch={
 function mapByHash(rows:CanonicalListingObservationV1[],hash:(row:CanonicalListingObservationV1)=>string,value:(row:CanonicalListingObservationV1)=>Record<string,unknown>){const result=new Map<string,Record<string,unknown>>();for(const row of rows)result.set(hash(row),value(row));return result;}
 
 export function buildVehicleMarketAnalyticalBatch(run:ProcessedVehicleMarketRun):VehicleMarketAnalyticalBatch{
-  const scopeFingerprint=sourceScopeFingerprint(run.scope),runKey=valueHash({source:"autotrader",runId:run.runId,scopeFingerprint}),observedAt=`${run.observationDate}T00:00:00.000Z`;
+  const scopeFingerprint=sourceScopeFingerprint(run.scope),runKey=valueHash({source:"autotrader",runId:run.runId,scopeFingerprint}),observedAt=run.requestAttempts.map(attempt=>attempt.requestedAt).sort()[0]??`${run.observationDate}T00:00:00.000Z`;
   const accepted=run.observations.filter((row):row is CanonicalListingObservationV1&{listingKey:string;sourceListingId:string}=>Boolean(row.listingKey&&row.sourceListingId));
   const listings=new Map<string,Record<string,unknown>>();
   for(const row of accepted)listings.set(row.listingKey,{listingKey:row.listingKey,source:row.source,sourceListingId:row.sourceListingId,sourceRefId:row.sourceRefId,canonicalUrl:row.canonicalUrl,sourceCreatedAt:row.sourceCreatedAt});
@@ -29,7 +30,7 @@ export function buildVehicleMarketAnalyticalBatch(run:ProcessedVehicleMarketRun)
   const locations=mapByHash(accepted,row=>row.locationHash,row=>({locationKey:row.locationHash,suburb:row.suburb,locationState:row.locationState,latitude:row.latitude,longitude:row.longitude}));
   const contents=mapByHash(accepted,row=>row.contentHash,row=>({contentKey:row.contentHash,description:row.description,featureSetKey:row.featureSetHash,normalizedFeatureTerms:row.featureTerms,photoCount:row.photoCount,hasVideo:row.hasVideo}));
   const facts=new Map<string,VehicleMarketFactRow>();
-  for(const row of accepted)facts.set(`${runKey}:${row.listingKey}`,{runKey,listingKey:row.listingKey,vehicleSpecKey:row.vehicleSpecHash,sellerVersionKey:row.sellerVersionHash,locationKey:row.locationHash,contentKey:row.contentHash,observedAt,advertisedPrice:row.advertisedPrice,driveawayPrice:row.driveawayPrice,odometerKm:row.odometerKm,sourceStatus:row.sourceStatus,sourceUpdatedAt:row.sourceUpdatedAt,sourcePriorAdvertisedPrice:row.sourcePriorAdvertisedPrice,sourcePriorPriceEndedAt:row.sourcePriorPriceEndedAt,sourceRecordHash:row.sourceRecordHash});
+  for(const row of accepted)facts.set(`${runKey}:${row.listingKey}`,{runKey,listingKey:row.listingKey,vehicleSpecKey:row.vehicleSpecHash,sellerVersionKey:row.sellerVersionHash,locationKey:row.locationHash,contentKey:row.contentHash,observedAt,advertisedPrice:row.advertisedPrice,driveawayPrice:row.driveawayPrice,odometerKm:row.odometerKm,sourceStatus:row.sourceStatus,sourceUpdatedAt:row.sourceUpdatedAt,regoExpiry:row.regoExpiry,colour:row.colour,isRegistered:row.isRegistered,isTopAd:row.isTopAd,isAuction:row.isAuction,sourcePriorAdvertisedPrice:row.sourcePriorAdvertisedPrice,sourcePriorPriceEndedAt:row.sourcePriorPriceEndedAt,sourceRecordHash:row.sourceRecordHash});
   return {run:{runKey,runId:run.runId,observationDate:run.observationDate,observedAt,scopeFingerprint,runStatus:run.quality.runStatus},listings,vehicleSpecs,sellerVersions,locations,contents,facts};
 }
 

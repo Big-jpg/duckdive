@@ -1,11 +1,12 @@
 import {randomUUID} from "node:crypto";
 import {database} from "../db";
 import {sourceScopeFingerprint} from "./autotrader-adapter";
-import {VEHICLE_MARKET_ADAPTER_VERSION,VEHICLE_MARKET_MODEL_VERSION,VEHICLE_MARKET_PARSER_VERSION,VEHICLE_MARKET_SCHEMA_VERSION,type ProcessedVehicleMarketRun} from "./contracts";
+import {VEHICLE_MARKET_ADAPTER_VERSION,VEHICLE_MARKET_MODEL_VERSION,VEHICLE_MARKET_PARSER_VERSION,VEHICLE_MARKET_SCHEMA_VERSION,valueHash,type ProcessedVehicleMarketRun} from "./contracts";
+import type {PublishedVehicleMarketRun} from "./motherduck-publisher";
 
 function connectionUrl(){
   const value=process.env.DATABASE_URL_UNPOOLED??process.env.DATABASE_URL;
-  if(!value)throw new Error("HUMAN ACTION REQUIRED\n\nPurpose:\nRecord acquisition lineage and reconciliation in the isolated WA Neon control plane.\n\nAction:\nApply db/019_vehicle_market_ingestion.sql and provide DATABASE_URL_UNPOOLED or DATABASE_URL.\n\nThen reply:\nready");
+  if(!value)throw new Error("HUMAN ACTION REQUIRED\n\nPurpose:\nRecord vehicle-market lineage in the existing DuckDive Neon control plane.\n\nAction:\nApply db/019_vehicle_market_ingestion.sql and provide DATABASE_URL_UNPOOLED or DATABASE_URL through the ignored operator environment.\n\nThen reply:\nready");
   return value;
 }
 
@@ -34,5 +35,15 @@ export async function persistVehicleMarketOperationalRun(run:ProcessedVehicleMar
     }
     if(inserted)for(const [severity,messages] of [["error",quality.errors],["warning",quality.warnings]] as const)for(const message of messages.slice(0,100))await tx`INSERT INTO ops.vehicle_market_validation_result(validation_result_id,run_id,validation_code,severity,detail) VALUES(${randomUUID()}::uuid,${run.runId}::uuid,${message.slice(0,120)},${severity},${tx.json({message:message.slice(0,1000)} as never)})`;
     return {runId:run.runId,status:quality.runStatus,rawObjects:rawIds.size,attempts:run.requestAttempts.length};
+  });}finally{await sql.end();}
+}
+
+export async function persistVehicleMarketPublicationResult(result:PublishedVehicleMarketRun){
+  const sql=database(connectionUrl(),process.env.DATABASE_URL_UNPOOLED?"DATABASE_URL_UNPOOLED":"DATABASE_URL"),fingerprint=valueHash({runId:result.runId,targetDatabase:"wa_vehicle_market",sourceRows:result.sourceRows,factRows:result.factRows,dimensionCounts:result.dimensionCounts,rawManifestSha256:result.rawManifestSha256});
+  try{return await sql.begin(async tx=>{
+    const [existing]=await tx<{source_rows:number;fact_rows:number;dimension_counts:Record<string,number>;reconciliation_fingerprint:string}[]>`SELECT source_rows,fact_rows,dimension_counts,reconciliation_fingerprint FROM ops.vehicle_market_publication_result WHERE run_id=${result.runId}::uuid AND target_database='wa_vehicle_market'`;
+    if(existing){if(Number(existing.source_rows)!==result.sourceRows||Number(existing.fact_rows)!==result.factRows||existing.reconciliation_fingerprint!==fingerprint||valueHash(existing.dimension_counts)!==valueHash(result.dimensionCounts))throw new Error("Conflicting vehicle-market publication reconciliation");return {runId:result.runId,status:"reconciled",factRows:result.factRows,reconciliationFingerprint:fingerprint};}
+    await tx`INSERT INTO ops.vehicle_market_publication_result(publication_result_id,run_id,target_database,status,source_rows,fact_rows,dimension_counts,reconciliation_fingerprint,started_at,completed_at) VALUES(${randomUUID()}::uuid,${result.runId}::uuid,'wa_vehicle_market','reconciled',${result.sourceRows},${result.factRows},${tx.json(result.dimensionCounts as never)},${fingerprint},now(),now())`;
+    return {runId:result.runId,status:"reconciled",factRows:result.factRows,reconciliationFingerprint:fingerprint};
   });}finally{await sql.end();}
 }

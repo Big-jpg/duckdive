@@ -1,10 +1,12 @@
 import {mkdir,readFile,writeFile} from "node:fs/promises";
 import path from "node:path";
+import {seedVehicleMarketFixtureToRawStore} from "../src/lib/vehicle-market/blob-seed";
 import {assertLiveAcquisitionAuthorized,captureLiveVehicleMarket} from "../src/lib/vehicle-market/live-acquisition";
 import {vehicleMarketReplayManifestV1Schema,vehicleMarketScopeV1Schema,type ProcessedVehicleMarketRun} from "../src/lib/vehicle-market/contracts";
+import {initializeVehicleMarketDuckLake,publishVehicleMarketRun} from "../src/lib/vehicle-market/motherduck-publisher";
 import {replayVehicleMarketManifest,replayVehicleMarketManifestValue} from "../src/lib/vehicle-market/pipeline";
 import {LocalRawObjectStore,VercelBlobRawObjectStore} from "../src/lib/vehicle-market/raw-object-store";
-import {persistVehicleMarketOperationalRun} from "../src/lib/vehicle-market/operational-store";
+import {persistVehicleMarketOperationalRun,persistVehicleMarketPublicationResult} from "../src/lib/vehicle-market/operational-store";
 
 function argument(name:string){const index=process.argv.indexOf(name);return index>=0?process.argv[index+1]:undefined;}
 function requiredArgument(name:string){const value=argument(name);if(!value)throw new Error(`${name} is required`);return value;}
@@ -25,15 +27,37 @@ async function saveRun(run:ProcessedVehicleMarketRun,blobStore?:VercelBlobRawObj
   console.log(JSON.stringify({run_id:run.runId,...evidence(run)},null,2));
 }
 
+async function loadSavedRun(runId:string):Promise<ProcessedVehicleMarketRun>{
+  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(runId))throw new Error("Run ID must be a UUID");
+  const directory=path.join(evidenceRoot,"runs",runId),run=JSON.parse(await readFile(path.join(directory,"run.json"),"utf8")) as ProcessedVehicleMarketRun;
+  const lines=(await readFile(path.join(directory,"observations.jsonl"),"utf8")).split(/\r?\n/).filter(Boolean),observations=lines.map(line=>JSON.parse(line));
+  if(run.runId!==runId||run.quality?.runId!==runId)throw new Error("Saved run identity does not match the requested run");
+  if(observations.length!==run.quality.uniqueListingIds)throw new Error("Saved observations do not reconcile to the run quality record");
+  return {...run,observations};
+}
+
 async function main(){
   const command=process.argv[2];
   if(command==="replay"){
     const manifest=requiredArgument("--manifest");
     if(/^https:\/\//i.test(manifest)){
       const blobStore=new VercelBlobRawObjectStore(),document=vehicleMarketReplayManifestV1Schema.parse(JSON.parse((await blobStore.read(manifest)).toString("utf8")));
-      await saveRun(await replayVehicleMarketManifestValue(document,blobStore));return;
+      const run=await replayVehicleMarketManifestValue(document,blobStore);await saveRun(run);if(has("--record-neon"))await persistVehicleMarketOperationalRun(run);return;
     }
     const run=await replayVehicleMarketManifest(manifest,localStore);await saveRun(run);if(has("--record-neon"))await persistVehicleMarketOperationalRun(run);return;
+  }
+  if(command==="seed-blob"){
+    const blobStore=new VercelBlobRawObjectStore(),seeded=await seedVehicleMarketFixtureToRawStore(requiredArgument("--manifest"),blobStore);
+    console.log(JSON.stringify({manifest_object_path:seeded.manifestObjectPath,manifest_payload_sha256:seeded.manifestPayloadSha256,raw_objects:seeded.rawObjects},null,2));return;
+  }
+  if(command==="ducklake-init"){
+    if(!has("--execute"))throw new Error("HUMAN ACTION REQUIRED\n\nPurpose:\nCreate or update wa_vehicle_market inside the existing MotherDuck organization.\n\nAction:\nRe-run with --execute after explicit MotherDuck DDL approval.\n\nThen reply:\nready");
+    console.log(JSON.stringify(await initializeVehicleMarketDuckLake(),null,2));return;
+  }
+  if(command==="publish"){
+    if(!has("--execute"))throw new Error("HUMAN ACTION REQUIRED\n\nPurpose:\nPublish one reconciled COMPLETE observation to wa_vehicle_market.\n\nAction:\nRe-run with --execute after explicit MotherDuck write approval.\n\nThen reply:\nready");
+    const run=await loadSavedRun(requiredArgument("--run")),store=run.rawPages.some(page=>/^https:\/\//i.test(page.objectPath))?new VercelBlobRawObjectStore():localStore,result=await publishVehicleMarketRun(run,store);
+    if(has("--record-neon"))await persistVehicleMarketPublicationResult(result);console.log(JSON.stringify(result,null,2));return;
   }
   if(command==="smoke"){
     if(!has("--live"))throw new Error("--live is required for an explicit bounded source smoke");
@@ -52,7 +76,7 @@ async function main(){
     const runId=requiredArgument("--run");if(!/^[A-Za-z0-9._-]+$/.test(runId))throw new Error("Invalid run ID");
     console.log(await readFile(path.join(evidenceRoot,"runs",runId,"run.json"),"utf8"));return;
   }
-  throw new Error("Use replay, smoke, collect, or status");
+  throw new Error("Use replay, seed-blob, smoke, collect, ducklake-init, publish, or status");
 }
 
 main().catch(error=>{console.error(error instanceof Error?error.message:error);process.exitCode=1;});
