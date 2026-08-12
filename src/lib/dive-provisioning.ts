@@ -79,10 +79,10 @@ export function workspaceDatasetProvisioningPlan(owned:readonly WorkspaceDive[],
 export async function ensureWorkspaceDataset(user:AppUser,dataset:DatasetDefinition=defaultDataset()):Promise<Workspace>{
   const runtime=resolveDatasetRuntime(dataset),existing=await getWorkspace(user.user_id),owned=existing?await getWorkspaceDives(existing.workspace_id):[];
   const {missing}=workspaceDatasetProvisioningPlan(owned,dataset);
+  const sources=await sourceDives(dataset);
   if(!missing.length&&existing?.motherduck_username===runtime.serviceAccountUsername)return existing;
   const diveIds:Record<string,string>={},sourceIds:Record<string,string>={};
   if(missing.length){
-    const sources=await sourceDives(dataset);
     for(const starter of missing){
       const source=sources.find(item=>item.key===starter.key);if(!source)throw new Error(`Source Dive is missing ${starter.key}`);
       diveIds[starter.key]=await createDive(`${starter.title} · ${user.user_id.slice(0,8)}`,starter.description,await content(dataset,starter),runtime.serviceAccountUsername);
