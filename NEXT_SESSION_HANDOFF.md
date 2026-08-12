@@ -1,6 +1,6 @@
 # Next session handoff
 
-Updated: 2026-08-12 (Australia/Perth)
+Updated: 2026-08-13 (Australia/Perth)
 
 ## Outcome achieved
 
@@ -12,8 +12,10 @@ The temporary WA Used Vehicle Listings MVP is live for an approved existing Duck
 - The existing Vercel project is configured for the WA runtime with both source-acquisition gates disabled.
 - Market Atlas, Vehicle Lens, and Data Observatory are provisioned and query successfully in MotherDuck.
 - The same three reports now render successfully inside authenticated DuckDive embeds.
+- The owner edit/save path is now proven in production: Vehicle Lens was changed from `Vehicle Lens` to `Vehicle Lens — WA` and persisted as version 2 without changing analytical semantics.
+- The saved version exposes its requested-vs-applied manifest, validation results, report purpose, and reversible version history in DuckDive.
 
-Do not rerun acquisition or rebuild the data plane. The remaining work is limited release assurance, evidence capture, and mandatory disposal by 2026-08-18 Australia/Perth.
+Do not rerun acquisition or rebuild the data plane. The next product phase is base-site UI/UX polish only. Mandatory WA disposal remains due by 2026-08-18 Australia/Perth.
 
 ## Start here
 
@@ -22,19 +24,23 @@ Do not rerun acquisition or rebuild the data plane. The remaining work is limite
 - Reverify current external state before mutation.
 - Never write credentials or the restricted MotherDuck share URL to Git, logs, screenshots, or chat.
 - Do not create another Vercel project/team, Neon project, Blob store, MotherDuck organization, auth estate, service account, or human seat.
+- For the next phase, treat the embedded Dive as an opaque governed surface. Improve the application around it; do not modify report source, report validation, data contracts, APIs, auth, ownership, or infrastructure.
 
 ## Git and deployment state
 
-- Current `origin/main`: `f583fcc` (`Patched Motherduck API to support new provisioning endpoints and added tests for the embed route and Motherduck API.`).
+- Current `origin/main`: `6c85c4c` (`Harden MotherDuck connections and validate report update plans`).
 - Relevant preceding commits:
+  - `1cf0f6a` — add the report-validation feature flag used to isolate the rejected-plan failure;
+  - `cc8bdc8` — update the prior session handoff;
+  - `f583fcc` — bind the governed MotherDuck share explicitly when creating embed sessions;
   - `260902e` — refresh registered source Dives even when owner mappings already exist;
   - `04c10cc` — correct current-observation copy and publishable-run policy wording;
   - `0dc62e9` — merge the expanded WA handoff;
   - `3cd6d33` — merge the WA vehicle-market implementation.
-- The user confirmed the Vercel rebuild after `f583fcc` succeeded.
+- Production deployment `dpl_6kTFVgjVqjDPKdyQ7etJyUfJTTbd` served the successful edit/save request after the connection and validation fixes.
 - Production project/domain remain the existing `vic-house-data-lab` / `https://duckdive.gold` estate.
 - Former VIC-only rollback reference: `e10181b623e299f7dc550eeafe0dfd3c727cdc10`.
-- At handoff update, the local worktree was clean on `main` at `f583fcc`.
+- Before this documentation update, the local worktree was clean on `main` at `6c85c4c` and matched `origin/main`.
 
 ## Accepted observation and MVP correction
 
@@ -127,11 +133,27 @@ Verified in MotherDuck:
 - Vehicle Lens shows real make/model rows, vehicle age, odometer/km-per-year, cohort sizes, cohort ranges, and percentiles.
 - Data Observatory shows `CHANGED_DURING_CAPTURE`, `295 / 295`, 14,747 raw hits, 14,747 unique IDs, zero duplicates, and zero violations.
 
-Verified in DuckDive after `f583fcc`:
+Verified in DuckDive after `6c85c4c`:
 
 - Authenticated embeds render successfully against the governed WA share.
 - The fix passes the configured share explicitly in the MotherDuck embed-session `required_resources` field, bound to alias `wa_vehicle_market`.
 - This explicit session binding is required; the same Dives worked in MotherDuck before they worked in DuckDive.
+
+### Verified edit/save smoke
+
+The owner completed the smallest useful production mutation on Vehicle Lens:
+
+- requested change: replace the unique H1 `Vehicle Lens` with `Vehicle Lens — WA`;
+- result: version 1 advanced to version 2;
+- applied change: one heading text node only;
+- unchanged: queries, metrics, filters, charts, styling, governed contract, and ownership protections;
+- saved metadata: exact/unique-copy validation passed, analytical semantics were recorded as unchanged, and the report purpose was reconciled to the revised geographic title;
+- completed run: `15731c6b-61d6-4e78-9c55-8d631c97bbbb`;
+- Vercel request ID: `jgzq6-1786550773430-ac70832e35fc`.
+
+Independent Vercel inspection found one MotherDuck token request during the successful `/api/chat` invocation, followed by completed MCP edit and embed verification calls. The post-save `/report`, `/version`, and `/embed` requests returned `200` repeatedly. No post-save `CONNECTION_ENDED` error was present in the inspected production window.
+
+The user supplied authenticated visual evidence of the version-2 report, saved manifest, reconciled report purpose, and updated embedded heading. A later independent browser refresh redirected to login because that browser session had expired, so do not misstate that signed-in re-read as independently repeated.
 
 ## Why the embed fix matters
 
@@ -143,6 +165,15 @@ Commit `f583fcc` updates both authenticated embed entry points:
 - owned Dive embed route in `src/app/api/dives/[diveId]/embed/route.ts`.
 
 `src/lib/motherduck-api.ts` now supports per-session `required_resources`. Preserve this behavior in future refactors. Do not treat MotherDuck UI success as proof that DuckDive embedding works.
+
+## Why the edit/save fix matters
+
+Commit `6c85c4c` addressed the two production failure modes observed during report editing:
+
+- MotherDuck connection/token work is single-flight so concurrent report metadata and embed requests do not race redundant token creation;
+- report update plans are schema-validated before mutation, while the temporary validation flag remains available for controlled diagnosis.
+
+The successful version-2 smoke proves the full owner-visible path: interpret request, validate the proposed change, mutate the governed Dive, persist version metadata, and reload the updated embed. Do not remove these protections as part of visual work.
 
 ## Validation evidence
 
@@ -166,46 +197,53 @@ focused ESLint passed
 git diff --check passed
 ```
 
-The user confirmed the deployed DuckDive embed worked after `f583fcc`.
+After `6c85c4c`, the focused and full local checks passed before deployment, including 53 test files / 185 tests, typecheck, focused lint, build, and `git diff --check`. The production edit/save evidence above is the release-level proof for this path.
 
-## Remaining work
+## Next phase: base-site UI/UX polish
 
-### 1. Optional final owner edit/reset smoke
+### Intended outcome
 
-If continuing release assurance, use one owner Dive only:
+Make the signed-in journey from workspace to report to DuckDive editor clearer, calmer, more legible, and easier to use on desktop and mobile. This is presentation work around a now-proven Dive workflow, not another infrastructure phase.
 
-- make a harmless report edit;
-- verify a new version is recorded;
-- reset to the registered starter;
-- verify the governed values still load in DuckDive.
+### Smallest owner-visible slice
 
-Do not edit all three merely to prove the path.
+Start with the two active application surfaces:
 
-### 2. Denial checks
+1. `src/components/LabHome.tsx`: improve workspace hierarchy, report discovery, action clarity, and the distinction between included reports and optional data-source paths.
+2. `src/components/EditLab.tsx`: improve the report/editor hierarchy, pane navigation, toolbar status/actions, readable metadata and explanations, responsive behavior, keyboard focus, and loading/error states.
 
-Verify only if the user wants to continue release assurance:
+Keep `src/components/AppBrand.tsx`, `src/app/design-tokens.css`, and `src/app/lab.css` as the active shell seams. Confirm whether `src/app/styles.css` is unused before consolidating or removing it; do not create a third visual system.
 
-- signed-out workspace access redirects to login;
-- an unknown/unallowlisted user is denied;
-- one owner cannot access another owner’s Dive;
-- arbitrary Dive IDs and mismatched dataset/resource combinations fail closed;
-- public sharing remains unavailable for WA;
-- application/source acquisition remains impossible because both source gates are false.
+### Hard scope boundary for this phase
 
-### 3. Release evidence
+In scope:
 
-Record, without secrets:
+- visual hierarchy, typography, spacing, colour application, responsive layout, and interaction affordances;
+- accessible focus/hover/disabled states and clearer status/error/loading presentation;
+- workspace, login, header/navigation, and editor-shell consistency where needed for the owner journey;
+- copy changes that improve comprehension without changing analytical meaning.
 
-- deployed commit (`f583fcc`) and production URL;
-- Vercel Ready/build result;
-- authenticated DuckDive report results;
-- optional edit/reset result;
-- optional denial results;
-- known limitation: only one accepted observation, so no movement or lifecycle claims.
+Out of scope:
 
-Do not claim broader production completion from a Vercel build alone.
+- embedded Dive TSX, starter-report source, report validation, mutation semantics, or versioning;
+- MotherDuck/DuckLake databases, shares, tokens, service accounts, MCP calls, or embed-session contracts;
+- Neon schemas or metadata, Vercel configuration, Blob, ingestion, acquisition, dataset registry, or analytics contracts;
+- authentication, allowlisting, ownership checks, public-sharing policy, API payloads, or route behavior;
+- any new data source, report, query, metric, chart, or external resource.
 
-### 4. Mandatory retention cleanup
+### Validation for the UI slice
+
+- inspect the signed-in workspace and editor at desktop and narrow mobile widths;
+- traverse workspace → report → DuckDive using keyboard as well as pointer input;
+- verify visible focus, readable contrast, loading/error/disabled states, and no clipped primary actions;
+- verify the existing iframe still loads and `/report`, `/version`, and `/embed` behavior remains unchanged;
+- do not increment a report version merely to test visual changes;
+- run focused lint/typecheck while iterating, then the normal test/build/diff checks before release;
+- record authenticated owner visual evidence separately from Vercel Ready/build evidence.
+
+Optional denial checks remain useful release assurance, but they are not part of the UI redesign and must not expand its scope.
+
+## Mandatory retention cleanup
 
 All WA vehicle-market raw responses, Neon operational rows, DuckLake data/share, and temporary Dives must be removed no later than **2026-08-18 Australia/Perth**.
 
@@ -225,3 +263,4 @@ All WA vehicle-market raw responses, Neon operational rows, DuckLake data/share,
 - No first-observation movement, disappearance, reappearance, or sale claims.
 - Public WA sharing remains disabled.
 - Never expose credentials or the restricted share URL.
+- During the UI/UX phase, do not change the embedded Dive renderer, report source, validation path, MotherDuck/Neon/data plane, auth, ownership, or API contracts.
