@@ -4,8 +4,14 @@ import {StreamableHTTPClientTransport} from "@modelcontextprotocol/sdk/client/st
 import {createMotherDuckToken,type MotherDuckTokenType} from "./motherduck-api";
 
 type TokenEntry={token:string;generation:number;expires:number};
-const tokens=new Map<string,TokenEntry>(),connections=new Map<string,{generation:number;sql:Sql}>(),clients=new Map<string,{generation:number;client:MCPClient}>();let generation=1;
-async function credentials(username:string,tokenType:MotherDuckTokenType="read_write"){const key=`${username}:${tokenType}`,cached=tokens.get(key);if(cached&&cached.expires>Date.now())return cached;const ttl=tokenType==="read_scaling"?900:3600,{token}=await createMotherDuckToken(username,tokenType,ttl);const entry={token,generation:generation++,expires:Date.now()+(ttl-60)*1000};tokens.set(key,entry);return entry;}
+const tokens=new Map<string,TokenEntry>(),tokenRequests=new Map<string,Promise<TokenEntry>>(),connections=new Map<string,{generation:number;sql:Sql}>(),clients=new Map<string,{generation:number;client:MCPClient}>();let generation=1;
+async function credentials(username:string,tokenType:MotherDuckTokenType="read_write"){
+  const key=`${username}:${tokenType}`,cached=tokens.get(key);if(cached&&cached.expires>Date.now())return cached;
+  const pending=tokenRequests.get(key);if(pending)return pending;
+  const request=(async()=>{const ttl=tokenType==="read_scaling"?900:3600,{token}=await createMotherDuckToken(username,tokenType,ttl);const entry={token,generation:generation++,expires:Date.now()+(ttl-60)*1000};tokens.set(key,entry);return entry;})();
+  tokenRequests.set(key,request);try{return await request;}finally{if(tokenRequests.get(key)===request)tokenRequests.delete(key);}
+}
 export async function motherduckServiceSql(username:string,tokenType:MotherDuckTokenType="read_write"){const key=`${username}:${tokenType}`,credential=await credentials(username,tokenType),cached=connections.get(key);if(cached?.generation===credential.generation)return cached.sql;if(cached)await cached.sql.end().catch(()=>{});const sql=postgres({host:process.env.MOTHERDUCK_PG_HOST||"pg.us-east-1-aws.motherduck.com",port:5432,database:"md:",username:"ducky",password:credential.token,ssl:"require",max:2,prepare:false});connections.set(key,{generation:credential.generation,sql});return sql;}
 export async function closeMotherduckServiceSql(username:string,tokenType:MotherDuckTokenType){const key=`${username}:${tokenType}`,cached=connections.get(key);connections.delete(key);if(cached)await cached.sql.end({timeout:5}).catch(()=>{});}
+export function motherduckConnectionEnded(error:unknown){return typeof error==="object"&&error!==null&&"code" in error&&(error as {code?:string}).code==="CONNECTION_ENDED";}
 export async function motherduckMcp(username:string){const credential=await credentials(username),cached=clients.get(username);if(cached?.generation===credential.generation)return cached.client;if(cached)await cached.client.close().catch(()=>{});const transport=new StreamableHTTPClientTransport(new URL(process.env.MOTHERDUCK_MCP_URL||"https://api.motherduck.com/mcp"),{requestInit:{headers:{Authorization:`Bearer ${credential.token}`}}});const client=await createMCPClient({transport});clients.set(username,{generation:credential.generation,client});return client;}

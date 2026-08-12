@@ -4,7 +4,7 @@ import type {MCPClient} from "@ai-sdk/mcp";
 import {duckDiveRunIsActive} from "./duckdive-db";
 import {verifyDiveRevision,type DiveSnapshot} from "./duckdive-runtime";
 import type {DatasetReportPolicy,DatasetRuntime} from "./datasets";
-import {validateReportUpdatePlan,type ReportUpdatePlan} from "./duckdive-report";
+import {reportUpdatePlanSchema,validateReportUpdatePlan,type ReportUpdatePlan} from "./duckdive-report";
 
 export type VerifiedMutation={before:DiveSnapshot;after:DiveSnapshot;summary:string};
 
@@ -28,7 +28,7 @@ export async function createDuckDiveTools(input:{client:MCPClient;runId:string;d
   const tools:ToolSet={
     prepare_report_update:tool({
       description:reportValidationEnabled?"Before editing, convert the request into the required structured intent and change manifest fields. Use only capability IDs from the supplied contract. If the request is unsupported or materially ambiguous, set unsupportedRequests or materialClarification and do not attempt a save.":"Before editing, convert the request into the required structured intent and change manifest fields. Report policy validation is temporarily disabled, so capability IDs and validation results will be recorded but will not reject the plan. Still identify genuinely unsupported requests or material ambiguity.",
-      inputSchema:z.any(),
+      inputSchema:reportUpdatePlanSchema,
       execute:async(value)=>{
         if(!await duckDiveRunIsActive(input.runId))throw new Error("DuckDive run is no longer active");
         const checked=validateReportUpdatePlan(value,input.reportPolicy,{validationEnabled:reportValidationEnabled});if(!checked.ok){plan=null;return {accepted:false,error:checked.error};}

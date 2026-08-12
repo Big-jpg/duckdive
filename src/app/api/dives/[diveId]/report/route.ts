@@ -16,5 +16,5 @@ export async function GET(request:Request,{params}:{params:Promise<{diveId:strin
       if(!fallback)return Response.json({report:null,reason:"legacy-version"},{headers:{"Cache-Control":"private, no-store"}});
       const report=await saveDiveReportVersion({workspaceId:owned.workspace_id,diveId,version:snapshot.version,sourceHash:snapshot.hash,purpose:fallback.purpose,manifest:fallback.manifest});return Response.json({report,persisted:true},{headers:{"Cache-Control":"private, no-store"}});
     }catch(error){if(reportMetadataSchemaUnavailable(error))return Response.json({report:fallback,persisted:false,reason:fallback?"schema-unavailable":"legacy-version"},{headers:{"Cache-Control":"private, no-store"}});throw error;}
-  }catch(error){console.error("report metadata unavailable",error);return Response.json({error:"Report metadata unavailable"},{status:503});}
+  }catch(error){console.error("report loading unavailable",error);return Response.json({error:"Report unavailable"},{status:503});}
 }

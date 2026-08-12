@@ -1,6 +1,6 @@
 import {createHash} from "node:crypto";
 import {createEmbedSession} from "./motherduck-api";
-import {motherduckServiceSql} from "./motherduck-access";
+import {closeMotherduckServiceSql,motherduckConnectionEnded,motherduckServiceSql} from "./motherduck-access";
 import {mdString} from "./sql-literal";
 
 export type DiveSnapshot={version:number;content:string;hash:string};
@@ -13,14 +13,22 @@ export function assertDiveRevisionChanged(before:DiveSnapshot,after:DiveSnapshot
 }
 
 export async function readDiveSnapshot(diveId:string,username:string):Promise<DiveSnapshot>{
-  const sql=await motherduckServiceSql(username);
-  const rows=await sql.unsafe(`SELECT current_version FROM MD_GET_DIVE(id = ${mdString(diveId)})`);
-  const version=Number(rows[0]?.current_version);
-  if(!Number.isInteger(version)||version<1)throw new Error("Dive version is unavailable");
-  const versions=await sql.unsafe(`SELECT content FROM MD_GET_DIVE_VERSION(id = ${mdString(diveId)}, version = ${version})`);
-  const content=String(versions[0]?.content||"");
-  if(!content)throw new Error("Dive content is unavailable");
-  return {version,content,hash:createHash("sha256").update(canonicalDiveSource(content)).digest("hex")};
+  for(let attempt=0;attempt<2;attempt++){
+    const sql=await motherduckServiceSql(username);
+    try{
+      const rows=await sql.unsafe(`SELECT current_version FROM MD_GET_DIVE(id = ${mdString(diveId)})`);
+      const version=Number(rows[0]?.current_version);
+      if(!Number.isInteger(version)||version<1)throw new Error("Dive version is unavailable");
+      const versions=await sql.unsafe(`SELECT content FROM MD_GET_DIVE_VERSION(id = ${mdString(diveId)}, version = ${version})`);
+      const content=String(versions[0]?.content||"");
+      if(!content)throw new Error("Dive content is unavailable");
+      return {version,content,hash:createHash("sha256").update(canonicalDiveSource(content)).digest("hex")};
+    }catch(error){
+      if(attempt===0&&motherduckConnectionEnded(error)){await closeMotherduckServiceSql(username,"read_write");continue;}
+      throw error;
+    }
+  }
+  throw new Error("Dive snapshot is unavailable");
 }
 
 export async function verifyDiveRevision(diveId:string,username:string,before:DiveSnapshot){
