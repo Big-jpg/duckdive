@@ -97,9 +97,9 @@ export async function ensureWorkspaceDataset(user:AppUser,dataset:DatasetDefinit
 export async function workspaceDivePreview(user:AppUser,starterKey:string){
   const dataset=datasetForStarterKey(starterKey),starter=starterByKey(starterKey);
   if(!dataset||!starter)throw new Error("Unknown starter report");
-  const workspace=await ensureWorkspaceDataset(user,dataset),owned=await getWorkspaceDives(workspace.workspace_id),mapping=owned.find(dive=>dive.dataset_key===dataset.key&&dive.starter_key===starter.key);
+  const runtime=resolveDatasetRuntime(dataset),workspace=await ensureWorkspaceDataset(user,dataset),owned=await getWorkspaceDives(workspace.workspace_id),mapping=owned.find(dive=>dive.dataset_key===dataset.key&&dive.starter_key===starter.key);
   if(!mapping)throw new Error(`Workspace is missing ${starter.key}`);
-  return {dataset:datasetWorkspaceManifest(dataset),dive:{...starterEntry(dataset,starter),diveId:mapping.dive_id,session:await createEmbedSession(mapping.dive_id,workspace.motherduck_username)}};
+  return {dataset:datasetWorkspaceManifest(dataset),dive:{...starterEntry(dataset,starter),diveId:mapping.dive_id,session:await createEmbedSession(mapping.dive_id,workspace.motherduck_username,[{url:runtime.motherduckShareUrl,alias:runtime.motherduckDatabase}])}};
 }
 
 export function buildWorkspaceEditorDives(owned:readonly WorkspaceDive[],dataset:DatasetDefinition=defaultDataset()){
