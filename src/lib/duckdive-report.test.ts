@@ -1,7 +1,7 @@
 import {describe,expect,it} from "vitest";
 import {VIC_HOUSING_DATASET} from "./datasets";
 import type {DatasetReportPolicy} from "./dataset-types";
-import {capabilitiesForPolicy,normalizeReportPurpose,reportPurposeForStarter,reportUpdatePlanSchema,validateReportUpdatePlan} from "./duckdive-report";
+import {capabilitiesForPolicy,duckDiveReportValidationEnabled,normalizeReportPurpose,reportPurposeForStarter,reportUpdatePlanSchema,validateReportUpdatePlan} from "./duckdive-report";
 import {reportMetadataSchemaUnavailable,starterReportVersion} from "./duckdive-report-db";
 
 const policy=VIC_HOUSING_DATASET.reportPolicy;
@@ -47,6 +47,21 @@ describe("DuckDive report explanation contract",()=>{
   it("rejects a capability absent from the active dataset policy",()=>{
     const plan={request:"Show rentals",interpretedIntent:"Compare rentals",purpose:purpose(),capabilityIds:["rental-prices"],unsupportedRequests:["rental prices"],materialClarification:null,added:[],changed:[],removed:[],unchanged:[],validations:[]};
     expect(validateReportUpdatePlan(plan,policy).ok).toBe(false);
+    expect(validateReportUpdatePlan(plan,policy,{validationEnabled:false}).ok).toBe(true);
+  });
+
+  it("can bypass failed plan validations without bypassing structural parsing",()=>{
+    const plan={request:"Use brighter colours",interpretedIntent:"Increase chart contrast",purpose:purpose(),capabilityIds:[],unsupportedRequests:[],materialClarification:null,added:[],changed:["Chart colours"],removed:[],unchanged:[],validations:[{id:"palette",label:"Palette validation",status:"failed" as const,detail:"Not present in the analytical capability list"}]};
+    expect(validateReportUpdatePlan(plan,policy).ok).toBe(false);
+    expect(validateReportUpdatePlan(plan,policy,{validationEnabled:false}).ok).toBe(true);
+    expect(validateReportUpdatePlan({},policy,{validationEnabled:false}).ok).toBe(false);
+  });
+
+  it("keeps report validation enabled unless explicitly set to false",()=>{
+    expect(duckDiveReportValidationEnabled({})).toBe(true);
+    expect(duckDiveReportValidationEnabled({DUCKDIVE_REPORT_VALIDATION_ENABLED:"true"})).toBe(true);
+    expect(duckDiveReportValidationEnabled({DUCKDIVE_REPORT_VALIDATION_ENABLED:"false"})).toBe(false);
+    expect(duckDiveReportValidationEnabled({DUCKDIVE_REPORT_VALIDATION_ENABLED:"FALSE"})).toBe(true);
   });
 
   it("keeps the structured plan schema machine-readable",()=>expect(reportUpdatePlanSchema.safeParse({}).success).toBe(false));

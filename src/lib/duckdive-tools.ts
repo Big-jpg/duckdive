@@ -20,17 +20,18 @@ export function governedReadOnlyQuery(sql:string){
   return `SELECT * FROM (${statement}) AS duckdive_inspection LIMIT 200`;
 }
 
-export async function createDuckDiveTools(input:{client:MCPClient;runId:string;diveId:string;username:string;before:DiveSnapshot;dataset:DatasetRuntime;reportPolicy:DatasetReportPolicy}){
+export async function createDuckDiveTools(input:{client:MCPClient;runId:string;diveId:string;username:string;before:DiveSnapshot;dataset:DatasetRuntime;reportPolicy:DatasetReportPolicy;reportValidationEnabled?:boolean}){
   const mcp=await input.client.tools(),query=mcp.query,edit=mcp.edit_dive_content;
   if(!query?.execute||!edit?.execute)throw new Error("MotherDuck editing tools are unavailable");
+  const reportValidationEnabled=input.reportValidationEnabled!==false;
   let mutation:VerifiedMutation|null=null,mutationAttempted=false,plan:ReportUpdatePlan|null=null;
   const tools:ToolSet={
     prepare_report_update:tool({
-      description:"Before editing, convert the request into the required structured intent and change manifest fields. Use only capability IDs from the supplied contract. If the request is unsupported or materially ambiguous, set unsupportedRequests or materialClarification and do not attempt a save.",
+      description:reportValidationEnabled?"Before editing, convert the request into the required structured intent and change manifest fields. Use only capability IDs from the supplied contract. If the request is unsupported or materially ambiguous, set unsupportedRequests or materialClarification and do not attempt a save.":"Before editing, convert the request into the required structured intent and change manifest fields. Report policy validation is temporarily disabled, so capability IDs and validation results will be recorded but will not reject the plan. Still identify genuinely unsupported requests or material ambiguity.",
       inputSchema:z.any(),
       execute:async(value)=>{
         if(!await duckDiveRunIsActive(input.runId))throw new Error("DuckDive run is no longer active");
-        const checked=validateReportUpdatePlan(value,input.reportPolicy);if(!checked.ok){plan=null;return {accepted:false,error:checked.error};}
+        const checked=validateReportUpdatePlan(value,input.reportPolicy,{validationEnabled:reportValidationEnabled});if(!checked.ok){plan=null;return {accepted:false,error:checked.error};}
         plan=checked.plan;return {accepted:!plan.unsupportedRequests.length&&!plan.materialClarification,unsupportedRequests:plan.unsupportedRequests,materialClarification:plan.materialClarification,capabilityIds:plan.capabilityIds};
       },
     }),

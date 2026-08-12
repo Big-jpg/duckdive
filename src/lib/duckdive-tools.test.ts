@@ -31,4 +31,15 @@ describe("DuckDive controlled tools",()=>{
     expect(editExecute).toHaveBeenCalledWith(expect.objectContaining({id:"active-dive"}),options);
     await expect(control.tools.save_dive_revision.execute!({summary:"Again",edits:[{old_string:"a",new_string:"b"}]},options)).rejects.toThrow("already been attempted");
   });
+
+  it("permits a structurally valid rejected plan when report validation is disabled",async()=>{
+    const editExecute=vi.fn().mockResolvedValue({ok:true});
+    const client={tools:vi.fn().mockResolvedValue({query:{execute:vi.fn()},edit_dive_content:{execute:editExecute}})} as unknown as MCPClient;
+    const control=await createDuckDiveTools({client,runId:"run",diveId:"active-dive",username:"owner",before:{version:5,content:"before",hash:"aaa"},dataset:{key:"vic-housing",title:"VIC Housing",contractVersion:"vic-housing/v1",motherduckDatabase:"vic_house_data",motherduckShareUrl:"md:_share/vic/test",serviceAccountUsername:"vic_house_lab"},reportPolicy:VIC_HOUSING_DATASET.reportPolicy,reportValidationEnabled:false});
+    const options={toolCallId:"call",messages:[],abortSignal:new AbortController().signal} as never;
+    const prepared=await control.tools.prepare_report_update.execute!({request:"Use brighter colours",interpretedIntent:"Increase chart contrast",purpose:reportPurposeForStarter({title:"Market",description:"Market",policy:VIC_HOUSING_DATASET.reportPolicy}),capabilityIds:["visual-accessibility"],unsupportedRequests:[],materialClarification:null,added:[],changed:["Chart colours"],removed:[],unchanged:[],validations:[{id:"palette",label:"Palette validation",status:"failed"}]},options);
+    expect(prepared).toMatchObject({accepted:true,capabilityIds:["visual-accessibility"]});
+    await control.tools.save_dive_revision.execute!({summary:"Increased chart contrast",edits:[{old_string:"before",new_string:"after"}]},options);
+    expect(editExecute).toHaveBeenCalledOnce();
+  });
 });

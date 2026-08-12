@@ -70,11 +70,17 @@ export function normalizeReportPurpose(value:unknown):ReportPurpose{
   return {...legacy,schemaVersion:"report-purpose/v2",scope:{items,...(legacy.scope.dateRange?{dateRange:legacy.scope.dateRange}:{})}};
 }
 
-export function validateReportUpdatePlan(plan:unknown,policy:DatasetReportPolicy){
+export function duckDiveReportValidationEnabled(env:Record<string,string|undefined>=process.env){
+  return env.DUCKDIVE_REPORT_VALIDATION_ENABLED!=="false";
+}
+
+export function validateReportUpdatePlan(plan:unknown,policy:DatasetReportPolicy,options:{validationEnabled?:boolean}={}){
   const parsed=reportUpdatePlanSchema.safeParse(plan);if(!parsed.success)return {ok:false as const,error:"The structured report plan is invalid",plan:null};
-  const supported=new Set(policy.capabilities.map(item=>item.id));
-  if(parsed.data.capabilityIds.some(id=>!supported.has(id)))return {ok:false as const,error:"The report plan requested an unavailable capability",plan:parsed.data};
-  if(parsed.data.validations.some(item=>item.status==="failed"))return {ok:false as const,error:"The report plan did not pass contract validation",plan:parsed.data};
+  if(options.validationEnabled!==false){
+    const supported=new Set(policy.capabilities.map(item=>item.id));
+    if(parsed.data.capabilityIds.some(id=>!supported.has(id)))return {ok:false as const,error:"The report plan requested an unavailable capability",plan:parsed.data};
+    if(parsed.data.validations.some(item=>item.status==="failed"))return {ok:false as const,error:"The report plan did not pass contract validation",plan:parsed.data};
+  }
   const inferred=parsed.data.purpose.assumptions.some(item=>item.material&&(item.source==="model-inference"||item.source==="report-default"));
   const confidence=inferred?{level:"medium" as const,reason:"A material default or model inference affects the interpretation."}:parsed.data.purpose.confidence;
   return {ok:true as const,error:null,plan:{...parsed.data,purpose:{...parsed.data.purpose,confidence}}};

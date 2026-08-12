@@ -10,7 +10,7 @@ import {readDiveSnapshot} from "@/lib/duckdive-runtime";
 import {createDuckDiveTools} from "@/lib/duckdive-tools";
 import {duckDiveRequestSchema,validateDuckDiveBrief} from "@/lib/duckdive-request";
 import {datasetContextForWorkspaceDiveRecord,datasetContractPrompt,datasetReportPolicyPrompt} from "@/lib/datasets";
-import {manifestForPlan} from "@/lib/duckdive-report";
+import {duckDiveReportValidationEnabled,manifestForPlan} from "@/lib/duckdive-report";
 import {saveDiveReportVersion} from "@/lib/duckdive-report-db";
 
 export const maxDuration=300;
@@ -33,7 +33,8 @@ export async function POST(request:Request){
   catch(error){if(error instanceof DuckDiveBusyError)return Response.json({error:error.message},{status:409});throw error;}
   try{
     await saveChatMessages(chatId,body.messages);
-    const client=await motherduckMcp(workspaceDive.motherduck_username),control=await createDuckDiveTools({client,runId:body.runId,diveId:body.activeDiveId,username:workspaceDive.motherduck_username,before,dataset:datasetContext.runtime,reportPolicy:datasetContext.dataset.reportPolicy});
+    const reportValidationEnabled=duckDiveReportValidationEnabled();
+    const client=await motherduckMcp(workspaceDive.motherduck_username),control=await createDuckDiveTools({client,runId:body.runId,diveId:body.activeDiveId,username:workspaceDive.motherduck_username,before,dataset:datasetContext.runtime,reportPolicy:datasetContext.dataset.reportPolicy,reportValidationEnabled});
     const result=streamText({
       model:aiModel("gateway"),
       system:`You are DuckDive, a verified report-editing agent. You edit exactly one active MotherDuck Dive.
@@ -42,7 +43,7 @@ The application has already supplied the authoritative semantic contract and cur
 
 Apply a request automatically when it names an analytical, control, layout, chart, copy, or styling change that can be implemented safely. Style-only requests are valid. If the goal is genuinely ambiguous (for example, "make it better") or requires an unsupported measure, make no edit and ask exactly one focused clarification question.
 
-Always call prepare_report_update first. It is the authoritative structured intent and contract validation step. Use only capability IDs from the active dataset policy. Never call save_dive_revision unless the preparation result explicitly accepts the update. Do not invent outputs that the contract or policy does not support.
+Always call prepare_report_update first. It is the authoritative structured intent and change-record step. ${reportValidationEnabled?"Report policy validation is enabled: use only capability IDs from the active dataset policy and do not invent outputs that the contract or policy does not support.":"Report policy validation is temporarily disabled for testing: do not reject an otherwise safe styling, layout, chart, copy, or accessibility edit solely because a capability ID or plan validation falls outside the report policy. Preserve the semantic contract and record the plan truthfully."} Never call save_dive_revision unless the preparation result explicitly accepts the update.
 
 Use inspect_data only when actual values are required to design the requested view. Preserve metric definitions, valid-sample caveats, REQUIRED_DATABASES, and DD_THEME_CSS. Use save_dive_revision once with the complete minimal edit. After it succeeds, give a concrete summary under 60 words. Never claim a save unless the tool reports a verified new version.
 
