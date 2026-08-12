@@ -101,7 +101,7 @@ export async function publishVehicleMarketRun(run:ProcessedVehicleMarketRun,stor
     await target.begin(async tx=>{for(const [table,rows] of tables){await tx.unsafe(`DELETE FROM ${table} WHERE load_id=CAST('${batch.loadId}' AS UUID)`);await insertChunks(tx,table,rows);}});
     const promotion=(await readFile(path.resolve("db/ducklake/load_vehicle_market_run.sql"),"utf8")).replaceAll("__LOAD_ID__",batch.loadId);await target.unsafe(promotion);
     const [counts]=await target<{facts:number;runs:number}[]>`SELECT (SELECT count(*) FROM core.fact_listing_observation WHERE run_key=${batch.runKey})::BIGINT AS facts,(SELECT count(*) FROM core.dim_observation_run WHERE run_key=${batch.runKey})::BIGINT AS runs`;
-    if(Number(counts?.facts)!==run.quality.uniqueListingIds||Number(counts?.runs)!==1)throw new Error("Published DuckLake rows do not reconcile to the COMPLETE run");
+    if(Number(counts?.facts)!==run.quality.uniqueListingIds||Number(counts?.runs)!==1)throw new Error("Published DuckLake rows do not reconcile to the publishable run");
     const runStatus:PublishedVehicleMarketRun["runStatus"]=run.quality.runStatus==="COMPLETE"?"COMPLETE":"CHANGED_DURING_CAPTURE";
     return {runId:run.runId,runKey:batch.runKey,runStatus,sourceRows:run.quality.uniqueListingIds,factRows:Number(counts.facts),dimensionCounts:{listings:batch.rows.dimListing.length,vehicleSpecs:batch.rows.dimVehicleSpec.length,sellerVersions:batch.rows.dimSellerVersion.length,locations:batch.rows.dimLocation.length,contents:batch.rows.dimListingContent.length},rawManifestSha256:batch.rawManifestSha256};
   }finally{await target.end();}

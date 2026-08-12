@@ -55,7 +55,7 @@ async function main(){
     console.log(JSON.stringify(await initializeVehicleMarketDuckLake(),null,2));return;
   }
   if(command==="publish"){
-    if(!has("--execute"))throw new Error("HUMAN ACTION REQUIRED\n\nPurpose:\nPublish one reconciled COMPLETE observation to wa_vehicle_market.\n\nAction:\nRe-run with --execute after explicit MotherDuck write approval.\n\nThen reply:\nready");
+    if(!has("--execute"))throw new Error("HUMAN ACTION REQUIRED\n\nPurpose:\nPublish one reconciled observation eligible under the stable or bounded-drift policy to wa_vehicle_market.\n\nAction:\nRe-run with --execute after explicit MotherDuck write approval.\n\nThen reply:\nready");
     const run=await loadSavedRun(requiredArgument("--run")),store=run.rawPages.some(page=>/^https:\/\//i.test(page.objectPath))?new VercelBlobRawObjectStore():localStore,result=await publishVehicleMarketRun(run,store);
     if(has("--record-neon"))await persistVehicleMarketPublicationResult(result);console.log(JSON.stringify(result,null,2));return;
   }

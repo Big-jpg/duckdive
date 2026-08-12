@@ -72,5 +72,8 @@ describe("dataset registry",()=>{
   it("serializes the registered contract without runtime configuration",()=>{
     const prompt=datasetContractPrompt(WA_VEHICLE_MARKET_DATASET);
     expect(prompt).toContain("fact_listing_observation");expect(prompt).toContain("saleInference");expect(prompt).not.toMatch(/token|password|motherduck_share_url|serviceAccount/i);
+    expect(prompt).toContain("latest publishable current observation");
+    expect(prompt).toContain("Adjacent COMPLETE runs");
+    expect(prompt).not.toContain("latest COMPLETE observation");
   });
 });

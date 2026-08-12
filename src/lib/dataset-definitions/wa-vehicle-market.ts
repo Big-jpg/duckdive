@@ -12,11 +12,11 @@ export const WA_VEHICLE_MARKET_DATASET={
   publicContract:vehicleMarketPublicContract,
   presentation:{
     badge:"Included dataset",
-    summary:"Explore a complete WA Used listing snapshot, inspect transparent peer cohorts, and trace every analytical row to a capture run and raw page.",
+    summary:"Explore a fully enumerated WA Used listing snapshot, inspect transparent peer cohorts, and trace every analytical row to a capture run and raw page.",
     boundary:"Observable source listings and asking prices, not the whole WA market, transactions, valuations, forecasts, or evidence of sale.",
   },
   starters:[
-    {key:"vehicle-market-atlas",title:"Market Atlas",label:"Current market",description:"Inventory, asking-price and odometer distributions across vehicle and seller slices.",outcome:"Map the composition and asking-price shape of the latest complete WA Used observation.",entryPrompt:"Start with the current WA Used market",questions:["Which makes and models dominate the current listings?","How do asking-price and odometer distributions differ by body group?"],file:"vehicle-market-atlas.tsx",accent:"blue"},
+    {key:"vehicle-market-atlas",title:"Market Atlas",label:"Current market",description:"Inventory, asking-price and odometer distributions across vehicle and seller slices.",outcome:"Map the composition and asking-price shape of the current WA Used observation.",entryPrompt:"Start with the current WA Used market",questions:["Which makes and models dominate the current listings?","How do asking-price and odometer distributions differ by body group?"],file:"vehicle-market-atlas.tsx",accent:"blue"},
     {key:"vehicle-lens",title:"Vehicle Lens",label:"Transparent cohorts",description:"Vehicle age, kilometres per year, cohort medians, percentiles, and sample sufficiency.",outcome:"Place a listing in a clearly defined same-make/model and nearby-year cohort.",entryPrompt:"Inspect a vehicle cohort",questions:["How does this Outback compare with nearby model years?","Which listings have insufficient cohort evidence?"],file:"vehicle-lens.tsx",accent:"orange"},
     {key:"data-observatory",title:"Data Observatory",label:"Quality and lineage",description:"Capture scope, pagination reconciliation, row quality, versions, hashes, and limitations.",outcome:"Verify exactly what was observed and whether the snapshot is fit for analysis.",entryPrompt:"Inspect capture quality",questions:["Did the latest run reconcile exactly?","What analytical claims are unavailable from one observation?"],file:"data-observatory.tsx",accent:"teal"},
   ],
@@ -36,7 +36,7 @@ export const WA_VEHICLE_MARKET_DATASET={
       {id:"no-physical-vehicle-identity",label:"Unique physical vehicle counts",reason:"The source listing ID identifies a listing, not necessarily a unique physical vehicle."},
     ],
     assumptions:[
-      {id:"complete-run-only",label:"Product snapshots use only COMPLETE runs",source:"data-contract",material:true},
+      {id:"current-run-eligibility",label:"Current snapshots require reconciled, fully enumerated runs; movement remains COMPLETE-only",source:"data-contract",material:true},
       {id:"cohort-definition",label:"Cohorts use the same make and model within two manufacturer years and require ten listings for percentiles",source:"data-contract",material:true},
       {id:"asking-price",label:"Price fields are advertised asking prices",source:"data-contract",material:true},
     ],
