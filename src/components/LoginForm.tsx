@@ -2,22 +2,23 @@
 import {FormEvent,useState} from "react";
 import {useSearchParams} from "next/navigation";
 import Link from "next/link";
-import {safeNextPath} from "@/lib/auth-policy";
+import {postAuthNextPath} from "@/lib/auth-policy";
 import AppBrand from "@/components/AppBrand";
 
 const errors:Record<string,string>={access_denied:"This verified email does not have active access.",link_failed:"That sign-in link is invalid or expired. Request a fresh link.",github_failed:"GitHub sign-in could not be completed."};
 export default function LoginForm(){
   const params=useSearchParams(),[email,setEmail]=useState(""),[error,setError]=useState(errors[params.get("error")||""]||""),[message,setMessage]=useState(""),[loading,setLoading]=useState(false),[githubLoading,setGithubLoading]=useState(false);
+  const next=postAuthNextPath(params.get("next"));
   async function submit(event:FormEvent){
     event.preventDefault();setLoading(true);setError("");setMessage("");
-    const response=await fetch("/api/auth/request-link",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,next:safeNextPath(params.get("next"))})});
+    const response=await fetch("/api/auth/request-link",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,next})});
     const body=await response.json().catch(()=>({}));setLoading(false);
     if(!response.ok){setError(body.error||"Could not request a sign-in link.");return;}
     setMessage(body.message||"If this address has active access, a sign-in link is on its way.");
   }
   async function github(){
     setGithubLoading(true);setError("");
-    const response=await fetch("/api/auth/github",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({next:safeNextPath(params.get("next"))})});
+    const response=await fetch("/api/auth/github",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({next})});
     const body=await response.json().catch(()=>({}));
     if(!response.ok||typeof body.url!=="string"){setError(body.error||"Could not start GitHub sign-in.");setGithubLoading(false);return;}
     location.assign(body.url);

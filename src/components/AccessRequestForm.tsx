@@ -16,13 +16,13 @@ export default function AccessRequestForm(){
     setMessage(body.message||"Thanks — your request has been received for review.");
   }
   return <main id="main-content" className="access-page">
-    <header className="access-header"><AppBrand/><Link href="/login">Sign in</Link></header>
+    <header className="access-header"><AppBrand/><Link href="/login?next=%2Fworkspace">Sign in</Link></header>
     <section className="access-layout">
       <div className="access-copy">
         <p className="lab-kicker">Governed analytics, open to curious people</p>
         <h1>I want to explore DuckDive</h1>
         <p>DuckDive is a small, guided testing program for exploring governed datasets and reshaping live analytical reports. Tell us who you are and, if you like, what data you would value.</p>
-        <p className="access-note">Already approved? <Link href="/login">Sign in with GitHub or an email link.</Link></p>
+        <p className="access-note">Already approved? <Link href="/login?next=%2Fworkspace">Sign in with GitHub or an email link.</Link></p>
       </div>
       <form onSubmit={submit} aria-busy={loading}>
         <div className="access-fields">

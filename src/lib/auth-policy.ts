@@ -4,6 +4,11 @@ export function safeNextPath(value:string|null|undefined){
   return value?.startsWith("/")&&!value.startsWith("//")?value:"/";
 }
 
+export function postAuthNextPath(value:string|null|undefined){
+  const next=safeNextPath(value);
+  return next==="/"?"/workspace":next;
+}
+
 export function appUrl(path:string,requestUrl?:string){
   const configured=process.env.NEXT_PUBLIC_SITE_URL?.trim();
   const base=configured||(requestUrl?new URL(requestUrl).origin:"");

@@ -1,7 +1,7 @@
 import {redirect} from "next/navigation";
 import {cookies} from "next/headers";
 import {currentUser} from "@/lib/auth";
-import {safeNextPath} from "@/lib/auth-policy";
+import {postAuthNextPath} from "@/lib/auth-policy";
 
 export const dynamic="force-dynamic";
 export default async function AuthComplete({searchParams}:{searchParams:Promise<{next?:string;neon_auth_session_verifier?:string}>}){
@@ -20,5 +20,5 @@ export default async function AuthComplete({searchParams}:{searchParams:Promise<
     sessionResolved:Boolean(user),
   });
   if(!user)redirect("/login?error=access_denied");
-  redirect(safeNextPath(params.next));
+  redirect(postAuthNextPath(params.next));
 }
