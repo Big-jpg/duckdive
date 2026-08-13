@@ -3,42 +3,23 @@
   --font-serif: Georgia, "Times New Roman", serif;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 
-  --color-canvas: #f1d9a9;
-  --color-surface: #fff4d7;
-  --color-surface-subtle: #ead0a0;
-  --color-text: #15172f;
-  --color-text-muted: #55556a;
-  --color-border: rgba(21, 23, 47, 0.28);
-  --color-primary: #934018;
-  --color-primary-hover: #743014;
-  --color-accent: #f2c34f;
-  --color-positive: #27645f;
-  --color-negative: #a9362e;
-  --color-on-primary: #fff4d7;
+  --color-canvas: #dff3fb;
+  --color-surface: #fff9e9;
+  --color-surface-subtle: #c9eaf7;
+  --color-text: #17324a;
+  --color-text-muted: #4b6476;
+  --color-border: rgba(23, 70, 101, 0.28);
+  --color-primary: #e86622;
+  --color-primary-hover: #c94d12;
+  --color-accent: #ffc83d;
+  --color-positive: #087f8c;
+  --color-negative: #b42318;
+  --color-on-primary: #102a43;
 
-  --focus-ring: #15172f;
-  --radius-sm: 3px;
-  --radius-md: 6px;
-  --shadow-elevated: 0 16px 40px rgba(21, 23, 47, 0.13);
+  --focus-ring: #006ca8;
+  --radius-sm: 9px;
+  --radius-md: 14px;
+  --shadow-elevated: 0 18px 44px rgba(20, 77, 108, 0.13);
   --content-wide: 1240px;
   --content-reading: 720px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-canvas: #14152b;
-    --color-surface: #20233f;
-    --color-surface-subtle: #2c3052;
-    --color-text: #f5dfb1;
-    --color-text-muted: #c4b791;
-    --color-border: rgba(245, 223, 177, 0.25);
-    --color-primary: #d76a32;
-    --color-primary-hover: #ea7a3f;
-    --color-accent: #e7bd48;
-    --color-positive: #73b8aa;
-    --color-negative: #ff8b70;
-    --color-on-primary: #17182f;
-    --focus-ring: #f2c34f;
-    --shadow-elevated: 0 18px 50px rgba(0, 0, 0, 0.3);
-  }
 }

@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import Link from "next/link";
 import {FormEvent,useState} from "react";
 import AppBrand from "@/components/AppBrand";
@@ -19,15 +20,16 @@ export default function AccessRequestForm(){
     <header className="access-header"><AppBrand/><Link href="/login?next=%2Fworkspace">Sign in</Link></header>
     <section className="access-layout">
       <div className="access-copy">
+        <div className="access-art" aria-hidden="true"><Image src="/duckdive.png" alt="" width={1486} height={1059} priority sizes="(max-width: 850px) 82vw, 460px"/></div>
         <p className="lab-kicker">Governed analytics, open to curious people</p>
         <h1>I want to explore DuckDive</h1>
-        <p>DuckDive is a small, guided testing program for exploring governed datasets and reshaping live analytical reports. Tell us who you are and, if you like, what data you would value.</p>
+        <p>Explore a governed observation of WA&apos;s used-vehicle market, then reshape live analytical reports without losing sight of the source, rules, or changes. Tell us who you are and, if you like, what data you would value next.</p>
         <p className="access-note">Already approved? <Link href="/login?next=%2Fworkspace">Sign in with GitHub or an email link.</Link></p>
       </div>
       <form onSubmit={submit} aria-busy={loading}>
         <div className="access-fields">
           <label>Name <span>Required</span><input name="name" required maxLength={100} autoComplete="name"/></label>
-          <label>Email address <span>Required</span><input name="email" type="email" required maxLength={254} autoComplete="email" spellCheck={false}/></label>
+          <label>Email address <span>Required</span><input name="email" type="email" required maxLength={254} autoComplete="email" spellCheck={false} aria-describedby="access-email-note"/><small id="access-email-note" className="access-field-note">Use the email address for your primary GitHub account.</small></label>
           <label>Title <span>Optional</span><input name="title" maxLength={120} autoComplete="organization-title" placeholder="e.g. Analyst, founder, researcher"/></label>
           <label>What datasets would you like to explore? <span>Optional</span><textarea name="datasetInterest" maxLength={1000} rows={5} placeholder="A topic, public dataset, business question, or industry is enough."/></label>
           <label className="access-honeypot" aria-hidden="true">Website<input name="website" tabIndex={-1} autoComplete="off"/></label>

@@ -7,19 +7,16 @@ import "./lab.css";
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
   applicationName: "DuckDive",
-  title: { default: "DuckDive", template: "%s | DuckDive" },
-  description: "Explore an included governed dataset, reshape live reports with DuckDive, and share inspectable answers.",
-  keywords: ["governed analytics", "data visualisation", "embedded analytics", "AI report editing"],
+  title: { default: "DuckDive — Governed data you can explore", template: "%s | DuckDive" },
+  description: "Explore a governed observation of WA's used-vehicle market, open live reports, and reshape them through an inspectable, owner-scoped workflow.",
+  keywords: ["WA used vehicles", "governed analytics", "data visualisation", "inspectable reports"],
   creator: "DuckDive",
   publisher: "DuckDive",
   category: "technology",
   alternates: { canonical: "/" },
   icons: {
-    icon: [
-      { url: "/duckdive-icon.svg", type: "image/svg+xml" },
-      { url: "/favicon.png", type: "image/png" },
-    ],
-    shortcut: "/duckdive-icon.svg",
+    icon: [{ url: "/favicon.png", type: "image/png" }],
+    shortcut: "/favicon.png",
     apple: "/favicon.png",
   },
   openGraph: {
@@ -27,25 +24,22 @@ export const metadata: Metadata = {
     siteName: "DuckDive",
     type: "website",
     locale: "en_AU",
-    title: "DuckDive",
-    description: "Explore an included governed dataset and reshape live reports with DuckDive.",
-    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "DuckDive" }],
+    title: "DuckDive — Governed data you can explore",
+    description: "Explore WA's used-vehicle market through live, inspectable reports you can reshape.",
+    images: [{ url: "/duckdive.png", width: 1486, height: 1059, alt: "DuckDive surfing beneath a blue wave" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "DuckDive",
-    description: "Explore an included governed dataset and reshape live reports with DuckDive.",
-    images: ["/twitter-image"],
+    title: "DuckDive — Governed data you can explore",
+    description: "Explore WA's used-vehicle market through live, inspectable reports you can reshape.",
+    images: ["/duckdive.png"],
   },
   robots: { index: false, follow: false },
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f1d9a9" },
-    { media: "(prefers-color-scheme: dark)", color: "#14152b" },
-  ],
-  colorScheme: "light dark",
+  themeColor: "#dff3fb",
+  colorScheme: "light",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
