@@ -8,7 +8,7 @@ export default async function AuthComplete({searchParams}:{searchParams:Promise<
   const params=await searchParams;
   const cookieStore=await cookies();
   const verifierPresent=typeof params.neon_auth_session_verifier==="string";
-  const challengePresent=cookieStore.has("__Secure-neon-auth.session_challange");
+  const challengePresent=cookieStore.has("__Secure-neon-auth.session_challenge")||cookieStore.has("__Secure-neon-auth.session_challange");
   const sessionTokenPresent=cookieStore.has("__Secure-neon-auth.session_token");
   const sessionDataPresent=cookieStore.has("__Secure-neon-auth.local.session_data");
   const user=await currentUser();

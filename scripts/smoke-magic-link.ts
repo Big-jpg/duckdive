@@ -2,9 +2,10 @@ import {randomBytes} from "node:crypto";
 import {addAccess} from "../src/lib/app-db";
 import {database} from "../src/lib/db";
 
-const APP_ORIGIN="https://duckdive.gold";
+const APP_ORIGIN=(process.env.MAGIC_LINK_SMOKE_ORIGIN||"https://duckdive.gold").replace(/\/$/,"");
+const REQUEST_ORIGIN=(process.env.MAGIC_LINK_SMOKE_REQUEST_ORIGIN||APP_ORIGIN).replace(/\/$/,"");
 const MAIL_API="https://api.mail.tm";
-const CHALLENGE_COOKIE="__Secure-neon-auth.session_challange";
+const CHALLENGE_COOKIES=["__Secure-neon-auth.session_challenge","__Secure-neon-auth.session_challange"] as const;
 const CONFIRMATION_FLAG="--confirm-production";
 
 type Mailbox={id:string;address:string;password:string;token:string};
@@ -56,6 +57,11 @@ function cookieValue(headers:Headers,name:string):string|null{
   return line.slice(name.length+1).split(";",1)[0]||null;
 }
 
+function challengeCookie(headers:Headers):{name:string;value:string}|null{
+  for(const name of CHALLENGE_COOKIES){const value=cookieValue(headers,name);if(value)return {name,value};}
+  return null;
+}
+
 function safeLocation(response:Response):string|null{
   const location=response.headers.get("location");
   if(!location)return null;
@@ -66,22 +72,8 @@ function safeLocation(response:Response):string|null{
 async function requestLink(address:string){
   return fetch(`${APP_ORIGIN}/api/auth/request-link`,{
     method:"POST",redirect:"manual",
-    headers:{"Content-Type":"application/json",Origin:APP_ORIGIN,Referer:`${APP_ORIGIN}/login`},
+    headers:{"Content-Type":"application/json",Origin:REQUEST_ORIGIN,Referer:`${REQUEST_ORIGIN}/login`},
     body:JSON.stringify({email:address,next:"/workspace"}),
-  });
-}
-
-async function requestLinkDirectlyFromNeon(address:string){
-  const baseUrl=process.env.NEON_AUTH_BASE_URL;
-  if(!baseUrl)throw new Error("NEON_AUTH_BASE_URL is required");
-  return fetch(`${baseUrl.replace(/\/$/,"")}/sign-in/magic-link`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json",Origin:APP_ORIGIN,"x-neon-auth-proxy":"nextjs"},
-    body:JSON.stringify({
-      email:address,
-      callbackURL:`${APP_ORIGIN}/auth/complete?next=${encodeURIComponent("/workspace")}`,
-      errorCallbackURL:`${APP_ORIGIN}/login?error=link_failed`,
-    }),
   });
 }
 
@@ -125,11 +117,13 @@ async function main(){
 
     const allowedRequest=await requestLink(allowed.address);
     const initialCookieNames=cookieNames(allowedRequest.headers);
-    const challenge=cookieValue(allowedRequest.headers,CHALLENGE_COOKIE);
+    const challenge=challengeCookie(allowedRequest.headers);
     console.log("Allowlisted request",{status:allowedRequest.status,setCookieNames:initialCookieNames,challengePresent:Boolean(challenge)});
+    if(allowedRequest.status!==202||!challenge)throw new Error("Allowlisted request did not issue the session challenge");
 
     const deniedRequest=await requestLink(denied.address);
     console.log("Denied request",{status:deniedRequest.status,setCookieNames:cookieNames(deniedRequest.headers)});
+    if(deniedRequest.status!==202||cookieNames(deniedRequest.headers).length)throw new Error("Denied request was not generic and cookie-free");
 
     const verificationUrl=await waitForMagicLink(allowed);
     const verifier=await fetch(verificationUrl,{redirect:"manual"});
@@ -137,15 +131,22 @@ async function main(){
     const callbackLocation=verifier.headers.get("location");
     if(!callbackLocation)throw new Error("Neon verification did not redirect to the application callback");
 
-    const callback=await fetch(callbackLocation,{redirect:"manual",headers:challenge?{Cookie:`${CHALLENGE_COOKIE}=${challenge}`}:{}});
+    const callbackChallenge=challenge?CHALLENGE_COOKIES.map(name=>`${name}=${challenge.value}`).join("; "):"";
+    const callback=await fetch(callbackLocation,{redirect:"manual",headers:callbackChallenge?{Cookie:callbackChallenge}:{}});
     console.log("Application callback",{status:callback.status,location:safeLocation(callback),setCookieNames:cookieNames(callback.headers),challengeSupplied:Boolean(challenge)});
+    const sessionCookieNames=cookieNames(callback.headers);
+    if(callback.status!==307||!sessionCookieNames.includes("__Secure-neon-auth.session_token"))throw new Error("Callback did not establish a Neon Auth session");
+
+    const completeLocation=callback.headers.get("location");
+    if(!completeLocation)throw new Error("Callback omitted the cleaned completion redirect");
+    const sessionCookieHeader=setCookieLines(callback.headers).map(line=>line.split(";",1)[0]).join("; ");
+    const complete=await fetch(new URL(completeLocation,callbackLocation),{redirect:"manual",headers:{Cookie:sessionCookieHeader}});
+    console.log("Authenticated completion",{status:complete.status,location:safeLocation(complete)});
+    if(complete.status!==307||new URL(complete.headers.get("location")??"/",APP_ORIGIN).pathname!=="/workspace")throw new Error("Authenticated completion did not reach the workspace boundary");
 
     const deniedMessages=await json<{"hydra:member":MailMessage[]}>(`${MAIL_API}/messages`,{headers:{Authorization:`Bearer ${denied.token}`}});
     console.log("Denied delivery",{messageCount:deniedMessages["hydra:member"].length});
-
-    const directNeon=await requestLinkDirectlyFromNeon(allowed.address);
-    const directBody=await directNeon.clone().json().catch(()=>null) as Record<string,unknown>|null;
-    console.log("Direct Neon request",{status:directNeon.status,headerNames:[...directNeon.headers.keys()].sort(),bodyKeys:directBody?Object.keys(directBody).sort():[],setCookieNames:cookieNames(directNeon.headers),challengePresent:Boolean(cookieValue(directNeon.headers,CHALLENGE_COOKIE))});
+    if(deniedMessages["hydra:member"].length)throw new Error("Denied identity received an email");
   }finally{
     const failures:string[]=[];
     let neonAuthUsersDeleted=0;
