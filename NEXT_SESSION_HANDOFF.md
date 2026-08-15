@@ -1,6 +1,6 @@
 # Next session handoff
 
-Updated: 2026-08-13 (Australia/Perth)
+Updated: 2026-08-15 (Australia/Perth)
 
 ## Outcome achieved
 
@@ -14,6 +14,7 @@ The temporary WA Used Vehicle Listings MVP is live for an approved existing Duck
 - The same three reports now render successfully inside authenticated DuckDive embeds.
 - The owner edit/save path is now proven in production: Vehicle Lens was changed from `Vehicle Lens` to `Vehicle Lens — WA` and persisted as version 2 without changing analytical semantics.
 - The saved version exposes its requested-vs-applied manifest, validation results, report purpose, and reversible version history in DuckDive.
+- Production email magic-link authentication is restored and proven through an allowlisted end-to-end smoke, including session exchange and redirect to `/workspace`; the denied path remained generic and email-free.
 
 Do not rerun acquisition or rebuild the data plane. The next product phase is base-site UI/UX polish only. Mandatory WA disposal remains due by 2026-08-18 Australia/Perth.
 
@@ -28,8 +29,11 @@ Do not rerun acquisition or rebuild the data plane. The next product phase is ba
 
 ## Git and deployment state
 
-- Current `origin/main`: `6c85c4c` (`Harden MotherDuck connections and validate report update plans`).
+- Current `origin/main`: `69392a8` (`Upgrade Neon Auth beta dependencies`).
 - Relevant preceding commits:
+  - `2954593` — add the guarded production magic-link smoke and exact QA cleanup;
+  - `65cab01` — add administrator control for AI Gateway model selection;
+  - `4de18eb` — default completed sign-ins to `/workspace`;
   - `1cf0f6a` — add the report-validation feature flag used to isolate the rejected-plan failure;
   - `cc8bdc8` — update the prior session handoff;
   - `f583fcc` — bind the governed MotherDuck share explicitly when creating embed sessions;
@@ -38,9 +42,40 @@ Do not rerun acquisition or rebuild the data plane. The next product phase is ba
   - `0dc62e9` — merge the expanded WA handoff;
   - `3cd6d33` — merge the WA vehicle-market implementation.
 - Production deployment `dpl_6kTFVgjVqjDPKdyQ7etJyUfJTTbd` served the successful edit/save request after the connection and validation fixes.
+- Production deployment `dpl_CKVfUZ7C87P4nntNRSt4qzTL8fnG` deployed `69392a8` to the existing estate at 2026-08-15 21:36:51 Australia/Perth; Vercel reported `Ready` and aliased it to `https://duckdive.gold`.
 - Production project/domain remain the existing `vic-house-data-lab` / `https://duckdive.gold` estate.
 - Former VIC-only rollback reference: `e10181b623e299f7dc550eeafe0dfd3c727cdc10`.
-- Before this documentation update, the local worktree was clean on `main` at `6c85c4c` and matched `origin/main`.
+- Before this documentation update, the local worktree was clean on `main` at `69392a8` and matched `origin/main`.
+
+## Production magic-link incident resolved
+
+The email link itself, allowlist, nested callback encoding, and Neon verifier were not the failed boundaries. Neon accepted the emailed token and redirected to DuckDive, but the magic-link request response no longer issued the session challenge cookie required by the verifier exchange. This was reproduced both through DuckDive and directly against the Neon Auth endpoint.
+
+Commit `69392a8` provides a migration-safe repair:
+
+- upgrades `@neondatabase/auth` from `0.4.2-beta` to `0.5.0-beta`;
+- generates a cryptographically random 256-bit challenge inside the allowlisted DuckDive request route;
+- sends the same challenge to Neon and returns it to the browser as secure, HTTP-only, SameSite=Lax cookies;
+- temporarily issues both canonical `session_challenge` and legacy `session_challange` cookie names with the identical value so the current Neon migration and rollback boundary both work;
+- prefers a challenge returned by Neon if the upstream service resumes issuing one;
+- issues no challenge for denied, rate-limited, or failed upstream requests;
+- retains generic allowlist denial and exact QA cleanup in `pnpm smoke:magic-link`.
+
+Production smoke on 2026-08-15:
+
+```text
+allowlisted request       202; canonical and legacy challenge cookies present
+denied request            202; no cookies
+Neon verification         302 to https://duckdive.gold/auth/complete
+application callback      307; session_token and local.session_data present
+authenticated completion  307 to https://duckdive.gold/workspace
+denied delivery            0 messages
+cleanup                    allowlist row removed, one Neon Auth QA user removed, two temporary mailboxes removed
+```
+
+An independent post-smoke database check returned `appQaRows: 0` and `neonAuthQaRows: 0`. No QA identity remains. Before deployment, the candidate passed 57 test files / 199 tests, lint with zero errors and 17 pre-existing warnings, typecheck, production build, and `git diff --check`. Local preflight remained red only for absent WA vehicle-market/MotherDuck environment variables, not auth.
+
+Bounded Vercel logs for the smoke window independently recorded the final `/auth/complete` request with `sessionTokenPresent: true`, `sessionDataPresent: true`, and `sessionResolved: true`. `challengePresent: false` at that page is expected because middleware had already exchanged the one-time challenge. No auth error was present in the inspected production window.
 
 ## Accepted observation and MVP correction
 
