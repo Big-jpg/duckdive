@@ -27,6 +27,7 @@
     "smoke:operational-runtime:lifecycle": "tsx --env-file=.env.local scripts/smoke-operational-runtime-lifecycle.ts",
     "smoke:ai-gateway": "tsx --env-file=.env.ai-gateway.local scripts/smoke-ai-gateway.ts",
     "smoke:share": "tsx --env-file=.env.local scripts/smoke-share.ts",
+    "smoke:magic-link": "tsx --env-file=.env.local scripts/smoke-magic-link.ts",
     "access:add": "tsx --env-file=.env.local scripts/access.ts add",
     "access:revoke": "tsx --env-file=.env.local scripts/access.ts revoke",
     "access:list": "tsx --env-file=.env.local scripts/access.ts list",
