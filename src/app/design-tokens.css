@@ -15,6 +15,8 @@
   --color-positive: #087f8c;
   --color-negative: #b42318;
   --color-on-primary: #102a43;
+  --color-status-positive: #e6f5f3;
+  --color-status-negative: #fff0ed;
 
   --focus-ring: #006ca8;
   --radius-sm: 9px;
