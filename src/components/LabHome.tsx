@@ -5,7 +5,6 @@ import {useState} from "react";
 import {useRouter} from "next/navigation";
 import AppBrand from "@/components/AppBrand";
 import {saveDuckDiveDraft} from "@/lib/duckdive-draft";
-import {clearCsvDiveStorage} from "@/lib/csv-dive";
 import type {DatasetStarterManifest,DatasetWorkspaceManifest} from "@/lib/datasets";
 
 export default function LabHome({isAdmin=false,dataset}:{isAdmin?:boolean;dataset:DatasetWorkspaceManifest}){
@@ -19,7 +18,7 @@ export default function LabHome({isAdmin=false,dataset}:{isAdmin?:boolean;datase
     router.push(`/edit?key=${encodeURIComponent(starter.key)}&pane=duckdive`);
   }
 
-  async function signOut(){setSigningOut(true);clearCsvDiveStorage(sessionStorage);await fetch("/api/auth/logout",{method:"POST"});location.assign("/");}
+  async function signOut(){setSigningOut(true);await fetch("/api/auth/logout",{method:"POST"});location.assign("/");}
 
   return <main id="main-content" className="lab-shell workspace-home">
     <header className="lab-header"><AppBrand/><nav aria-label="Primary navigation">{isAdmin?<Link href="/admin">Admin</Link>:null}<button disabled={signingOut} onClick={signOut}>{signingOut?"Signing Out…":"Sign Out"}</button></nav></header>
@@ -41,10 +40,6 @@ export default function LabHome({isAdmin=false,dataset}:{isAdmin?:boolean;datase
         <div className="workspace-report-actions"><Link className="workspace-primary-action" href={`/edit?key=${encodeURIComponent(starter.key)}&pane=report`}>Open Report</Link><button disabled={Boolean(preparingKey)} onClick={()=>tryStarter(starter)}>{preparingKey===starter.key?"Preparing Example…":"Try Example in DuckDive"}</button></div>
       </article>)}</div>
       {error?<div className="lab-error" role="alert" aria-live="assertive"><strong>Could Not Open the Example</strong><span>{error}</span></div>:null}
-    </section>
-    <section className="workspace-sources" aria-labelledby="sources-heading">
-      <div><p className="lab-kicker">Optional Paths</p><h2 id="sources-heading">Use Your Own Data</h2><p>The included reports above are ready now. Use these paths only when you deliberately want to inspect another source.</p></div>
-      <nav aria-label="Other data sources"><Link href="/datasets/csv"><strong>Import a CSV</strong><span>Inspect one small file locally in this browser.</span></Link><Link href="/datasets/new"><strong>Bring Your Own Model</strong><span>Review semantic-model evidence before registration.</span></Link></nav>
     </section>
   </main>;
 }

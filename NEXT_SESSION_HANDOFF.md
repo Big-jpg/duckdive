@@ -240,11 +240,13 @@ After `6c85c4c`, the focused and full local checks passed before deployment, inc
 
 Make the signed-in journey from workspace to report to DuckDive editor clearer, calmer, more legible, and easier to use on desktop and mobile. This is presentation work around a now-proven Dive workflow, not another infrastructure phase.
 
+The workspace is report-only for now. The browser-local CSV profiler and Bring Your Own Model pages were removed because neither matched the persisted, owner-scoped Dive lifecycle. Do not restore either route without a new product decision.
+
 ### Smallest owner-visible slice
 
 Start with the two active application surfaces:
 
-1. `src/components/LabHome.tsx`: improve workspace hierarchy, report discovery, action clarity, and the distinction between included reports and optional data-source paths.
+1. `src/components/LabHome.tsx`: improve workspace hierarchy, report discovery, and action clarity around the included reports.
 2. `src/components/EditLab.tsx`: improve the report/editor hierarchy, pane navigation, toolbar status/actions, readable metadata and explanations, responsive behavior, keyboard focus, and loading/error states.
 
 Keep `src/components/AppBrand.tsx`, `src/app/design-tokens.css`, and `src/app/lab.css` as the active shell seams. Confirm whether `src/app/styles.css` is unused before consolidating or removing it; do not create a third visual system.
