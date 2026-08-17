@@ -4,10 +4,10 @@ export const vehicleMarketContract={
   grains:{current:"One row per source listing ID in the latest publishable current observation run",history:"One row per publishable observation run and stable listing key",runQuality:"One row per attempted observation run"},
   identity:{listingKey:"autotrader:<source_listing_id>",observation:["run_key","listing_key"],mutableAttributesExcludedFromListingIdentity:true},
   measures:{listingCount:"Count of observable source listing IDs",askingPrice:"Advertised asking price, not transaction price",odometerKm:"Source-reported odometer",listingAgeDays:"Days from source listing-created timestamp to observation date",cohort:"Same make and model within plus or minus two manufacturer years; percentiles require at least 10 current listings"},
-  events:{eligibleRuns:"Adjacent COMPLETE runs with identical scope and population definition",absenceLabel:"No longer observed",saleInference:false,sourcePricingHistory:"Supplementary source-prefixed evidence only"},
+  events:{snapshotChanges:"Adjacent snapshot-comparable runs with identical scope; only listings present in both observations",setDifferences:"NEWLY_OBSERVED and NO_LONGER_OBSERVED require both adjacent runs to be population-comparable",absenceLabel:"No longer observed",saleInference:false,sourcePricingHistory:"Supplementary source-prefixed evidence only"},
   physicalTables:["dim_observation_run","dim_listing","dim_vehicle_spec","dim_seller_version","dim_location","dim_listing_content","fact_listing_observation"],
-  governedViews:["contract.vehicle_market_current","contract.vehicle_market_history","contract.listing_lifecycle","contract.listing_events","contract.market_timeseries","contract.vehicle_screen","contract.observation_run_quality"],
-  deferred:["Physical observation-to-feature bridge","Market Movement report until a second comparable COMPLETE observation","Sale inference","Photo ingestion"],
+  governedViews:["contract.observation_run_comparability","contract.vehicle_market_current","contract.vehicle_market_history","contract.listing_lifecycle","contract.observation_pairs","contract.listing_events","contract.market_movement","contract.market_timeseries","contract.vehicle_screen","contract.observation_run_quality"],
+  deferred:["Physical observation-to-feature bridge","Population set differences until two adjacent population-comparable observations","Sale inference","Photo ingestion"],
 } as const;
 
 export const vehicleMarketPublicContract={
@@ -25,6 +25,6 @@ export const vehicleMarketPublicContract={
     "Asking price is not transaction price.",
     "Source absence does not prove sale; eligible absence events are labelled no longer observed.",
     "Source pricing history is supplementary evidence and is not our periodic event history.",
-    "Movement and lifecycle events require adjacent comparable COMPLETE observations; the first snapshot contains none.",
+    "Changes among listings present in both observations use adjacent snapshot-comparable runs. Newly and no-longer-observed claims require both runs to be population-comparable.",
   ],
 } as const;

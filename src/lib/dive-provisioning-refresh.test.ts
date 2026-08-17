@@ -39,9 +39,9 @@ describe("Dive source refresh",()=>{
   it("refreshes registered source Dives even when the workspace already has every mapping",async()=>{
     const existing=await ensureWorkspaceDataset({user_id:"user",email:"owner@example.com",auth_subject:"auth-user",role:"admin",status:"active",invited_at:null,last_login_at:null,revoked_at:null},WA_VEHICLE_MARKET_DATASET);
     expect(existing.workspace_id).toBe("workspace");
-    expect(mocks.unsafe).toHaveBeenCalledTimes(3);
+    expect(mocks.unsafe).toHaveBeenCalledTimes(4);
     expect(mocks.unsafe.mock.calls.every(([sql])=>String(sql).includes("MD_UPDATE_DIVE_CONTENT"))).toBe(true);
-    expect(mocks.setSetting).toHaveBeenCalledTimes(3);
+    expect(mocks.setSetting).toHaveBeenCalledTimes(4);
     expect(mocks.saveWorkspace).not.toHaveBeenCalled();
   });
 });

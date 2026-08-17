@@ -34,6 +34,17 @@ describe("vehicle-market DuckLake staging",()=>{
     expect(isVehicleMarketRunPublishable(run)).toBe(false);
   });
 
+  it("allows only tightly bounded duplicate drift without rewriting the recorded status",async()=>{
+    const store=new MemoryStore(),run=await replayVehicleMarketManifest("fixtures/vehicle-market/replay/wa-used-sanitized.manifest.json",store);
+    run.quality={...run.quality,runStatus:"INVALID",rawHits:14741,uniqueListingIds:14737,duplicateHits:4,errors:["Source creation ordering decreased during capture"]};
+    expect(isVehicleMarketRunPublishable(run)).toBe(true);
+    run.quality.errors=["Raw page schema mismatch"];
+    expect(isVehicleMarketRunPublishable(run)).toBe(false);
+    run.quality.errors=["Source creation ordering decreased during capture"];
+    run.quality.rawHits=14748;run.quality.uniqueListingIds=14737;run.quality.duplicateHits=11;
+    expect(isVehicleMarketRunPublishable(run)).toBe(false);
+  });
+
   it("fails closed when a retained raw object no longer matches its hash",async()=>{
     const store=new MemoryStore(),run=await replayVehicleMarketManifest("fixtures/vehicle-market/replay/wa-used-sanitized.manifest.json",store);store.objects.set(run.rawPages[0].objectPath,Buffer.from("{}"));
     await expect(buildVehicleMarketStageBatch(run,store)).rejects.toThrow("hash mismatch");

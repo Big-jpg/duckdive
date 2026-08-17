@@ -6,9 +6,12 @@ describe("vehicle-market SQL artifacts",()=>{
   it("uses only DuckLake-supported constraints and declares every governed view",async()=>{
     const sql=await readFile(path.resolve("db/ducklake/wa_vehicle_market.sql"),"utf8"),statements=sql.replace(/--.*$/gm,"");
     expect(statements).not.toMatch(/\b(?:PRIMARY KEY|FOREIGN KEY|UNIQUE|CHECK)\b/i);
-    for(const view of ["vehicle_market_current","vehicle_market_history","listing_lifecycle","listing_events","market_timeseries","vehicle_screen","observation_run_quality"])expect(sql).toContain(`contract.${view}`);
-    expect(sql).toContain("run_status IN ('COMPLETE','CHANGED_DURING_CAPTURE')");
-    expect(sql).toContain("FROM core.dim_observation_run WHERE run_status='COMPLETE'");
+    for(const view of ["observation_run_comparability","vehicle_market_current","vehicle_market_history","listing_lifecycle","observation_pairs","listing_events","market_movement","market_timeseries","vehicle_screen","observation_run_quality"])expect(sql).toContain(`contract.${view}`);
+    expect(sql).toContain("duplicate_hits BETWEEN 1 AND 10");
+    expect(sql).toContain("duplicate_hits::DOUBLE/raw_hits<=0.001");
+    expect(sql).toContain("'SNAPSHOT_INTERSECTION' AS comparison_basis");
+    expect(sql).toContain("WHERE c.set_differences_available");
+    expect(sql).not.toMatch(/WHERE\s+r\.run_status IN \('COMPLETE','CHANGED_DURING_CAPTURE'\)/);
     expect(sql).not.toMatch(/CREATE TABLE[^;]*feature_bridge/is);
   });
 

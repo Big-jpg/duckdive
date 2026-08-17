@@ -128,9 +128,30 @@ CREATE TABLE IF NOT EXISTS stage.dim_location AS SELECT NULL::UUID AS load_id,r.
 CREATE TABLE IF NOT EXISTS stage.dim_listing_content AS SELECT NULL::UUID AS load_id,r.* FROM core.dim_listing_content r WHERE false;
 CREATE TABLE IF NOT EXISTS stage.fact_listing_observation AS SELECT NULL::UUID AS load_id,r.* FROM core.fact_listing_observation r WHERE false;
 
+CREATE OR REPLACE VIEW contract.observation_run_comparability AS
+SELECT r.*,
+       pages_expected>0
+         AND pages_fetched=pages_expected
+         AND unique_listing_ids>0
+         AND scope_violations=0
+         AND raw_hits=unique_listing_ids+duplicate_hits
+         AND (
+           (run_status IN ('COMPLETE','CHANGED_DURING_CAPTURE') AND duplicate_hits=0)
+           OR (run_status='INVALID' AND duplicate_hits BETWEEN 1 AND 10 AND duplicate_hits::DOUBLE/raw_hits<=0.001)
+         ) AS snapshot_comparable,
+       run_status='COMPLETE'
+         AND pages_expected>0
+         AND pages_fetched=pages_expected
+         AND scope_violations=0
+         AND duplicate_hits=0
+         AND source_total_start=source_total_end
+         AND raw_hits=source_total_start
+         AND unique_listing_ids=source_total_start AS population_comparable
+FROM core.dim_observation_run r;
+
 CREATE OR REPLACE VIEW contract.vehicle_market_history AS
 SELECT
-  r.run_id,r.observation_date,r.observed_at,r.run_status,r.scope_fingerprint,
+  r.run_id,r.observation_date,r.observed_at,r.run_status,r.scope_fingerprint,r.snapshot_comparable,r.population_comparable,
   l.listing_key,l.source_listing_id,l.source_ref_id,l.canonical_url,l.source_created_at,
   date_diff('day',CAST(l.source_created_at AS DATE),r.observation_date) AS listing_age_days,
   v.vehicle_spec_key,v.manufacturer_year,v.make,v.model,v.series,v.variant,v.vehicle_class,v.body_type,v.body_type_group,v.segment,
@@ -143,18 +164,18 @@ SELECT
   f.source_prior_advertised_price,f.source_prior_price_ended_at,
   f.source_record_hash,f.raw_payload_sha256,f.raw_object_reference,f.raw_page_number
 FROM core.fact_listing_observation f
-JOIN core.dim_observation_run r USING(run_key)
+JOIN contract.observation_run_comparability r USING(run_key)
 JOIN core.dim_listing l USING(listing_key)
 JOIN core.dim_vehicle_spec v USING(vehicle_spec_key)
 JOIN core.dim_seller_version s USING(seller_version_key)
 JOIN core.dim_location loc USING(location_key)
 JOIN core.dim_listing_content c USING(content_key)
-WHERE r.run_status IN ('COMPLETE','CHANGED_DURING_CAPTURE');
+WHERE r.snapshot_comparable;
 
 CREATE OR REPLACE VIEW contract.vehicle_market_current AS
 WITH latest AS (
   SELECT scope_fingerprint,max(observed_at) AS observed_at
-  FROM core.dim_observation_run WHERE run_status IN ('COMPLETE','CHANGED_DURING_CAPTURE') GROUP BY scope_fingerprint
+  FROM contract.observation_run_comparability WHERE snapshot_comparable GROUP BY scope_fingerprint
 )
 SELECT h.*
 FROM contract.vehicle_market_history h
@@ -162,53 +183,113 @@ JOIN latest l USING(scope_fingerprint,observed_at);
 
 CREATE OR REPLACE VIEW contract.listing_lifecycle AS
 SELECT listing_key,source_listing_id,min(observed_at) AS first_observed_at,max(observed_at) AS last_observed_at,
-       count(DISTINCT run_id) AS complete_observations,
+       count(DISTINCT run_id) AS snapshot_observations,
+       count(DISTINCT run_id) FILTER(WHERE population_comparable) AS population_comparable_observations,
        arg_min(advertised_price,observed_at) AS first_observed_price,
        arg_max(advertised_price,observed_at) AS current_observed_price
 FROM contract.vehicle_market_history
 GROUP BY listing_key,source_listing_id;
 
-CREATE OR REPLACE VIEW contract.listing_events AS
+CREATE OR REPLACE VIEW contract.observation_pairs AS
 WITH ordered_runs AS (
-  SELECT run_key,scope_fingerprint,observed_at,
-         lag(run_key) OVER(PARTITION BY scope_fingerprint ORDER BY observed_at) AS prior_run_key
-  FROM core.dim_observation_run WHERE run_status='COMPLETE'
-), comparable AS (
-  SELECT * FROM ordered_runs WHERE prior_run_key IS NOT NULL
-), same_listing AS (
-  SELECT c.run_key,c.prior_run_key,n.listing_key,n.observed_at,
+  SELECT run_key AS current_run_key,run_id AS current_run_id,observation_date AS current_observation_date,
+         observed_at AS current_observed_at,run_status AS current_run_status,scope_fingerprint,
+         snapshot_comparable AS current_snapshot_comparable,population_comparable AS current_population_comparable,
+         lag(run_key) OVER(PARTITION BY scope_fingerprint ORDER BY observed_at,run_key) AS prior_run_key,
+         lag(run_id) OVER(PARTITION BY scope_fingerprint ORDER BY observed_at,run_key) AS prior_run_id,
+         lag(observation_date) OVER(PARTITION BY scope_fingerprint ORDER BY observed_at,run_key) AS prior_observation_date,
+         lag(observed_at) OVER(PARTITION BY scope_fingerprint ORDER BY observed_at,run_key) AS prior_observed_at,
+         lag(run_status) OVER(PARTITION BY scope_fingerprint ORDER BY observed_at,run_key) AS prior_run_status,
+         lag(population_comparable) OVER(PARTITION BY scope_fingerprint ORDER BY observed_at,run_key) AS prior_population_comparable
+  FROM contract.observation_run_comparability
+  WHERE snapshot_comparable
+)
+SELECT *,current_population_comparable AND prior_population_comparable AS set_differences_available
+FROM ordered_runs WHERE prior_run_key IS NOT NULL;
+
+CREATE OR REPLACE VIEW contract.listing_events AS
+WITH same_listing AS (
+  SELECT c.current_run_key AS run_key,c.prior_run_key,n.listing_key,n.observed_at,
          p.advertised_price AS prior_price,n.advertised_price AS current_price,
          p.odometer_km AS prior_odometer_km,n.odometer_km,
          p.content_key AS prior_content_key,n.content_key,
          p.seller_version_key AS prior_seller_version_key,n.seller_version_key,
          p.vehicle_spec_key AS prior_vehicle_spec_key,n.vehicle_spec_key
-  FROM comparable c
-  JOIN core.fact_listing_observation n ON n.run_key=c.run_key
+  FROM contract.observation_pairs c
+  JOIN core.fact_listing_observation n ON n.run_key=c.current_run_key
   JOIN core.fact_listing_observation p ON p.run_key=c.prior_run_key AND p.listing_key=n.listing_key
 ), newly_observed AS (
-  SELECT c.run_key,n.listing_key,n.observed_at,'NEWLY_OBSERVED' AS event_type,NULL::BIGINT AS prior_value,NULL::BIGINT AS current_value
-  FROM comparable c JOIN core.fact_listing_observation n ON n.run_key=c.run_key
+  SELECT c.current_run_key AS run_key,c.prior_run_key,n.listing_key,n.observed_at,'NEWLY_OBSERVED' AS event_type,NULL::BIGINT AS prior_value,NULL::BIGINT AS current_value,'POPULATION_SET' AS comparison_basis
+  FROM contract.observation_pairs c JOIN core.fact_listing_observation n ON n.run_key=c.current_run_key
   LEFT JOIN core.fact_listing_observation p ON p.run_key=c.prior_run_key AND p.listing_key=n.listing_key
-  WHERE p.listing_key IS NULL
+  WHERE c.set_differences_available AND p.listing_key IS NULL
 ), no_longer_observed AS (
-  SELECT c.run_key,p.listing_key,c.observed_at,'NO_LONGER_OBSERVED' AS event_type,NULL::BIGINT,NULL::BIGINT
-  FROM comparable c JOIN core.fact_listing_observation p ON p.run_key=c.prior_run_key
-  LEFT JOIN core.fact_listing_observation n ON n.run_key=c.run_key AND n.listing_key=p.listing_key
-  WHERE n.listing_key IS NULL
+  SELECT c.current_run_key AS run_key,c.prior_run_key,p.listing_key,c.current_observed_at AS observed_at,'NO_LONGER_OBSERVED' AS event_type,NULL::BIGINT,NULL::BIGINT,'POPULATION_SET' AS comparison_basis
+  FROM contract.observation_pairs c JOIN core.fact_listing_observation p ON p.run_key=c.prior_run_key
+  LEFT JOIN core.fact_listing_observation n ON n.run_key=c.current_run_key AND n.listing_key=p.listing_key
+  WHERE c.set_differences_available AND n.listing_key IS NULL
 ), changes AS (
-  SELECT run_key,listing_key,observed_at,'PRICE_CHANGED' AS event_type,prior_price,current_price FROM same_listing WHERE prior_price IS DISTINCT FROM current_price
-  UNION ALL SELECT run_key,listing_key,observed_at,'ODOMETER_CHANGED',prior_odometer_km,odometer_km FROM same_listing WHERE prior_odometer_km IS DISTINCT FROM odometer_km
-  UNION ALL SELECT run_key,listing_key,observed_at,'CONTENT_CHANGED',NULL,NULL FROM same_listing WHERE prior_content_key IS DISTINCT FROM content_key
-  UNION ALL SELECT run_key,listing_key,observed_at,'SELLER_CHANGED',NULL,NULL FROM same_listing WHERE prior_seller_version_key IS DISTINCT FROM seller_version_key
-  UNION ALL SELECT run_key,listing_key,observed_at,'SPECIFICATION_CHANGED',NULL,NULL FROM same_listing WHERE prior_vehicle_spec_key IS DISTINCT FROM vehicle_spec_key
+  SELECT run_key,prior_run_key,listing_key,observed_at,'PRICE_CHANGED' AS event_type,prior_price,current_price,'SNAPSHOT_INTERSECTION' AS comparison_basis FROM same_listing WHERE prior_price IS DISTINCT FROM current_price
+  UNION ALL SELECT run_key,prior_run_key,listing_key,observed_at,'ODOMETER_CHANGED',prior_odometer_km,odometer_km,'SNAPSHOT_INTERSECTION' FROM same_listing WHERE prior_odometer_km IS DISTINCT FROM odometer_km
+  UNION ALL SELECT run_key,prior_run_key,listing_key,observed_at,'CONTENT_CHANGED',NULL,NULL,'SNAPSHOT_INTERSECTION' FROM same_listing WHERE prior_content_key IS DISTINCT FROM content_key
+  UNION ALL SELECT run_key,prior_run_key,listing_key,observed_at,'SELLER_CHANGED',NULL,NULL,'SNAPSHOT_INTERSECTION' FROM same_listing WHERE prior_seller_version_key IS DISTINCT FROM seller_version_key
+  UNION ALL SELECT run_key,prior_run_key,listing_key,observed_at,'SPECIFICATION_CHANGED',NULL,NULL,'SNAPSHOT_INTERSECTION' FROM same_listing WHERE prior_vehicle_spec_key IS DISTINCT FROM vehicle_spec_key
 )
 SELECT * FROM newly_observed UNION ALL SELECT * FROM no_longer_observed UNION ALL SELECT * FROM changes;
 
+CREATE OR REPLACE VIEW contract.market_movement AS
+WITH intersection_changes AS (
+  SELECT c.current_run_key,
+         count(*) AS matched_listing_count,
+         count(*) FILTER(WHERE p.advertised_price IS DISTINCT FROM n.advertised_price) AS price_changed_count,
+         count(*) FILTER(WHERE n.advertised_price<p.advertised_price) AS price_decrease_count,
+         count(*) FILTER(WHERE n.advertised_price>p.advertised_price) AS price_increase_count,
+         median(n.advertised_price-p.advertised_price) FILTER(WHERE n.advertised_price IS NOT NULL AND p.advertised_price IS NOT NULL AND n.advertised_price IS DISTINCT FROM p.advertised_price) AS median_price_change,
+         count(*) FILTER(WHERE p.odometer_km IS DISTINCT FROM n.odometer_km) AS odometer_changed_count,
+         count(*) FILTER(WHERE p.content_key IS DISTINCT FROM n.content_key) AS content_changed_count,
+         count(*) FILTER(WHERE p.seller_version_key IS DISTINCT FROM n.seller_version_key) AS seller_changed_count,
+         count(*) FILTER(WHERE p.vehicle_spec_key IS DISTINCT FROM n.vehicle_spec_key) AS specification_changed_count
+  FROM contract.observation_pairs c
+  JOIN core.fact_listing_observation n ON n.run_key=c.current_run_key
+  JOIN core.fact_listing_observation p ON p.run_key=c.prior_run_key AND p.listing_key=n.listing_key
+  GROUP BY c.current_run_key
+), inventory AS (
+  SELECT c.current_run_key,
+         count(*) FILTER(WHERE f.run_key=c.prior_run_key) AS prior_listing_count,
+         count(*) FILTER(WHERE f.run_key=c.current_run_key) AS current_listing_count
+  FROM contract.observation_pairs c
+  JOIN core.fact_listing_observation f ON f.run_key IN (c.prior_run_key,c.current_run_key)
+  GROUP BY c.current_run_key
+), newly_observed AS (
+  SELECT c.current_run_key,count(*) FILTER(WHERE p.listing_key IS NULL) AS newly_observed_count
+  FROM contract.observation_pairs c
+  JOIN core.fact_listing_observation n ON n.run_key=c.current_run_key
+  LEFT JOIN core.fact_listing_observation p ON p.run_key=c.prior_run_key AND p.listing_key=n.listing_key
+  GROUP BY c.current_run_key
+), no_longer_observed AS (
+  SELECT c.current_run_key,count(*) FILTER(WHERE n.listing_key IS NULL) AS no_longer_observed_count
+  FROM contract.observation_pairs c
+  JOIN core.fact_listing_observation p ON p.run_key=c.prior_run_key
+  LEFT JOIN core.fact_listing_observation n ON n.run_key=c.current_run_key AND n.listing_key=p.listing_key
+  GROUP BY c.current_run_key
+)
+SELECT c.*,
+       i.prior_listing_count,i.current_listing_count,
+       x.matched_listing_count,x.price_changed_count,x.price_decrease_count,x.price_increase_count,x.median_price_change,
+       x.odometer_changed_count,x.content_changed_count,x.seller_changed_count,x.specification_changed_count,
+       CASE WHEN c.set_differences_available THEN added.newly_observed_count END AS newly_observed_count,
+       CASE WHEN c.set_differences_available THEN removed.no_longer_observed_count END AS no_longer_observed_count
+FROM contract.observation_pairs c
+JOIN inventory i USING(current_run_key)
+JOIN intersection_changes x USING(current_run_key)
+LEFT JOIN newly_observed added USING(current_run_key)
+LEFT JOIN no_longer_observed removed USING(current_run_key);
+
 CREATE OR REPLACE VIEW contract.market_timeseries AS
-SELECT run_id,observation_date,observed_at,run_status,scope_fingerprint,count(*) AS listing_count,
+SELECT run_id,observation_date,observed_at,run_status,scope_fingerprint,snapshot_comparable,population_comparable,count(*) AS listing_count,
        median(advertised_price) FILTER(WHERE advertised_price IS NOT NULL) AS median_asking_price,
        median(odometer_km) FILTER(WHERE odometer_km IS NOT NULL) AS median_odometer_km
-FROM contract.vehicle_market_history GROUP BY run_id,observation_date,observed_at,run_status,scope_fingerprint;
+FROM contract.vehicle_market_history GROUP BY run_id,observation_date,observed_at,run_status,scope_fingerprint,snapshot_comparable,population_comparable;
 
 CREATE OR REPLACE VIEW contract.vehicle_screen AS
 WITH cohort AS (
@@ -230,13 +311,24 @@ SELECT c.*,
        CASE WHEN cohort.cohort_size>=10 THEN cohort.cohort_median_asking_price END AS cohort_median_asking_price,
        CASE WHEN cohort.cohort_size>=10 THEN cohort.cohort_p25_asking_price END AS cohort_p25_asking_price,
        CASE WHEN cohort.cohort_size>=10 THEN cohort.cohort_p75_asking_price END AS cohort_p75_asking_price,
-       CASE WHEN cohort.cohort_size>=10 AND c.advertised_price IS NOT NULL THEN cohort.asking_price_percentile END AS asking_price_percentile
-FROM contract.vehicle_market_current c JOIN cohort USING(listing_key);
+       CASE WHEN cohort.cohort_size>=10 AND c.advertised_price IS NOT NULL THEN cohort.asking_price_percentile END AS asking_price_percentile,
+       movement.prior_observed_price,movement.observed_price_change,movement.last_change_observed_at
+FROM contract.vehicle_market_current c JOIN cohort USING(listing_key)
+LEFT JOIN (
+  SELECT listing_key,arg_max(prior_value,observed_at) AS prior_observed_price,
+         arg_max(current_value-prior_value,observed_at) AS observed_price_change,
+         max(observed_at) AS last_change_observed_at
+  FROM contract.listing_events WHERE event_type='PRICE_CHANGED' GROUP BY listing_key
+) movement USING(listing_key);
 
 CREATE OR REPLACE VIEW contract.observation_run_quality AS
 SELECT run_id,observation_date,observed_at,scope_version,scope_fingerprint,source_total_start,source_total_end,
        pages_expected,pages_fetched,raw_hits,unique_listing_ids,duplicate_hits,scope_violations,
-       collection_duration_ms,run_status,adapter_version,parser_version,schema_version,model_version,raw_manifest_sha256
-FROM core.dim_observation_run;
+       collection_duration_ms,run_status,snapshot_comparable,population_comparable,
+       CASE WHEN population_comparable THEN 'POPULATION_COMPARABLE'
+            WHEN snapshot_comparable THEN 'SNAPSHOT_COMPARABLE'
+            ELSE 'NOT_COMPARABLE' END AS comparison_class,
+       adapter_version,parser_version,schema_version,model_version,raw_manifest_sha256
+FROM contract.observation_run_comparability;
 
 -- See load_vehicle_market_run.sql for the transactional, idempotent promotion.

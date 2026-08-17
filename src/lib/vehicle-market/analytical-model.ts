@@ -1,5 +1,6 @@
 import {sourceScopeFingerprint} from "./autotrader-adapter";
 import {valueHash,type CanonicalListingObservationV1,type ProcessedVehicleMarketRun} from "./contracts";
+import {isVehicleMarketPopulationComparable,isVehicleMarketSnapshotComparable} from "./quality-policy";
 
 export type VehicleMarketFactRow={
   runKey:string;listingKey:string;vehicleSpecKey:string;sellerVersionKey:string;locationKey:string;contentKey:string;
@@ -9,7 +10,7 @@ export type VehicleMarketFactRow={
 };
 
 export type VehicleMarketAnalyticalBatch={
-  run:{runKey:string;runId:string;observationDate:string;observedAt:string;scopeFingerprint:string;runStatus:ProcessedVehicleMarketRun["quality"]["runStatus"]};
+  run:{runKey:string;runId:string;observationDate:string;observedAt:string;scopeFingerprint:string;runStatus:ProcessedVehicleMarketRun["quality"]["runStatus"];snapshotComparable:boolean;populationComparable:boolean};
   listings:Map<string,Record<string,unknown>>;
   vehicleSpecs:Map<string,Record<string,unknown>>;
   sellerVersions:Map<string,Record<string,unknown>>;
@@ -31,7 +32,7 @@ export function buildVehicleMarketAnalyticalBatch(run:ProcessedVehicleMarketRun)
   const contents=mapByHash(accepted,row=>row.contentHash,row=>({contentKey:row.contentHash,description:row.description,featureSetKey:row.featureSetHash,normalizedFeatureTerms:row.featureTerms,photoCount:row.photoCount,hasVideo:row.hasVideo}));
   const facts=new Map<string,VehicleMarketFactRow>();
   for(const row of accepted)facts.set(`${runKey}:${row.listingKey}`,{runKey,listingKey:row.listingKey,vehicleSpecKey:row.vehicleSpecHash,sellerVersionKey:row.sellerVersionHash,locationKey:row.locationHash,contentKey:row.contentHash,observedAt,advertisedPrice:row.advertisedPrice,driveawayPrice:row.driveawayPrice,odometerKm:row.odometerKm,sourceStatus:row.sourceStatus,sourceUpdatedAt:row.sourceUpdatedAt,regoExpiry:row.regoExpiry,colour:row.colour,isRegistered:row.isRegistered,isTopAd:row.isTopAd,isAuction:row.isAuction,sourcePriorAdvertisedPrice:row.sourcePriorAdvertisedPrice,sourcePriorPriceEndedAt:row.sourcePriorPriceEndedAt,sourceRecordHash:row.sourceRecordHash});
-  return {run:{runKey,runId:run.runId,observationDate:run.observationDate,observedAt,scopeFingerprint,runStatus:run.quality.runStatus},listings,vehicleSpecs,sellerVersions,locations,contents,facts};
+  return {run:{runKey,runId:run.runId,observationDate:run.observationDate,observedAt,scopeFingerprint,runStatus:run.quality.runStatus,snapshotComparable:isVehicleMarketSnapshotComparable(run.quality),populationComparable:isVehicleMarketPopulationComparable(run.quality)},listings,vehicleSpecs,sellerVersions,locations,contents,facts};
 }
 
 export type VehicleMarketAnalyticalState={runs:Map<string,VehicleMarketAnalyticalBatch["run"]>;listings:Map<string,Record<string,unknown>>;vehicleSpecs:Map<string,Record<string,unknown>>;sellerVersions:Map<string,Record<string,unknown>>;locations:Map<string,Record<string,unknown>>;contents:Map<string,Record<string,unknown>>;facts:Map<string,VehicleMarketFactRow>};
@@ -47,10 +48,10 @@ export function deriveVehicleMarketEvents(orderedBatches:VehicleMarketAnalytical
   const events:VehicleMarketDerivedEvent[]=[];
   for(let index=1;index<orderedBatches.length;index++){
     const prior=orderedBatches[index-1],current=orderedBatches[index];
-    if(prior.run.runStatus!=="COMPLETE"||current.run.runStatus!=="COMPLETE"||prior.run.scopeFingerprint!==current.run.scopeFingerprint)continue;
+    if(!prior.run.snapshotComparable||!current.run.snapshotComparable||prior.run.scopeFingerprint!==current.run.scopeFingerprint)continue;
     const priorByListing=new Map([...prior.facts.values()].map(fact=>[fact.listingKey,fact])),currentByListing=new Map([...current.facts.values()].map(fact=>[fact.listingKey,fact]));
-    for(const [listingKey,fact] of currentByListing){const before=priorByListing.get(listingKey);if(!before){events.push({runKey:current.run.runKey,listingKey,eventType:"NEWLY_OBSERVED"});continue;}if(before.advertisedPrice!==fact.advertisedPrice)events.push({runKey:current.run.runKey,listingKey,eventType:"PRICE_CHANGED",priorValue:before.advertisedPrice,currentValue:fact.advertisedPrice});if(before.odometerKm!==fact.odometerKm)events.push({runKey:current.run.runKey,listingKey,eventType:"ODOMETER_CHANGED",priorValue:before.odometerKm,currentValue:fact.odometerKm});if(before.contentKey!==fact.contentKey)events.push({runKey:current.run.runKey,listingKey,eventType:"CONTENT_CHANGED"});if(before.sellerVersionKey!==fact.sellerVersionKey)events.push({runKey:current.run.runKey,listingKey,eventType:"SELLER_CHANGED"});if(before.vehicleSpecKey!==fact.vehicleSpecKey)events.push({runKey:current.run.runKey,listingKey,eventType:"SPECIFICATION_CHANGED"});}
-    for(const listingKey of priorByListing.keys())if(!currentByListing.has(listingKey))events.push({runKey:current.run.runKey,listingKey,eventType:"NO_LONGER_OBSERVED"});
+    for(const [listingKey,fact] of currentByListing){const before=priorByListing.get(listingKey);if(!before){if(prior.run.populationComparable&&current.run.populationComparable)events.push({runKey:current.run.runKey,listingKey,eventType:"NEWLY_OBSERVED"});continue;}if(before.advertisedPrice!==fact.advertisedPrice)events.push({runKey:current.run.runKey,listingKey,eventType:"PRICE_CHANGED",priorValue:before.advertisedPrice,currentValue:fact.advertisedPrice});if(before.odometerKm!==fact.odometerKm)events.push({runKey:current.run.runKey,listingKey,eventType:"ODOMETER_CHANGED",priorValue:before.odometerKm,currentValue:fact.odometerKm});if(before.contentKey!==fact.contentKey)events.push({runKey:current.run.runKey,listingKey,eventType:"CONTENT_CHANGED"});if(before.sellerVersionKey!==fact.sellerVersionKey)events.push({runKey:current.run.runKey,listingKey,eventType:"SELLER_CHANGED"});if(before.vehicleSpecKey!==fact.vehicleSpecKey)events.push({runKey:current.run.runKey,listingKey,eventType:"SPECIFICATION_CHANGED"});}
+    if(prior.run.populationComparable&&current.run.populationComparable)for(const listingKey of priorByListing.keys())if(!currentByListing.has(listingKey))events.push({runKey:current.run.runKey,listingKey,eventType:"NO_LONGER_OBSERVED"});
   }
   return events;
 }

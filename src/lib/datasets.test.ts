@@ -25,7 +25,7 @@ describe("dataset registry",()=>{
   it("registers exactly one default included dataset and every current starter once",()=>{
     expect(DATASETS.map(dataset=>dataset.key)).toEqual(["wa-vehicle-market"]);
     expect(defaultDataset()).toBe(WA_VEHICLE_MARKET_DATASET);
-    expect(WA_VEHICLE_MARKET_DATASET.starters.map(starter=>starter.key)).toEqual(["vehicle-market-atlas","vehicle-lens","data-observatory"]);
+    expect(WA_VEHICLE_MARKET_DATASET.starters.map(starter=>starter.key)).toEqual(["vehicle-market-atlas","market-movement","vehicle-lens","data-observatory"]);
     for(const starter of WA_VEHICLE_MARKET_DATASET.starters)expect(datasetForStarterKey(starter.key)?.key).toBe("wa-vehicle-market");
     expect(datasetByKey("vic-housing")).toBeNull();
   });
@@ -73,7 +73,7 @@ describe("dataset registry",()=>{
     const prompt=datasetContractPrompt(WA_VEHICLE_MARKET_DATASET);
     expect(prompt).toContain("fact_listing_observation");expect(prompt).toContain("saleInference");expect(prompt).not.toMatch(/token|password|motherduck_share_url|serviceAccount/i);
     expect(prompt).toContain("latest publishable current observation");
-    expect(prompt).toContain("Adjacent COMPLETE runs");
+    expect(prompt).toContain("Adjacent snapshot-comparable runs");
     expect(prompt).not.toContain("latest COMPLETE observation");
   });
 });

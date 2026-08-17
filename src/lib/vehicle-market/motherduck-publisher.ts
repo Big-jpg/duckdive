@@ -4,6 +4,7 @@ import postgres,{type TransactionSql} from "postgres";
 import {AutotraderVehicleMarketAdapter,sourceScopeFingerprint} from "./autotrader-adapter";
 import {buildVehicleMarketAnalyticalBatch} from "./analytical-model";
 import {VEHICLE_MARKET_ADAPTER_VERSION,VEHICLE_MARKET_MODEL_VERSION,VEHICLE_MARKET_PARSER_VERSION,VEHICLE_MARKET_SCHEMA_VERSION,canonicalJson,sha256Hex,type ProcessedVehicleMarketRun} from "./contracts";
+import {isVehicleMarketSnapshotComparable} from "./quality-policy";
 import type {RawObjectStore} from "./raw-object-store";
 
 type StageRows={
@@ -17,16 +18,10 @@ type StageRows={
 };
 
 export type VehicleMarketStageBatch={loadId:string;runKey:string;rawManifestSha256:string;rows:StageRows};
-export type PublishedVehicleMarketRun={runId:string;runKey:string;runStatus:"COMPLETE"|"CHANGED_DURING_CAPTURE";sourceRows:number;factRows:number;dimensionCounts:{listings:number;vehicleSpecs:number;sellerVersions:number;locations:number;contents:number};rawManifestSha256:string};
+export type PublishedVehicleMarketRun={runId:string;runKey:string;runStatus:"COMPLETE"|"CHANGED_DURING_CAPTURE"|"INVALID";sourceRows:number;factRows:number;dimensionCounts:{listings:number;vehicleSpecs:number;sellerVersions:number;locations:number;contents:number};rawManifestSha256:string};
 
 export function isVehicleMarketRunPublishable(run:ProcessedVehicleMarketRun){
-  const quality=run.quality;
-  if(quality.runStatus==="COMPLETE")return true;
-  return quality.runStatus==="CHANGED_DURING_CAPTURE"
-    &&quality.pagesFetched===quality.pagesExpected
-    &&quality.rawHits===quality.uniqueListingIds
-    &&quality.duplicateHits===0
-    &&quality.scopeViolations===0;
+  return isVehicleMarketSnapshotComparable(run.quality);
 }
 
 function timestamp(value:string|null|undefined){
@@ -86,7 +81,10 @@ export async function initializeVehicleMarketDuckLake(){
   const target=connection(`md:${name}`);
   try{
     const bootstrap=await readFile(path.resolve("db/ducklake/wa_vehicle_market.sql"),"utf8");
-    for(const statement of bootstrap.split(";").map(value=>value.trim()).filter(Boolean))await target.unsafe(statement);
+    const statements=bootstrap.split(";").map(value=>value.trim()).filter(Boolean),firstView=statements.findIndex(statement=>/^CREATE OR REPLACE VIEW\b/i.test(statement));
+    if(firstView<0)throw new Error("Vehicle-market bootstrap does not declare governed views");
+    for(const statement of statements.slice(0,firstView))await target.unsafe(statement);
+    await target.begin(async tx=>{for(const statement of statements.slice(firstView))await tx.unsafe(statement);});
     await target.unsafe("CREATE SHARE IF NOT EXISTS wa_vehicle_market_app FROM wa_vehicle_market (ACCESS RESTRICTED, VISIBILITY DISCOVERABLE, UPDATE AUTOMATIC)");
     await target.unsafe("GRANT READ ON SHARE wa_vehicle_market_app TO ROLE explorer");
   }finally{await target.end();}
@@ -102,7 +100,8 @@ export async function publishVehicleMarketRun(run:ProcessedVehicleMarketRun,stor
     const promotion=(await readFile(path.resolve("db/ducklake/load_vehicle_market_run.sql"),"utf8")).replaceAll("__LOAD_ID__",batch.loadId);await target.unsafe(promotion);
     const [counts]=await target<{facts:number;runs:number}[]>`SELECT (SELECT count(*) FROM core.fact_listing_observation WHERE run_key=${batch.runKey})::BIGINT AS facts,(SELECT count(*) FROM core.dim_observation_run WHERE run_key=${batch.runKey})::BIGINT AS runs`;
     if(Number(counts?.facts)!==run.quality.uniqueListingIds||Number(counts?.runs)!==1)throw new Error("Published DuckLake rows do not reconcile to the publishable run");
-    const runStatus:PublishedVehicleMarketRun["runStatus"]=run.quality.runStatus==="COMPLETE"?"COMPLETE":"CHANGED_DURING_CAPTURE";
+    const runStatus=run.quality.runStatus;
+    if(runStatus==="PARTIAL")throw new Error("A partial run cannot be published");
     return {runId:run.runId,runKey:batch.runKey,runStatus,sourceRows:run.quality.uniqueListingIds,factRows:Number(counts.facts),dimensionCounts:{listings:batch.rows.dimListing.length,vehicleSpecs:batch.rows.dimVehicleSpec.length,sellerVersions:batch.rows.dimSellerVersion.length,locations:batch.rows.dimLocation.length,contents:batch.rows.dimListingContent.length},rawManifestSha256:batch.rawManifestSha256};
   }finally{await target.end();}
 }
