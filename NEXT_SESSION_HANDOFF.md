@@ -1,6 +1,6 @@
 # Next session handoff
 
-Updated: 2026-08-15 (Australia/Perth)
+Updated: 2026-08-17 (Australia/Perth)
 
 ## Outcome achieved
 
@@ -16,7 +16,68 @@ The temporary WA Used Vehicle Listings MVP is live for an approved existing Duck
 - The saved version exposes its requested-vs-applied manifest, validation results, report purpose, and reversible version history in DuckDive.
 - Production email magic-link authentication is restored and proven through an allowlisted end-to-end smoke, including session exchange and redirect to `/workspace`; the denied path remained generic and email-free.
 
-Do not rerun acquisition or rebuild the data plane. The next product phase is base-site UI/UX polish only. Mandatory WA disposal remains due by 2026-08-18 Australia/Perth.
+Two additional manual captures were completed on 2026-08-17 and retained as private raw/operational evidence. Neither has been published. Do not run another acquisition. Continue the user-provided plan in order: land one captured run as the second observation, implement the temporal contracts, create Market Movement, improve the three existing Dives, then perform release verification. Make only the minimal quality-policy adjustment needed to land the bounded-drift observation; it is part of that publication step, not a new phase. Mandatory WA disposal remains due by 2026-08-18 Australia/Perth unless the user explicitly changes that retention authority.
+
+## 2026-08-17 second-observation checkpoint (current authority)
+
+### What completed
+
+Two one-off full WA Used captures completed through the existing gated collector. Both enumerated every expected page, persisted every response before parsing, wrote content-addressed private Blob manifests, saved local evidence, recorded Neon operational lineage, exited successfully, and returned both live-source gates to `false`.
+
+| Run | Source total | Pages | Raw hits | Unique listing IDs | Duplicate hits | Scope violations | Current code status |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| `98361f5c-ba0b-4f32-8085-41796432c39d` | 14,758 → 14,752 | 296 / 296 | 14,752 | 14,747 | 5 | 0 | `INVALID` |
+| `a3731a93-339f-469e-8ca5-c1be310a8b85` | 14,746 → 14,741 | 295 / 295 | 14,741 | 14,737 | 4 | 0 | `INVALID` |
+
+For the latest run:
+
+- observation date: `2026-08-17`;
+- raw objects/request attempts: `296 / 296`, including the end consistency probe;
+- private Blob manifest SHA-256: `2399139e1af7442ade7da3a58ece5f6ff4caff03d0473037c3d2625aeb38d857`;
+- local manifest SHA-256: the same value;
+- saved canonical observation rows: `14,737`;
+- collector exit code: `0`;
+- collector process: no longer running;
+- operator `VEHICLE_MARKET_SOURCE_ENABLED` and `VEHICLE_MARKET_ALLOW_FULL_WA_COLLECTION`: both `false` after exit.
+
+The `INVALID` label is the current implementation's quality classification for duplicate hits. It is not a failed acquisition: the latest run retained 14,737 unique listing records, while four repeated hits represent approximately 0.027% of its raw hits.
+
+### Product decision
+
+Do not make minor pagination drift the product story or force another collection for four or five repeated hits.
+
+For a fully enumerated, zero-scope-violation run with a very small, explicitly reported duplicate count:
+
+- preserve raw hits, unique listing count, duplicate count, start/end totals, and all immutable evidence;
+- use one deterministic canonical observation per listing ID;
+- treat the observation as snapshot-comparable for inventory, aggregates, time-series points, and changes among listings present in both observations;
+- if repeated copies of a listing conflict, exclude that listing from intersection-level change claims or resolve it under an explicit deterministic rule;
+- do not treat the run as an exact population boundary;
+- withhold `NEWLY_OBSERVED` and `NO_LONGER_OBSERVED` unless the run pair satisfies the stricter population-comparable rule;
+- never infer a sale from source absence;
+- do not relabel the run `COMPLETE` or conceal its drift metadata.
+
+This decision has not yet been implemented in code. Both 17 August runs remain operational/raw evidence only under their current recorded statuses.
+
+### What did not occur
+
+- `vehicle:publish` was not run for either 17 August capture.
+- MotherDuck/DuckLake still contains only the previously published 11 August observation unless current external state has changed independently.
+- No temporal contract, Market Movement, starter-Dive, dataset-definition, schema, application, Vercel, auth, ownership, or deployment change was made for the second observation.
+- No scheduler or recurring source trigger was created.
+- An offline replay of the first 17 August run read and parsed its private objects, but a temporary reporting harness failed afterward because it expected observations inside `run.json`. Do not claim a clean final replay certificate from that attempt.
+
+### Remaining execution order
+
+Continue the supplied second-observation plan in its original order:
+
+1. **Validate and publish the second observation.** Land one retained 17 August capture through the existing transactional `vehicle:publish -- --run <run-id> --execute --record-neon` path after explicit approval for the MotherDuck write. As part of this step, make only the minimal local policy/fixture change required to accept fully enumerated, zero-scope-violation bounded duplicate drift while preserving its recorded quality metadata. No run selection has been applied yet.
+2. **Correct and expand the temporal contracts.** Implement snapshot-comparable intersection changes separately from population-comparable set differences.
+3. **Create Market Movement.** Use the existing dataset registry, governed report policy, versioning, metadata, reset/revert, and report mutation path.
+4. **Improve Market Atlas, Vehicle Lens, and Data Observatory.** Reuse the same governed temporal contracts rather than introducing Dive-specific SQL.
+5. **Run release verification.** Verify actual two-observation values, report lifecycle behavior, denial of unsupported population claims, public sharing disabled, source gates false, and the normal sequential validation commands.
+
+Do not insert another acquisition, broad replay, new infrastructure phase, or unrelated UI phase into that order.
 
 ## Start here
 
@@ -25,11 +86,15 @@ Do not rerun acquisition or rebuild the data plane. The next product phase is ba
 - Reverify current external state before mutation.
 - Never write credentials or the restricted MotherDuck share URL to Git, logs, screenshots, or chat.
 - Do not create another Vercel project/team, Neon project, Blob store, MotherDuck organization, auth estate, service account, or human seat.
-- For the next phase, treat the embedded Dive as an opaque governed surface. Improve the application around it; do not modify report source, report validation, data contracts, APIs, auth, ownership, or infrastructure.
+- Follow the remaining execution order above. Preserve the existing embedded renderer, auth, ownership, service-account, and infrastructure boundaries; the temporal contracts and governed report sources may change only as required by the supplied second-observation plan.
 
 ## Git and deployment state
 
-- Current `origin/main`: `69392a8` (`Upgrade Neon Auth beta dependencies`).
+- Current `origin/main`: `696b6a4` (`Remove obsolete CSV and BYOD workspace surfaces`).
+- Relevant later commits after the prior handoff:
+  - `bb444d5` — improve report editor layout and loading states;
+  - `2749165` — document restored production magic-link authentication;
+  - `696b6a4` — remove obsolete CSV and BYOD workspace surfaces.
 - Relevant preceding commits:
   - `2954593` — add the guarded production magic-link smoke and exact QA cleanup;
   - `65cab01` — add administrator control for AI Gateway model selection;
@@ -45,7 +110,7 @@ Do not rerun acquisition or rebuild the data plane. The next product phase is ba
 - Production deployment `dpl_CKVfUZ7C87P4nntNRSt4qzTL8fnG` deployed `69392a8` to the existing estate at 2026-08-15 21:36:51 Australia/Perth; Vercel reported `Ready` and aliased it to `https://duckdive.gold`.
 - Production project/domain remain the existing `vic-house-data-lab` / `https://duckdive.gold` estate.
 - Former VIC-only rollback reference: `e10181b623e299f7dc550eeafe0dfd3c727cdc10`.
-- Before this documentation update, the local worktree was clean on `main` at `69392a8` and matched `origin/main`.
+- Before this documentation update, `main`, `origin/main`, and `origin/HEAD` were all at `696b6a4`. `AGENTS.md` was already locally modified; preserve that user-owned change. This handoff edit adds the expected `NEXT_SESSION_HANDOFF.md` modification.
 
 ## Production magic-link incident resolved
 
@@ -96,6 +161,7 @@ The full acquisition enumerated every expected page, but the source total increa
 Policy:
 
 - Fully enumerated bounded-drift runs may serve current inventory, listing-age, cohort, and quality views when pages reconcile, raw hits are unique, and duplicate/scope-violation counts are zero.
+- Pending product-policy change from 2026-08-17: a very small, explicitly reported duplicate count should not withhold an otherwise fully enumerated zero-scope-violation snapshot. Implement deterministic unique-listing handling and keep stricter population-comparison gates; do not manually edit recorded run lineage to simulate that change.
 - Periodic movement, newly observed, disappearance, and reappearance comparisons remain adjacent-`COMPLETE`-run only.
 - Never relabel this run `COMPLETE` or conceal its start/end totals.
 - Never infer sale.
@@ -234,7 +300,9 @@ git diff --check passed
 
 After `6c85c4c`, the focused and full local checks passed before deployment, including 53 test files / 185 tests, typecheck, focused lint, build, and `git diff --check`. The production edit/save evidence above is the release-level proof for this path.
 
-## Next phase: base-site UI/UX polish
+## Historical UI/UX brief (implemented on current `main`)
+
+The following brief describes the prior UI phase. Its report-only route cleanup and editor-shell work landed in `bb444d5` and `696b6a4`. It is not the current next phase; the current authority is the 2026-08-17 second-observation checkpoint above.
 
 ### Intended outcome
 
