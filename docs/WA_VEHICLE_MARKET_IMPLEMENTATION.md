@@ -26,6 +26,7 @@ The VIC production rollback reference is commit `e10181b623e299f7dc550eeafe0dfd3
 - Immutable local and private Blob evidence stores: `src/lib/vehicle-market/raw-object-store.ts`
 - Private Blob fixture seeding: `src/lib/vehicle-market/blob-seed.ts`
 - Shared persist-before-parse replay/reconciliation path: `src/lib/vehicle-market/pipeline.ts`
+- Snapshot and population comparability policy: `src/lib/vehicle-market/quality-policy.ts`
 - Gated sequential acquisition and retry policy: `src/lib/vehicle-market/live-acquisition.ts`
 - Deterministic dimensional staging and event rules: `src/lib/vehicle-market/analytical-model.ts`
 - Executable DuckLake staging/publication: `src/lib/vehicle-market/motherduck-publisher.ts`
@@ -36,7 +37,7 @@ The VIC production rollback reference is commit `e10181b623e299f7dc550eeafe0dfd3
 - Managed DuckLake DDL and governed views: `db/ducklake/wa_vehicle_market.sql`
 - Transactional staged promotion: `db/ducklake/load_vehicle_market_run.sql`
 - WA dataset authority: `src/lib/dataset-definitions/wa-vehicle-market.ts`
-- Starter Dives: `src/dives/vehicle-market-atlas.tsx`, `src/dives/vehicle-lens.tsx`, and `src/dives/data-observatory.tsx`
+- Starter Dives: `src/dives/vehicle-market-atlas.tsx`, `src/dives/market-movement.tsx`, `src/dives/vehicle-lens.tsx`, and `src/dives/data-observatory.tsx`
 - Retention and disposal: `docs/WA_VEHICLE_MARKET_RETENTION.md`
 
 ## Commands
@@ -82,7 +83,7 @@ $env:VEHICLE_MARKET_ALLOW_FULL_WA_COLLECTION='true'
 corepack pnpm vehicle:collect -- --live --full-wa-used
 ```
 
-Publish a saved `COMPLETE` run to DuckLake and record publication reconciliation in Neon:
+Publish a saved snapshot-comparable run to DuckLake and record publication reconciliation in Neon:
 
 ```powershell
 corepack pnpm vehicle:publish -- --run <run-id> --execute --record-neon
@@ -118,7 +119,23 @@ The sanitized two-row fixture produces:
 
 The dated `2026-08-11-wa-used.expected.json` fixture preserves the separately validated 14,749-row, 295-page source behaviour. It is evidence, not a production assertion.
 
-For the temporary MVP current-market lens, a fully enumerated `CHANGED_DURING_CAPTURE` run may be published when every expected page is present, raw hits are unique, and duplicate and scope-violation counts are zero. The operational status remains truthful. Such a run is available to current-market views but is excluded from periodic listing-event comparisons, which continue to require `COMPLETE` observations.
+For the temporary MVP current-market lens, a run is snapshot-comparable when every expected page is present, scope violations are zero, raw hits reconcile to canonical unique IDs plus explicitly recorded duplicate hits, and either:
+
+- the run is `COMPLETE` or `CHANGED_DURING_CAPTURE` with zero duplicate hits; or
+- the run retains its recorded `INVALID` status solely for duplicate-induced source-order drift, with at most 10 duplicate hits and a duplicate rate no greater than 0.1%.
+
+Repeated listing IDs resolve deterministically to the newest source update, then the lexicographically greatest source-record hash. Status, start/end totals, raw hits, unique IDs, and duplicates remain visible; a bounded-drift observation is not relabelled `COMPLETE`.
+
+Adjacent snapshot-comparable observations support inventory points and attribute changes only for listing IDs present in both observations. `NEWLY_OBSERVED` and `NO_LONGER_OBSERVED` require both runs to pass the stricter population-comparable rule. Source absence never establishes a sale.
+
+## Published repeat-observation evidence
+
+The existing DuckLake contains two private WA Used observations:
+
+- `6dd6bdba-48e5-4092-8892-69eabe00c317`, observed 2026-08-11: 14,747 canonical facts, `CHANGED_DURING_CAPTURE`;
+- `a3731a93-339f-469e-8ca5-c1be310a8b85`, observed 2026-08-17: 14,737 canonical facts from 14,741 raw hits with four duplicates, recorded `INVALID`.
+
+Both are snapshot-comparable and neither is population-comparable. The governed intersection contains 12,984 repeated listing IDs. It exposes 2,801 asking-price changes, 137 odometer changes, 391 content changes, nine seller changes, and 40 specification changes. Population set-difference counts are `NULL`, and the set-difference event row count is zero.
 
 ## Release gates
 
@@ -126,4 +143,4 @@ Before applying shared-infrastructure mutations, verify the exact existing resou
 
 The approved source use is bounded to private fixture replay, a bounded live smoke, and one private full snapshot for this experiment. The two live-source gates remain false in Vercel and are enabled only in the operator process invoking the approved command.
 
-Public sharing and custom-domain changes are not part of this release. Market Movement remains absent until a second adjacent comparable `COMPLETE` observation exists.
+Public sharing and custom-domain changes are not part of this release. Market Movement uses only the governed snapshot intersection and visibly withholds population set differences for the current run pair.

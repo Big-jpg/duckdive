@@ -37,7 +37,7 @@ After cleanup, prove:
 - the Blob prefix lists zero objects;
 - MotherDuck no longer lists `wa_vehicle_market` or its share;
 - Neon contains no vehicle-market payload, request, validation, run, or publication records;
-- no workspace maps to the three WA starter keys;
+- no workspace maps to the four WA starter keys;
 - authenticated and anonymous requests cannot open a WA Dive;
 - `duckdive.gold` serves the approved post-experiment commit;
 - no secrets or extracted records were written into Git, logs, screenshots, or the disposal manifest.
