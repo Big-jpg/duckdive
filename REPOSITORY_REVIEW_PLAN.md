@@ -289,12 +289,12 @@ This package aligns public claims with the enforcement that exists in code.
 
 ### Gate 6: evidence-backed architecture claims
 
-- [ ] Every architecture arrow maps to code or is labelled proposed
-- [ ] Every trust boundary and external dependency is described
-- [ ] Public text distinguishes deterministic guards from agent judgment
-- [ ] Production report-policy validation cannot be disabled by configuration
-- [ ] All required control-loop scenarios have passing tests
-- [ ] No prototype is described as production-complete
+- [x] Every architecture arrow maps to code or is labelled proposed
+- [x] Every trust boundary and external dependency is described
+- [x] Public text distinguishes deterministic guards from agent judgment
+- [x] Production report-policy validation cannot be disabled by configuration
+- [x] All required control-loop scenarios have passing tests
+- [x] No prototype is described as production-complete
 
 ## Work package 7: Reframe the repository and add public verification
 
