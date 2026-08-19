@@ -22,3 +22,8 @@ rea-collections/
 .env*.local
 .env.motherduck
 .env*
+
+# Generic agent skills are reproducible from skills-lock.json.
+.agents/skills/*
+!.agents/skills/vic-house-platform-operator/
+!.agents/skills/vic-house-platform-operator/**

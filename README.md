@@ -1,141 +1,65 @@
-# DuckDive — VIC House Data Lab
+# DuckDive
 
-An experimental, open analytical experience for Victorian detached-house sales. Immutable CSV sources flow through Neon Postgres canonical records into MotherDuck OLAP tables and three embedded, AI-remixable Dives.
+DuckDive is an engineering case study in bounded agentic business intelligence. The repository shows how data contracts, governed analytical views, explicit quality policy, constrained tools, ownership, and version checks bound an agent that inspects data and changes analytical reports.
 
-The VIC estate is intentionally isolated from the historical WA deployment. Point every database environment variable at a dedicated VIC Neon project before running migrations or ingestion.
+The current preserved experiment documents two WA vehicle-listing observations. Its reviewer workflow uses sanitized fixtures, keeps live acquisition disabled, and requires no credentials or external services.
 
-## Data flow
+## Run the reviewer baseline
 
-1. A CSV is registered in `ops.ingest_file` by SHA-256. The immutable local VIC archive is the bulk-load source; private Vercel Blob remains available for incremental HTTP ingestion.
-2. A durable workflow parses one bounded file and idempotently lands observations in `raw.sale_observation`.
-3. `core.curate_file` selects the best listing observation and resolves it to a canonical property.
-4. `core.sale_event` preserves transactions independently of listing identity.
-5. `mart.suburb_monthly_sales` serves common application reads from Neon.
-6. `scripts/publish-motherduck.ts` atomically publishes dimensions, aggregates, and sale facts to `vic_house_data`, then creates or updates an automatic, read-only organization share.
-
-The current property key is a SHA-256 fingerprint of normalized address, state, and postcode. It is marked as `NORMALIZED_ADDRESS` with a confidence of `0.9000`; authoritative parcel/title identifiers can later be attached without changing `property_id` references. Analytical suburb identity is independent of postcode: `mart.suburb_dimension` assigns a state-qualified normalized `suburb_key`, retains every observed postcode for lineage, and selects the sales-weighted modal postcode as display metadata. Monthly suburb statistics are recomputed from individual sale events at `suburb_key × sale_month` grain.
-
-## Setup
+Use Node.js 22 and pnpm 10.28.0. The baseline installs the frozen dependency graph, validates the application, and replays two sanitized fixture rows:
 
 ```bash
-pnpm install
-cp .env.example .env.local
-pnpm db:migrate
-pnpm test
-pnpm ingest:local -- --limit=1
-pnpm db:status
-pnpm ingest:local
-pnpm db:reconcile
-pnpm publish:motherduck
-pnpm smoke:motherduck
-pnpm preflight
-pnpm access:add -- editor@example.com admin
+corepack pnpm install --frozen-lockfile
+corepack pnpm test
+corepack pnpm lint
+corepack pnpm typecheck
+corepack pnpm build
+corepack pnpm vehicle:replay -- --manifest fixtures/vehicle-market/replay/wa-used-sanitized.manifest.json
 ```
 
-## Allowlisted authentication
+The replay must report two source rows, two unique listings, zero duplicates, zero scope violations, one expected and fetched page, and `COMPLETE` status.
 
-The main application is private and uses Neon Auth magic links. Neon proves the email identity; `app.app_user` remains the authorization boundary and never auto-enrols a new identity. Add, revoke, and inspect access without handling passwords:
+## Inspect the bounded system
 
-```bash
-pnpm access:add -- member@example.com member
-pnpm access:revoke -- member@example.com
-pnpm access:list
-```
+The reviewable system separates responsibilities across these surfaces:
 
-Enable Neon Auth and the Magic Link plugin on the isolated production branch. Configure `NEON_AUTH_BASE_URL`, one stable 32+ character `NEON_AUTH_COOKIE_SECRET`, `RESEND_API_KEY`, and `AUTH_EMAIL_FROM`. The canonical application is `https://duckdive.gold`; configure the branch webhook URL as `https://duckdive.gold/api/webhooks/neon-auth` with blocking events `send.magic_link` and `user.before_create`.
+- Dataset contracts define supported entities, measures, assumptions, and refusal boundaries
+- Quality policy decides which observations support snapshot or population comparisons
+- Governed analytical queries preserve grains, cohort rules, lineage, and publication invariants
+- Agent tools restrict reads, require a structured change plan, and permit one verified save
+- Ownership and version checks prevent cross-workspace or stale writes
+- Sanitized fixtures exercise the same replay and reconciliation path without source access
 
-The webhook verifies Neon's rotating Ed25519 signatures against the branch JWKS, rejects stale or mismatched events, delivers links through Resend, blocks non-allowlisted user creation, and persists exact responses for idempotent retries. `/share/*` remains the only deliberate public read-only application capability; `POST /api/ingest` remains independently protected by `INGEST_SECRET`.
+The registered dataset is `wa-vehicle-market`. Its four starter reports are Market Atlas, Market Movement, Vehicle Lens, and Data Observatory. The MotherDuck Business trial and Embedded Dives are unavailable, so the repository does not present them as a live review surface.
 
-## Private administration and cost controls
+## Understand the repository states
 
-Active allowlist administrators can open `/admin` to add, reactivate, or revoke members and inspect aggregate operational activity. The dashboard tracks identities, AI attempts, chat sessions, share links/views, login attempts, and durable audit events; it deliberately does not record a clickstream. Revocation preserves the user's stable identity, workspace, and history. Administrators cannot revoke or demote themselves, and transactional locking prevents removal of the final active administrator.
+The repository retains several experiments without presenting all of them as current product paths:
 
-AI requests are admitted through Neon before reaching a model. `AI_REMIX_REQUESTS_PER_HOUR` defaults to 20 per user and `AI_REMIX_GLOBAL_REQUESTS_PER_HOUR` defaults to 100 across the application. The global decision uses a PostgreSQL advisory transaction lock so concurrent requests cannot burst past the configured hourly cap. Unauthenticated or non-allowlisted callers cannot reach AI at all.
+| Surface | Status | Reviewer interpretation |
+| --- | --- | --- |
+| WA vehicle-market contracts, fixtures, governed database definitions, and starter sources | Current preserved experiment | Primary bounded-agent evidence; fixture replay is supported |
+| VIC housing ingestion, marts, notebooks, scraper, and starter sources | Historical experiment | Preserved implementation history; not registered in the current dataset registry |
+| Power BI and Fabric semantic-model import | Tested prototype | Local archive and Tabular Model Definition Language parsing plus protected draft APIs; no complete visible workflow |
+| World Health Organization operational runtime | Fixture adapter | Fixed resource used to test binding, reconciliation, query, and revocation policy; not a general connector |
 
-Anonymous `/share/*` loads have a separate cost circuit breaker before MotherDuck session creation: `PUBLIC_SHARE_REQUESTS_PER_HOUR` defaults to 30 per visitor/link and `PUBLIC_SHARE_GLOBAL_REQUESTS_PER_HOUR` defaults to 300. Visitor identity is stored only as a salted SHA-256 hash; raw IP addresses are not retained. Exceeding either cap fails closed before calling MotherDuck.
+[`docs/REPOSITORY_MAP.md`](docs/REPOSITORY_MAP.md) explains every tracked top-level directory and the boundaries between these states.
 
-Archive the historical CSV source with a separate ignored environment file so Neon credentials in `.env.local` are not overwritten. Locally minted Vercel OIDC tokens carry a `development` environment claim even when Production variables are pulled, so the Blob store must allow the Development connection (or `.env.blob` must contain a dedicated read/write token):
+## Follow the review plan
 
-```bash
-vercel env pull .env.blob --environment=production
-pnpm archive:blob
-```
+Use these documents according to the task:
 
-Standalone database scripts load `.env.local` explicitly. Vercel deliberately downloads variables marked Sensitive as the literal value `[SENSITIVE]`; neither `vercel env pull` nor `vercel env run` can recover those values for a local migration. Copy the pooled and direct connection strings from the isolated Neon project's **Connect** panel into `DATABASE_URL` and `DATABASE_URL_UNPOOLED` in `.env.local`, then run `pnpm db:migrate`. Keep the Vercel variables marked Sensitive: production builds and Functions receive their real values.
+- [`REPOSITORY_REVIEW_PLAN.md`](REPOSITORY_REVIEW_PLAN.md): authoritative execution order and success gates
+- [`NEXT_SESSION_HANDOFF.md`](NEXT_SESSION_HANDOFF.md): concise current-session orientation
+- [`docs/REPOSITORY_MAP.md`](docs/REPOSITORY_MAP.md): directory purposes and experiment classifications
+- [`docs/PLATFORM_OPERATIONS.md`](docs/PLATFORM_OPERATIONS.md): credentialed and historical operator procedures outside the reviewer path
+- [`docs/WA_VEHICLE_MARKET_IMPLEMENTATION.md`](docs/WA_VEHICLE_MARKET_IMPLEMENTATION.md): WA implementation and fixture commands
+- [`docs/WA_VEHICLE_MARKET_RETENTION.md`](docs/WA_VEHICLE_MARKET_RETENTION.md): current preservation authority and superseded disposal history
 
-## HTTP ingestion
+## Respect the external-state boundary
 
-Upload an immutable CSV to Vercel Blob, then call `POST /api/ingest` with `Authorization: Bearer $INGEST_SECRET`:
+The reviewer path must not run vehicle acquisition, enable either source gate, mutate cloud data, deploy the application, or require MotherDuck, Neon, Vercel Blob, or Embedded Dives. Those actions need separate explicit approval and verified resource identities.
 
-```json
-{"fileName":"rea-sold-ABERFELDIE-VIC-_3040_.csv","objectUrl":"https://...blob.vercel-storage.com/raw/...csv","expectedSha256":"optional-64-character-checksum"}
-```
+## License status
 
-The route returns `202` and a Vercel Workflow run ID. The Workflow state contains only file metadata; CSV bytes remain in Blob.
-If `INGEST_SECRET` is not configured, the route fails closed with HTTP 503.
-
-## Metadata-driven extension collection
-
-The Chrome extension in `rea-sold-scraper` owns the raw collection queue inside the user's normal browser session. Jobs can be added through the popup or imported from a JSON collection plan. Supported slice metadata includes suburb/state/postcode, property type, bedroom and price bounds, REA's relative sold-age filter, exact client-side sold-date bounds, and surrounding-suburb behavior.
-
-REA's sold-search result window is treated as deliberately bounded: page 80 / 2,000 visible results is a successful completion with `result_window_reached` recorded as its reason. Extension state, cooldowns, retries, page progress, and slice metadata persist in `chrome.storage.local` across service-worker restarts.
-
-## Analytics API
-
-`GET /api/analytics/suburb-sales` queries the MotherDuck monthly mart. Preferred parameters are `suburb_key`, `from`, `to`, and `limit`; `suburb` and `postcode` remain available for compatibility.
-
-`GET /api/analytics/suburb-insights` accepts `suburb_key`, `from`, and `to`. It queries the curated MotherDuck sale fact table for rolling 12-month and prior-year medians, explicit sample sizes, land-to-price correlation, plausible median land size, and bedroom-segment medians over the visitor's selected period.
-
-### Operational dataset runtime
-
-Reviewed operational datasets remain runtime-unbound until an authenticated owner calls `POST /api/datasets/[datasetId]/runtime`. The WHO fixture adapter accepts only `sample_data.who.ambient_air_quality`, uses the dedicated `MOTHERDUCK_WHO_SERVICE_ACCOUNT_USERNAME`, and obtains short-lived read-scaling tokens server-side. Configure that username separately from `MOTHERDUCK_SHARED_SERVICE_ACCOUNT_USERNAME`.
-
-`POST /api/datasets/[datasetId]/query` accepts a structured selection, filters, ordering, and a maximum 500-row limit. It does not accept SQL. Fields must be present in both the adapter policy and the owner-reviewed contract; values remain parameters. Cross-owner, unknown-field, VIC-resource, degraded, and revoked contexts fail closed.
-
-Operator verification commands are `pnpm smoke:operational-runtime:resource` for live public-schema reconciliation and `pnpm smoke:operational-runtime:lifecycle` for the exact `.invalid` QA binding/query/revocation/cleanup rehearsal. The lifecycle smoke targets only `qa-phase2cc-runtime@invalid.local` and verifies zero retained QA rows plus the unchanged VIC baseline.
-
-Authenticated members receive isolated Dive IDs and chat history while a controlled MotherDuck service account supplies compute and read-only access to the automatic organization share.
-
-Editors can publish an individual personal Dive as an unlisted, view-only `/share/<slug>` link. The 80-bit capability slug resolves through `app.dive_share`; the server verifies ownership, active/revoked state, and optional expiry before minting a fresh short-lived MotherDuck embed session. Durable links never contain MotherDuck tokens or expose arbitrary Dive IDs. Revocation takes effect immediately and returns HTTP 404 for the old slug.
-
-Embedded Dive sessions and their downstream CloudFront signed object URLs are intentionally visible to the authorized browser. Treat both as short-lived bearer capabilities: do not persist them in application logs, analytics, screenshots, or support tickets. They are scoped and expiring, while the MotherDuck admin token remains server-only.
-
-The production lifecycle smoke harness uses a temporary `.invalid` QA owner and the existing source Suburb Story without modifying the source Dive:
-
-```bash
-pnpm smoke:share create
-pnpm smoke:share revoke
-pnpm smoke:share cleanup
-```
-
-The API uses one versioned analytics contract: all observations count toward volume, while price statistics use reported values from AUD 50,000 through AUD 20,000,000 and land statistics use 50 through 10,000 m². Responses include these definitions and explicit valid-sample counts. `suburb-insights` compares a requested period with the immediately preceding period of equal inclusive length.
-
-Sales velocity is defined as completed detached-house sales per month over the latest rolling 12 months. Its comparison is the percentage change in completed sale count versus the immediately preceding 12 months; it is not an inventory-turnover or days-on-market measure.
-
-```text
-/api/analytics/suburb-sales?suburb=Yarraville&from=2020-01-01
-```
-
-## Baseline reconciliation
-
-The immutable VIC archive contains 83 source files and 88,422 source rows dated 2004-09-14 through 2026-07-18. `pnpm reconcile` checks those invariants alongside database counts. Unpriced sales remain in volume metrics and are excluded only from price statistics; any remaining discrepancy must be explained by an explicit quality rule rather than silent deletion.
-
-## Production notes
-
-- Vercel Functions are pinned to Sydney (`syd1`) in `vercel.json`, beside the Sydney Neon/Auth estate. Preserve this unless the data estate moves.
-- Use `DATABASE_URL_UNPOOLED` for migrations/ingestion, `DATABASE_URL` for pooled application traffic, and optionally `DATABASE_READ_URL` for read-only publication and stats queries.
-- The historical archive is intentionally supported by the idempotent local bulk driver; incremental files can use Vercel Workflow.
-- Keep the raw CSV archive immutable. Do not use Neon raw tables as the only recovery source.
-
-## AI Gateway smoke test
-
-The application accepts Vercel OIDC or `AI_GATEWAY_API_KEY` authentication. Refresh a short-lived local OIDC token without overwriting `.env.local`, then stream a response through AI Gateway:
-
-```powershell
-vercel env pull .env.ai-gateway.local --yes --environment=development
-pnpm smoke:ai-gateway
-```
-
-The smoke script deliberately uses `openai/gpt-5.6-sol`. The ignored `.env.ai-gateway.local` file must never be committed.
-- Embedded Dives website sessions require the appropriate MotherDuck Business or Enterprise entitlement. Keep admin, service-account, and Neon direct credentials server-only.
-- Run `pnpm preflight` against the production environment before deploying. A successful code build does not provision the isolated Neon project, MotherDuck share, service account, or Embedded Dives entitlement.
+No license is currently granted. See [`LICENSE_STATUS.md`](LICENSE_STATUS.md) before copying, modifying, distributing, or reusing repository material.

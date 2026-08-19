@@ -8,9 +8,9 @@ The repository has moved from temporary WA vehicle-market operation into an appr
 
 This handoff supersedes the 17 August disposal-first instruction. The owner has explicitly changed the retention authority: do not fully flatten or delete the WA data. No destructive cleanup is authorized by the review plan.
 
-Work package 1 is complete. Gate 1 now establishes the retention authority, public path portability, license status, artifact inventory, safety scans, acquisition boundary, and reproducible validation baseline. No external system changed, no screenshot entered Git, and no deployment occurred.
+Work package 1 is complete. Gate 1 establishes the retention authority, public path portability, license status, artifact inventory, safety scans, acquisition boundary, and reproducible validation baseline. No external system changed, no screenshot entered Git, and no deployment occurred.
 
-The work-laptop dependency tree was incomplete, and group policy blocked pnpm. An approved Codespace completed the frozen install and every Gate 1 validation command against commit `ee7135e`. See [`docs/review/WORK_PACKAGE_1_EVIDENCE.md`](docs/review/WORK_PACKAGE_1_EVIDENCE.md).
+Work package 2 has a review candidate. It removes reproducible generic skills from Git tracking, removes the one-off production operator script, renames the private package to `duckdive`, classifies retained experiments, maps every tracked top-level directory, and moves operator detail out of the README. Gate 2 remains open only for the full Codespace validation. See [`docs/review/WORK_PACKAGE_2_EVIDENCE.md`](docs/review/WORK_PACKAGE_2_EVIDENCE.md).
 
 ## Review objective
 
@@ -55,11 +55,11 @@ Original screenshots are evidence inputs, not ready-to-publish assets. Public de
 
 - Branch `main` matched `origin/main` at commit `a9228d6` before the Work package 1 edits
 - The working tree contained no tracked raw WA evidence; `.env.local` was ignored
-- The Work package 1 baseline tracks 579 files, including 307 files beneath `.agents`
-- Only five tracked skill files belong to the repository-specific platform operator; the other generic skills are reproducible from `skills-lock.json`
-- The README still presents a VIC housing application with three Dives, while the registered dataset is WA vehicle listings with four starters
+- Only five skill files remain tracked, all within the repository-specific platform operator
+- Nine generic skills remain reproducible from `skills-lock.json` and are ignored when installed locally
+- The README, private package, product, and active registry now identify DuckDive and the WA vehicle-market experiment consistently
 - The repository has no GitHub Actions workflows
-- Commit `a9228d6` canonized the review plan before Work package 1 began
+- `docs/REPOSITORY_MAP.md` classifies WA vehicles as current, VIC housing as historical, Fabric import as a tested prototype, and the WHO runtime as a fixture adapter
 - The preserved repository contains cohort percentile machinery but not the original version 16 Dive source
 - The approved Codespace clean install resolves every declared dependency
 - All 57 test suites and 195 tests pass
@@ -81,4 +81,4 @@ The previous 17 August handoff remains historical evidence in Git history. Its l
 
 Execute [`REPOSITORY_REVIEW_PLAN.md`](REPOSITORY_REVIEW_PLAN.md) in order. Each work package has an exit gate. Do not begin a dependent package or call a package complete until its gate passes and its evidence is recorded.
 
-Begin Work package 2: reduce repository noise. Preserve unrelated user changes, use forward commits, and do not rewrite public history. Keep the full Gate 1 baseline passing after structural changes.
+Finish Gate 2 in the approved Codespace. Do not begin Work package 3 until the frozen install, all 57 suites, lint, type checking, production build, fixture replay, diff check, and clean status pass. Preserve unrelated user changes, use forward commits, and do not rewrite public history.

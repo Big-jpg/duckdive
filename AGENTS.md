@@ -2,6 +2,8 @@
 
 For production setup, deployment, credentials, Neon, Vercel Blob, MotherDuck, Embedded Dives, ingestion, analytics semantics, or incident response, use `.agents/skills/vic-house-platform-operator/SKILL.md`.
 
+`skills-lock.json` records reproducible generic skills. Do not vendor those skills into `.agents/skills`; keep only repository-specific guidance under version control.
+
 At the start of a fresh agent session, read `NEXT_SESSION_HANDOFF.md`. Treat it as a concise orientation, not a phase plan or live telemetry. Reverify facts that matter to the requested work.
 
 Start from the user-visible outcome. Existing schemas, routes, adapters, and phase labels are implementation history, not constraints. Prefer the smallest end-to-end product change that can be evaluated by an owner. Do not require a generalized schema abstraction or infrastructure proof before building a useful slice unless the requested behavior actually depends on one.

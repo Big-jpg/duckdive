@@ -116,12 +116,12 @@ This package makes the actual application and analytical evidence visible withou
 
 ### Gate 2: reviewer-oriented repository structure
 
-- [ ] Repository-specific agent guidance remains available
-- [ ] Generic vendored guidance no longer obscures application code
-- [ ] No runtime import, test, or documented command depends on a removed file
-- [ ] Every top-level directory has a documented purpose
-- [ ] Historical and prototype code is labelled accurately
-- [ ] Package, product, README, and registered-dataset naming no longer contradict each other
+- [x] Repository-specific agent guidance remains available
+- [x] Generic vendored guidance no longer obscures application code
+- [x] No runtime import, test, or documented command depends on a removed file
+- [x] Every top-level directory has a documented purpose
+- [x] Historical and prototype code is labelled accurately
+- [x] Package, product, README, and registered-dataset naming no longer contradict each other
 - [ ] Full validation from Gate 1 still passes
 
 ## Work package 3: Curate the screenshot evidence
