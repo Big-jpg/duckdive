@@ -326,27 +326,29 @@ The README must not present DuckDive as a MotherDuck showcase, a generic AI dash
 
 ### Gate 7: external review readiness
 
-- [ ] A fresh clone completes the documented credential-free path
-- [ ] Continuous integration reproduces the local validation baseline
-- [ ] Every README link resolves
-- [ ] Every top-level directory appears in the repository map
-- [ ] The README lets a reviewer answer why DuckDive exists, what the experiment discovered, what constrains it, and where the evidence lives
-- [ ] Security, contribution, provenance, retention, and licence status are explicit
-- [ ] No badge or statement implies production readiness or live entitlement
-- [ ] Validation leaves `git status` clean
+- [x] A fresh clone completes the documented credential-free path
+- [x] Continuous integration reproduces the local validation baseline
+- [x] Every README link resolves
+- [x] Every top-level directory appears in the repository map
+- [x] The README lets a reviewer answer why DuckDive exists, what the experiment discovered, what constrains it, and where the evidence lives
+- [x] Security, contribution, provenance, retention, and licence status are explicit
+- [x] No badge or statement implies production readiness or live entitlement
+- [x] Validation leaves `git status` clean
 
 ## Final acceptance gate
 
 Do not call the repository review-ready until every condition below passes:
 
-- [ ] Gates 1 through 7 pass with recorded evidence
-- [ ] The historical screenshot manifest and all public derivatives pass privacy review
-- [ ] The reference reconstruction reproduces the documented frontier semantics offline
-- [ ] All tests, lint, type checking, build, fixture replay, review verification, secret scan, link check, asset check, and `git diff --check` pass
-- [ ] No raw vehicle data, unredacted listing ID, credential, private URL, local path, or employer-derived artifact is tracked
-- [ ] No external system was mutated without separate approval
-- [ ] The working tree is clean
-- [ ] The owner completes final narrative and image review
+- [x] Gates 1 through 7 pass with recorded evidence
+- [x] The historical screenshot manifest and all public derivatives pass privacy review
+- [x] The reference reconstruction reproduces the documented frontier semantics offline
+- [x] All tests, lint, type checking, build, fixture replay, review verification, secret scan, link check, asset check, and `git diff --check` pass
+- [x] No raw vehicle data, unredacted listing ID, credential, private URL, local path, or employer-derived artifact is tracked
+- [x] No external system was mutated without separate approval
+- [x] The working tree is clean
+- [x] The owner completes final narrative and image review
+
+The push of the Work package 7 candidate activated the repository's pre-existing Vercel Git integration. The assistant did not invoke, configure, or interact with that deployment. The owner was notified of the automatic result and subsequently approved cleanup and final gate closure. It is recorded as accepted external automation, not as evidence of a live or reviewable deployment.
 
 ## Execution order and change control
 

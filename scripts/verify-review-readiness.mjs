@@ -102,9 +102,19 @@ const requiredScripts = [
   "pnpm review:security",
   "pnpm review:readiness",
   "git diff --exit-code",
+  "git status --porcelain --untracked-files=all",
 ];
 for (const command of requiredScripts) {
   if (!workflow.includes(command)) fail(`CI is missing ${command}`);
+}
+
+const requiredActionVersions = [
+  "actions/checkout@v7",
+  "actions/setup-node@v7",
+  "pnpm/action-setup@v6",
+];
+for (const action of requiredActionVersions) {
+  if (!workflow.includes(action)) fail(`CI is missing Node 24 action runtime ${action}`);
 }
 
 console.log(`Review readiness verified: ${topLevelDirectories.size} mapped directories, public narrative, provenance, and CI baseline.`);
