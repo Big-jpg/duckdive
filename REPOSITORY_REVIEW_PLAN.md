@@ -204,12 +204,12 @@ Create `docs/case-studies/price-mileage-frontier.md` as a conceptual case study 
 
 ### Gate 4: case-study integrity
 
-- [ ] Every numerical claim is tied to the 11 August observation or omitted
-- [ ] No later-observation value is presented as part of the version 16 artifact
-- [ ] The case study states what was observed, what was reconstructed, and what remains unavailable
-- [ ] The frontier is never described as a valuation, bargain score, or recommendation engine
-- [ ] A reviewer can explain display, candidate, and dominance scopes after one reading
-- [ ] All case-study links and images resolve
+- [x] Every numerical claim is tied to the 11 August observation or omitted
+- [x] No later-observation value is presented as part of the version 16 artifact
+- [x] The case study states what was observed, what was reconstructed, and what remains unavailable
+- [x] The frontier is never described as a valuation, bargain score, or recommendation engine
+- [x] A reviewer can explain display, candidate, and dominance scopes after one reading
+- [x] All case-study links and images resolve
 
 ## Work package 5: Add an executable reference reconstruction
 

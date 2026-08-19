@@ -42,9 +42,9 @@ Observed screenshot with redaction. Version 15 reduces the default review set to
 
 ## 7. Apply the strict price-mileage frontier
 
-![Version 16 Ford Ranger Atlas above frontier rows showing asking price, odometer, local cohort measures, comparable counts, and plain-language survival reasons](./07-price-mileage-frontier.png)
+![Version 16 Ford Ranger Atlas with its validation panel above frontier rows showing local cohort measures, comparable counts, and plain-language survival reasons](./07-price-mileage-frontier.png)
 
-Composite of observed screenshots. Version 16 applies strict two-dimensional dominance and explains why each surviving row remains without weighting price against mileage.
+Composite of observed screenshots. Version 16 records the strict dominance checks, rejects a price-mileage exchange rate, and explains why each surviving row remains.
 
 ## 8. Change controls to test generalization
 

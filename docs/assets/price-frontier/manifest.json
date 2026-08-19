@@ -146,8 +146,8 @@
     },
     {
       "filename": "07-price-mileage-frontier.png",
-      "sha256": "e938993bb37b97582df991c046831fa3cadd686ead3675d10926687266d99e25",
-      "width": 1492,
+      "sha256": "f792fff5c494234b322c22f75afa6caafac9cc57d030191a7e4872c55054c2db",
+      "width": 1842,
       "height": 1573,
       "sourceFiles": [
         {
@@ -157,15 +157,19 @@
         {
           "filename": "f588ef08-795e-43c8-8fa9-375334f87f91.png",
           "sha256": "fda5dd836444af1968c24e0d05ef367d611cc06fbaeadf595334bab1b20c8260"
+        },
+        {
+          "filename": "4f6d80b1-2043-4b77-ba6d-ce0071f42567.png",
+          "sha256": "9d0c5f2e73bd9f57a7d8f1b4daecd86d5392ccd756701a5299a18af830397b1c"
         }
       ],
       "observationDate": "2026-08-11",
       "visibleReportVersion": "v16",
       "derivativeType": "composite of observed screenshots",
       "redactions": [],
-      "cropNotes": "Stacked the observed v16 report header above an observed row-detail frame whose crop begins at asking price and excludes identity columns.",
-      "alt": "Version 16 Ford Ranger Atlas above frontier rows showing asking price, odometer, local cohort measures, comparable counts, and plain-language survival reasons",
-      "caption": "Composite of observed screenshots. Version 16 applies strict two-dimensional dominance and explains why each surviving row remains without weighting price against mileage."
+      "cropNotes": "Placed the observed v16 validation panel beside the report, then stacked an observed row-detail frame whose crop begins at asking price and excludes identity columns.",
+      "alt": "Version 16 Ford Ranger Atlas with its validation panel above frontier rows showing local cohort measures, comparable counts, and plain-language survival reasons",
+      "caption": "Composite of observed screenshots. Version 16 records the strict dominance checks, rejects a price-mileage exchange rate, and explains why each surviving row remains."
     },
     {
       "filename": "08-generalization-grid.png",

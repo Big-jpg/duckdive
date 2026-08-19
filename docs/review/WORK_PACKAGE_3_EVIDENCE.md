@@ -20,7 +20,7 @@ The gallery at [`docs/assets/price-frontier/README.md`](../assets/price-frontier
 | `04-cohort-relative-price-filter.png` | Composite of observed screenshots | v13 | Source listing ID column masked |
 | `05-mileage-aware-investigation.png` | Composite of observed screenshots | v14 | Source listing ID column masked |
 | `06-first-pass-shortlist.png` | Observed screenshot with redaction | v15 | Source listing ID column masked |
-| `07-price-mileage-frontier.png` | Composite of observed screenshots | v16 | Row crop starts at asking price and excludes identity columns |
+| `07-price-mileage-frontier.png` | Composite of observed screenshots | v16 | Validation panel retained; row crop starts at asking price and excludes identity columns |
 | `08-generalization-grid.png` | Composite of observed screenshots | Not visible | Every frame stops above its listing table |
 | `09-contract-and-refusal-boundaries.png` | Composite of observed screenshots | Not visible | Contract fragments contain no listing identities |
 

@@ -4,6 +4,10 @@ DuckDive is an engineering case study in bounded agentic business intelligence. 
 
 The current preserved experiment documents two WA vehicle-listing observations. Its reviewer workflow uses sanitized fixtures, keeps live acquisition disabled, and requires no credentials or external services.
 
+## Read the primary case study
+
+[`Trace a Ranger question to a market-wide frontier`](docs/case-studies/price-mileage-frontier.md) follows the observed report from a conventional scatterplot through cohort-relative filtering, strict two-dimensional dominance, All/All generalization, and the final contract boundaries.
+
 ## Run the reviewer baseline
 
 Use Node.js 22 and pnpm 10.28.0. The baseline installs the frozen dependency graph, validates the application, and replays two sanitized fixture rows:
@@ -51,6 +55,7 @@ Use these documents according to the task:
 
 - [`REPOSITORY_REVIEW_PLAN.md`](REPOSITORY_REVIEW_PLAN.md): authoritative execution order and success gates
 - [`NEXT_SESSION_HANDOFF.md`](NEXT_SESSION_HANDOFF.md): concise current-session orientation
+- [`docs/case-studies/price-mileage-frontier.md`](docs/case-studies/price-mileage-frontier.md): primary observed Price Frontier case study
 - [`docs/REPOSITORY_MAP.md`](docs/REPOSITORY_MAP.md): directory purposes and experiment classifications
 - [`docs/PLATFORM_OPERATIONS.md`](docs/PLATFORM_OPERATIONS.md): credentialed and historical operator procedures outside the reviewer path
 - [`docs/WA_VEHICLE_MARKET_IMPLEMENTATION.md`](docs/WA_VEHICLE_MARKET_IMPLEMENTATION.md): WA implementation and fixture commands
