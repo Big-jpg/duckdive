@@ -20,6 +20,8 @@ Work package 5 is complete. It adds governed-view SQL, a wholly synthetic fixtur
 
 Work package 6 is complete. It removes the production configuration path that disabled report-policy validation, adds an allowlisted `report-presentation` capability, and limits each run to one preparation, one inspection attempt, and one mutation attempt. The two new architecture documents map eight implemented arrows, all trust boundaries, deterministic controls, model-mediated judgment, and all 11 required scenarios. A clean GitHub Codespace passed the frozen install, architecture verifier, 57 test files and 205 tests, lint, type checking, production build, Price Frontier reference verification, and final clean-worktree check. See [`docs/review/WORK_PACKAGE_6_EVIDENCE.md`](docs/review/WORK_PACKAGE_6_EVIDENCE.md).
 
+Work package 7 has an implementation candidate. The README is now a reviewer landing page, public security/contribution/provenance boundaries are explicit, and a read-only GitHub Actions workflow reproduces the credential-free baseline. Local direct-Node validation passed all 57 test files and 205 tests plus build, lint, type checking, fixture replay, reconstruction, architecture, case-study, asset, link, safety, and readiness checks. Gate 7 remains open until the pushed Linux workflow, a clean Linux checkout, and owner narrative/image review pass. See [`docs/review/WORK_PACKAGE_7_EVIDENCE.md`](docs/review/WORK_PACKAGE_7_EVIDENCE.md).
+
 ## Review objective
 
 Present DuckDive as an engineering case study in bounded agentic business intelligence. The central evidence is no longer a generic vehicle dashboard. A short conversation evolved a Ford Ranger question into a reusable price-mileage frontier that generalised across make, model, make-wide, and All/All display states while retaining local cohort semantics.
@@ -66,7 +68,7 @@ Original screenshots remain private evidence inputs. The nine published derivati
 - Only five skill files remain tracked, all within the repository-specific platform operator
 - Nine generic skills remain reproducible from `skills-lock.json` and are ignored when installed locally
 - The README, private package, product, and active registry now identify DuckDive and the WA vehicle-market experiment consistently
-- The repository has no GitHub Actions workflows
+- Work package 7 adds one credential-free, read-only GitHub Actions workflow; its first pushed run is pending
 - `docs/REPOSITORY_MAP.md` classifies WA vehicles as current, VIC housing as historical, Fabric import as a tested prototype, and the WHO runtime as a fixture adapter
 - The preserved repository contains cohort percentile machinery but not the original version 16 Dive source
 - The approved Codespace clean install resolves every declared dependency
@@ -90,4 +92,4 @@ The previous 17 August handoff remains historical evidence in Git history. Its l
 
 Execute [`REPOSITORY_REVIEW_PLAN.md`](REPOSITORY_REVIEW_PLAN.md) in order. Each work package has an exit gate. Do not begin a dependent package or call a package complete until its gate passes and its evidence is recorded.
 
-No further work package is currently authorized. Obtain explicit owner approval before beginning Work package 7, including any public README, repository-review, CI, deployment, credential, or external-platform changes.
+Finish the authorized Work package 7 gate without deploying or touching external data services. Confirm the pushed GitHub Actions run, repeat the documented commands in a clean Linux checkout or Codespace, record an empty final `git status --short`, and obtain the owner's final narrative and image review. Close Gate 7 and the final acceptance gate only after that evidence exists.

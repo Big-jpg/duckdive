@@ -30,6 +30,7 @@ Every tracked top-level directory has one review purpose:
 | Directory | Purpose | Classification |
 | --- | --- | --- |
 | `.agents/` | Repository-specific platform operating contract | Current repository guidance; generic skills come from `skills-lock.json` |
+| `.github/` | Credential-free continuous-integration workflow | Current public verification |
 | `db/` | Additive Neon migrations plus DuckLake definition, staging, and publication Structured Query Language (SQL) | Mixed current and historical infrastructure evidence |
 | `docs/` | Review plans, operating boundaries, retention authority, and recorded validation evidence | Current documentation |
 | `fixtures/` | Sanitized vehicle-market responses, probes, expected results, scopes, and replay manifests | Current deterministic evidence |
@@ -51,6 +52,8 @@ The root also contains files that define review or historical behavior:
 - `REPOSITORY_REVIEW_PLAN.md`: authoritative cleanup and case-study plan
 - `NEXT_SESSION_HANDOFF.md`: concise session orientation
 - `LICENSE_STATUS.md`: current no-license notice
+- `SECURITY.md`: private reporting route and repository security boundaries
+- `CONTRIBUTING.md`: credential-free contribution and evidence requirements
 
 Generated and local-only directories such as `node_modules`, `.next`, `.pnpm-store`, `.vercel`, `.vehicle-market-evidence`, and `rea-collections` are ignored. They are not repository evidence.
 
