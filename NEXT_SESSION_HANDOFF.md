@@ -16,7 +16,7 @@ Work package 3 is complete. Nine review-safe Price Frontier derivatives now pres
 
 Work package 4 is complete. The primary conceptual case study now traces the observed report from a conventional scatterplot through versions 12 to 16, generalization, All/All scope, strict dominance, and the final contract boundaries. It separates observed artifacts, editorial composites, the subsequent reference reconstruction, and unavailable source evidence. See [`docs/case-studies/price-mileage-frontier.md`](docs/case-studies/price-mileage-frontier.md) and [`docs/review/WORK_PACKAGE_4_EVIDENCE.md`](docs/review/WORK_PACKAGE_4_EVIDENCE.md).
 
-Work package 5 has an implementation candidate. It adds governed-view SQL, a wholly synthetic fixture, and an independent TypeScript implementation. `pnpm review:verify` runs both implementations against every fixture row in an in-memory DuckDB database, then checks the named strictness, scope, minimum-cohort, null, and display-union cases. Direct execution with Node 22 type stripping passed all 12 scenarios and matched 71 SQL and TypeScript evaluation rows with 9 survivors. The work laptop's application-control policy blocks the pnpm-launched TypeScript runner, so Gate 5 remains open pending the exact command after a frozen install in the Linux Codespace. Do not begin Work package 6 until that evidence is recorded.
+Work package 5 is complete. It adds governed-view SQL, a wholly synthetic fixture, and an independent TypeScript implementation. After a frozen Codespace install, `pnpm review:verify` passed all 12 scenarios and matched all 71 SQL and TypeScript evaluation rows, including 9 frontier survivors. Type checking, lint, all 57 test files and 198 tests, and the final clean-status check also passed. See [`docs/review/WORK_PACKAGE_5_EVIDENCE.md`](docs/review/WORK_PACKAGE_5_EVIDENCE.md).
 
 ## Review objective
 
@@ -70,6 +70,7 @@ Original screenshots remain private evidence inputs. The nine published derivati
 - The approved Codespace clean install resolves every declared dependency
 - All 57 test suites and 198 tests pass
 - Lint, type checking, production build, sanitized fixture replay, and `git diff --check` pass
+- The credential-free Price Frontier reconstruction passes 12 synthetic scenarios, with SQL and TypeScript agreeing on all 71 evaluation rows
 - The Codespace working tree remains clean after validation
 
 The previous 17 August handoff remains historical evidence in Git history. Its live MotherDuck, Embedded Dives, deployment, and report-version claims are not current telemetry.
@@ -87,4 +88,4 @@ The previous 17 August handoff remains historical evidence in Git history. Its l
 
 Execute [`REPOSITORY_REVIEW_PLAN.md`](REPOSITORY_REVIEW_PLAN.md) in order. Each work package has an exit gate. Do not begin a dependent package or call a package complete until its gate passes and its evidence is recorded.
 
-Finish the authorized Work package 5 gate in the Linux Codespace. Run a frozen install, `pnpm review:verify`, type checking, focused lint or full lint, and the repository test suite sequentially, then confirm that validation leaves the working tree clean. If the SQL/TypeScript comparison fails, fix it through a forward commit; do not weaken or remove the comparison. Work package 6 is not yet authorized.
+Work package 5 is closed. Work package 6 is next in the authoritative plan but is not yet authorized. Obtain explicit owner approval before changing the bounded-agent control loop, report-policy enforcement, presentation capability, or architecture documentation.

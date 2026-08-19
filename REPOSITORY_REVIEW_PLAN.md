@@ -250,12 +250,12 @@ The reference SQL must derive candidates from governed current-listing fields an
 
 ### Gate 5: credential-free reproducibility
 
-- [ ] `pnpm review:verify` runs after a fresh install without `.env.local`
-- [ ] The command performs no network request or external mutation
-- [ ] Every synthetic scenario passes
-- [ ] SQL and TypeScript reference behavior agree on the fixture
-- [ ] The output identifies itself as a reference reconstruction
-- [ ] The command leaves the working tree clean
+- [x] `pnpm review:verify` runs after a fresh install without `.env.local`
+- [x] The command performs no network request or external mutation
+- [x] Every synthetic scenario passes
+- [x] SQL and TypeScript reference behavior agree on the fixture
+- [x] The output identifies itself as a reference reconstruction
+- [x] The command leaves the working tree clean
 
 ## Work package 6: Document and harden the bounded-agent claim
 
