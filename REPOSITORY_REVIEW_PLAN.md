@@ -164,12 +164,12 @@ The generalization grid must show Hyundai Getz, Land Rover/All, All/All, and Ran
 
 ### Gate 3: review-safe visual evidence
 
-- [ ] The manifest accounts for every published derivative
-- [ ] The duplicate source file is represented once
-- [ ] Public images contain no source listing ID, credential, token, share URL, user identity, or local path
-- [ ] Captions distinguish observed evidence from reconstruction
-- [ ] The progression from ordinary dashboard to generalized frontier is readable without live application access
-- [ ] Image-link and metadata checks pass
+- [x] The manifest accounts for every published derivative
+- [x] The duplicate source file is represented once
+- [x] Public images contain no source listing ID, credential, token, share URL, user identity, or local path
+- [x] Captions distinguish observed evidence from reconstruction
+- [x] The progression from ordinary dashboard to generalized frontier is readable without live application access
+- [x] Image-link and metadata checks pass
 
 ## Work package 4: Publish the primary case study
 

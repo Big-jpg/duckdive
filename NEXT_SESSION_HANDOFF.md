@@ -12,6 +12,8 @@ Work package 1 is complete. Gate 1 establishes the retention authority, public p
 
 Work package 2 is complete. It removes reproducible generic skills from Git tracking, removes the one-off production operator script, renames the private package to `duckdive`, classifies retained experiments, maps every tracked top-level directory, and moves operator detail out of the README. The full Codespace validation passed. See [`docs/review/WORK_PACKAGE_2_EVIDENCE.md`](docs/review/WORK_PACKAGE_2_EVIDENCE.md).
 
+Work package 3 is complete. Nine review-safe Price Frontier derivatives now preserve the observed progression, version panels, four-state generalization test, and contract boundaries. A content-free manifest records every source and derivative hash. The original 52-file source set remains outside Git. See [`docs/review/WORK_PACKAGE_3_EVIDENCE.md`](docs/review/WORK_PACKAGE_3_EVIDENCE.md).
+
 ## Review objective
 
 Present DuckDive as an engineering case study in bounded agentic business intelligence. The central evidence is no longer a generic vehicle dashboard. A short conversation evolved a Ford Ranger question into a reusable price-mileage frontier that generalised across make, model, make-wide, and All/All display states while retaining local cohort semantics.
@@ -49,7 +51,7 @@ The screenshots show the critical scope separation:
 - **Candidate rule**: below the listing's own cohort 25th-percentile asking price, with at least 10 priced listings
 - **Dominance scope**: same make/model within plus or minus two manufacturer years
 
-Original screenshots are evidence inputs, not ready-to-publish assets. Public derivatives must remove source listing IDs, strip metadata, preserve relevant analytical labels, and record source and derivative hashes. Do not commit the full source set.
+Original screenshots remain private evidence inputs. The nine published derivatives remove source listing IDs, strip metadata, preserve relevant analytical labels, and record source and derivative hashes. Do not commit the full source set.
 
 ## Current repository truth
 
@@ -81,4 +83,4 @@ The previous 17 August handoff remains historical evidence in Git history. Its l
 
 Execute [`REPOSITORY_REVIEW_PLAN.md`](REPOSITORY_REVIEW_PLAN.md) in order. Each work package has an exit gate. Do not begin a dependent package or call a package complete until its gate passes and its evidence is recorded.
 
-Work package 3 is now authorized. Curate the supplied Price Frontier screenshots into review-safe derivatives without committing the source set. Preserve unrelated user changes, use forward commits, and do not rewrite public history.
+Work package 4 is now authorized. Publish the conceptual Price Frontier case study from the observed visual evidence without presenting a composite as a single screenshot or inventing the missing version 16 source. Preserve unrelated user changes, use forward commits, and do not rewrite public history.

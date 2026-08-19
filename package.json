@@ -38,7 +38,8 @@
     "vehicle:collect": "tsx --env-file=.env.local scripts/vehicle-market.ts collect",
     "vehicle:ducklake:init": "tsx --env-file=.env.local scripts/vehicle-market.ts ducklake-init",
     "vehicle:publish": "tsx --env-file=.env.local scripts/vehicle-market.ts publish",
-    "vehicle:status": "tsx scripts/vehicle-market.ts status"
+    "vehicle:status": "tsx scripts/vehicle-market.ts status",
+    "review:assets": "node scripts/verify-price-frontier-assets.mjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.67",

@@ -1,0 +1,229 @@
+{
+  "schemaVersion": 1,
+  "sourceSet": {
+    "observationDate": "2026-08-11",
+    "suppliedFileCount": 52,
+    "uniqueSha256Count": 51,
+    "sourcesTrackedInGit": false,
+    "duplicateGroups": [
+      {
+        "sha256": "0a969aa07edf2877afbe16eab34fead224e9325646749e97b72fa976072369b6",
+        "canonicalFilename": "706f00cb-2b8b-40df-9ae6-357c0689e95a.png",
+        "duplicateFilenames": [
+          "706f00cb-2b8b-40df-9ae6-357c0689e95a (1).png"
+        ]
+      }
+    ]
+  },
+  "derivatives": [
+    {
+      "filename": "01-conventional-scatterplot.png",
+      "sha256": "f872e76df817e9bcae5eab6b7ac86aea76de33fa24de4875d6b33265ec2b7364",
+      "width": 1567,
+      "height": 776,
+      "sourceFiles": [
+        {
+          "filename": "79d8e3b8-9ed2-41ad-a784-d703bd687d21.png",
+          "sha256": "edb2e86c8130863e3cc70a7eab9273d87d93ec0c7acd6d059d312485a543844f"
+        }
+      ],
+      "observationDate": "2026-08-11",
+      "visibleReportVersion": null,
+      "derivativeType": "observed screenshot",
+      "redactions": [],
+      "cropNotes": "Full source frame re-encoded without source metadata.",
+      "alt": "Conventional used-vehicle scatterplot with make and model selectors and advertised asking price plotted against odometer",
+      "caption": "Observed screenshot. A conventional make-and-model scatterplot compares advertised asking price with odometer without making a valuation claim."
+    },
+    {
+      "filename": "02-corporate-memphis-restyle.png",
+      "sha256": "3eb3d36281b135de9f0cfb6915e82aab48777ab4e58f4a0bb3d862e39229f146",
+      "width": 1913,
+      "height": 903,
+      "sourceFiles": [
+        {
+          "filename": "ff83f79b-0763-4347-b132-45739c5d83bb.png",
+          "sha256": "15b291717aed1844c5271a37f34026fab149609f7b00fb5095b3fb38f070b367"
+        }
+      ],
+      "observationDate": "2026-08-11",
+      "visibleReportVersion": "v8",
+      "derivativeType": "observed screenshot",
+      "redactions": [],
+      "cropNotes": "Full source frame re-encoded without source metadata.",
+      "alt": "Version 8 Market Atlas with Corporate Memphis cards, charts, decorative shapes, and the report summary panel",
+      "caption": "Observed screenshot. Version 8 applies Corporate Memphis styling while retaining current-market measures and charts."
+    },
+    {
+      "filename": "03-parameterized-ford-ranger.png",
+      "sha256": "86ae5d46f0168e27bbbe63a54c71f526929561e15dca3710d093846800cb2fbb",
+      "width": 1899,
+      "height": 858,
+      "sourceFiles": [
+        {
+          "filename": "58caf86e-9cde-42c6-b922-a805f113c538.png",
+          "sha256": "26dd91e409172001095ece3333bfd589f09290a09eff2cd28b6fd660b5678e4c"
+        }
+      ],
+      "observationDate": "2026-08-11",
+      "visibleReportVersion": "v12",
+      "derivativeType": "observed screenshot",
+      "redactions": [],
+      "cropNotes": "Full source frame re-encoded without source metadata.",
+      "alt": "Version 12 Ford Ranger Atlas with independent Ford make and Ranger model selectors, cohort counts, and price and odometer distributions",
+      "caption": "Observed screenshot. Version 12 scopes the report to Ford Ranger and exposes make and model as separate selectors."
+    },
+    {
+      "filename": "04-cohort-relative-price-filter.png",
+      "sha256": "43056b8a749a302878c6284c8a8b632cf4f77c725fdc56a16624e879a02ada99",
+      "width": 1846,
+      "height": 753,
+      "sourceFiles": [
+        {
+          "filename": "95607a44-de24-4b78-818f-37565c3fcdc7.png",
+          "sha256": "9acb2900a8878a833833d1b3d3e42d5bbfccf140a5f2ab7acb6b290d7216bbef"
+        },
+        {
+          "filename": "9de8afb7-d67e-43e8-8a34-1036605b3e52.png",
+          "sha256": "edec8efad6e898fbc6d1cd3c43e37f967d66d01373bcd204460e52abe0718424"
+        }
+      ],
+      "observationDate": "2026-08-11",
+      "visibleReportVersion": "v13",
+      "derivativeType": "composite of observed screenshots",
+      "redactions": [
+        "Masked the source listing ID column with an opaque label."
+      ],
+      "cropNotes": "Placed the observed v13 table beside its observed change and validation panel.",
+      "alt": "Redacted version 13 low-asking-price table beside the saved change panel that confirms same-model year-window cohorts and a minimum cohort size",
+      "caption": "Composite of observed screenshots. Version 13 adds cohort-relative candidate filtering and records its saved validation state; source listing identifiers are redacted."
+    },
+    {
+      "filename": "05-mileage-aware-investigation.png",
+      "sha256": "b101e55c684d357baa778c61d7dac48ca9ab27cf809a24ec668bbedd1d0eaa64",
+      "width": 1657,
+      "height": 525,
+      "sourceFiles": [
+        {
+          "filename": "1ddaf5b6-2267-4701-afca-403d465eaa42.png",
+          "sha256": "4a27a2edf7cb5f11b96acc53945bcfc1156ebd0dcc3e3256fad940e493a2b0d4"
+        },
+        {
+          "filename": "29497f87-596f-44b9-ab19-2ef9204bae60.png",
+          "sha256": "ef94ff615408846366db7fec3cc24277367092490754c9dcdb5ef900b59c4674"
+        }
+      ],
+      "observationDate": "2026-08-11",
+      "visibleReportVersion": "v14",
+      "derivativeType": "composite of observed screenshots",
+      "redactions": [
+        "Masked the source listing ID column with an opaque label."
+      ],
+      "cropNotes": "Placed the observed v14 table beside its observed change and validation panel.",
+      "alt": "Redacted version 14 table that adds odometer cohort size, median odometer, and distance from the median beside its validation panel",
+      "caption": "Composite of observed screenshots. Version 14 adds cohort-relative odometer context while the validation panel rejects a valuation model."
+    },
+    {
+      "filename": "06-first-pass-shortlist.png",
+      "sha256": "12be3bc063fdc6c1966d4b11e5ee7e088911b58261c3e95ccb48edfe671310a3",
+      "width": 1843,
+      "height": 508,
+      "sourceFiles": [
+        {
+          "filename": "706f00cb-2b8b-40df-9ae6-357c0689e95a.png",
+          "sha256": "0a969aa07edf2877afbe16eab34fead224e9325646749e97b72fa976072369b6"
+        }
+      ],
+      "observationDate": "2026-08-11",
+      "visibleReportVersion": "v15",
+      "derivativeType": "observed screenshot with redaction",
+      "redactions": [
+        "Masked the source listing ID column with an opaque label."
+      ],
+      "cropNotes": "Used the canonical file for the byte-identical duplicate pair and re-encoded it without source metadata.",
+      "alt": "Redacted version 15 five-row first-pass shortlist with review-order controls, explicit limitations, and the saved change panel",
+      "caption": "Observed screenshot with redaction. Version 15 reduces the default review set to five and labels it as data-only triage, not a recommendation."
+    },
+    {
+      "filename": "07-price-mileage-frontier.png",
+      "sha256": "e938993bb37b97582df991c046831fa3cadd686ead3675d10926687266d99e25",
+      "width": 1492,
+      "height": 1573,
+      "sourceFiles": [
+        {
+          "filename": "f307e4da-36d4-46b6-ad38-bbfd8693528c.png",
+          "sha256": "b6bf9dce11e2028469577c48d5fda13151c2bf916af5e84e393014a2edd50b7a"
+        },
+        {
+          "filename": "f588ef08-795e-43c8-8fa9-375334f87f91.png",
+          "sha256": "fda5dd836444af1968c24e0d05ef367d611cc06fbaeadf595334bab1b20c8260"
+        }
+      ],
+      "observationDate": "2026-08-11",
+      "visibleReportVersion": "v16",
+      "derivativeType": "composite of observed screenshots",
+      "redactions": [],
+      "cropNotes": "Stacked the observed v16 report header above an observed row-detail frame whose crop begins at asking price and excludes identity columns.",
+      "alt": "Version 16 Ford Ranger Atlas above frontier rows showing asking price, odometer, local cohort measures, comparable counts, and plain-language survival reasons",
+      "caption": "Composite of observed screenshots. Version 16 applies strict two-dimensional dominance and explains why each surviving row remains without weighting price against mileage."
+    },
+    {
+      "filename": "08-generalization-grid.png",
+      "sha256": "fded1eaaebe6f78477e9bb10a6cdb840cfc843ee529a9ac93c07c5e648c8cbba",
+      "width": 1812,
+      "height": 812,
+      "sourceFiles": [
+        {
+          "filename": "6d80eb58-8d22-4e3a-a3ab-600886326859.png",
+          "sha256": "b48bbb2dcebaf6de16c0d4dd5c1484e5aca7941ac351bac8a50fa83a1f9648ac"
+        },
+        {
+          "filename": "9b6d3289-4210-41a4-8dc5-309582f78a5d.png",
+          "sha256": "8e9fc70cc741ad8ec67345fc02ac4b24707bbc4343241c20a18a47e391e74bc3"
+        },
+        {
+          "filename": "c7dd4a21-e7a4-4df7-b243-2664818ae31a.png",
+          "sha256": "cbf9423f4381f841701c7dcbe6bf4f7f7534f5878e30fd545e6b2e1d28105926"
+        },
+        {
+          "filename": "8e08aae9-0dd5-49fd-be3d-ef1780db831e.png",
+          "sha256": "c102a0830a2843cf71637847a5c16abf17e3d6851a6009756c27073f369a132e"
+        }
+      ],
+      "observationDate": "2026-08-11",
+      "visibleReportVersion": null,
+      "derivativeType": "composite of observed screenshots",
+      "redactions": [],
+      "cropNotes": "Cropped each observed state above its listing table, then arranged Hyundai Getz, Land Rover/All, All/All, and Range Rover Evoque in a two-by-two grid.",
+      "alt": "Four-state grid showing Hyundai Getz, Land Rover all models, all makes and models, and Land Rover Range Rover Evoque with different counts and distributions",
+      "caption": "Composite of observed screenshots. Independent make and model controls expand and contract the display while each state retains its own counts and distributions."
+    },
+    {
+      "filename": "09-contract-and-refusal-boundaries.png",
+      "sha256": "106e6657a9bac764d73f61ee75730441eba848192da2759fac82872f2eacfb0c",
+      "width": 1065,
+      "height": 836,
+      "sourceFiles": [
+        {
+          "filename": "5670637b-8335-4431-ac6c-9c8230197c90.png",
+          "sha256": "228abe507c203681ed715e97270899c7598801ca5606f1ec8320f8fa3c67d5e5"
+        },
+        {
+          "filename": "353fdc08-97b7-4060-9e99-1ee199678e4f.png",
+          "sha256": "e5ed1bd8e106dae31f5cfc85708ce179b7a8cf2dc48fed0576cba64a83af6135"
+        },
+        {
+          "filename": "f98fecb1-2a18-4a77-9027-a3942df1983e.png",
+          "sha256": "15a4dbc88673a433a5d9a1114e340c6f8e3eb9cae84cdbf961aad3dca013b857"
+        }
+      ],
+      "observationDate": "2026-08-11",
+      "visibleReportVersion": null,
+      "derivativeType": "composite of observed screenshots",
+      "redactions": [],
+      "cropNotes": "Aligned three observed contract fragments that show definitions, validation caveats, frontier assumptions, and prohibited claims.",
+      "alt": "Three contract panels defining asking price, odometer, cohort position, validation caveats, strict frontier rules, and prohibited valuation and sales claims",
+      "caption": "Composite of observed screenshots. The contract defines measures and cohort rules, states validation caveats, and prohibits valuation, suitability, and sale claims."
+    }
+  ]
+}
