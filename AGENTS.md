@@ -10,16 +10,8 @@ Validate in proportion to the change. Use focused checks while iterating; reserv
 
 Never commit or print credentials. Vercel Sensitive values appear locally as `[SENSITIVE]`; ask the human for a direct dashboard-to-local handoff when that is simpler. Keep browser access behind authenticated server routes, preserve workspace ownership, and keep the VIC estate isolated from unrelated workloads. External resource creation, credential changes, destructive data operations, and production deployment require explicit authorization.
 
-## Windows package-manager execution
+## Package-manager execution
 
-On Windows, Corepack resolves pnpm from outside the workspace at
-`C:\Users\rossf\AppData\Local\node\corepack`.
+Use the pnpm version declared in `package.json`. Confirm that the current host can run the package manager before starting a gated work package. If local policy blocks execution, record the blocked gate and continue on an approved host.
 
-Run every `corepack pnpm ...` command with required sandbox access on the
-first attempt, using the narrowest applicable persistent command prefix.
-Do not first run it in the workspace sandbox and wait for the predictable
-Corepack `EPERM`.
-
-Run pnpm validation commands sequentially. Parallel Corepack or Next.js
-commands can contend for shared package-manager or build directories and
-produce a separate class of `EPERM` failures.
+Run pnpm validation commands sequentially. Parallel pnpm or Next.js commands can contend for shared package-manager or build directories on Windows.

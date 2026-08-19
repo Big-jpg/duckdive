@@ -1,8 +1,8 @@
 # WA Used Vehicle Market implementation handoff
 
-This branch implements a temporary WA Used Vehicle Listings lens on top of the existing DuckDive infrastructure. The validated source handoff at `C:\Users\rossf\Downloads\WA_Vehicle_Market_Validated_Codex_Handoff.md` remains authoritative for source behaviour and data invariants.
+This branch implements a WA Used Vehicle Listings lens on top of the existing DuckDive infrastructure. The versioned contracts, tests, and sanitized fixtures in this repository define the reviewable source behaviour and data invariants. Operator material outside the repository is not a reviewer dependency.
 
-The experiment is private, restricted to existing approved users, and must not retain vehicle-market data beyond 2026-08-18 Australia/Perth time. Public sharing remains disabled.
+The experiment remains private and restricted to existing approved users. On 2026-08-19, the owner superseded the former 2026-08-18 disposal deadline and directed that the retained evidence must not be fully flattened or deleted. Public sharing remains disabled.
 
 No live source request or cloud mutation is performed by tests, builds, application startup, deployment, or replay.
 
@@ -17,7 +17,7 @@ Reuse the existing:
 
 The only new analytical storage boundary is the `wa_vehicle_market` managed DuckLake/database and its restricted share inside the existing MotherDuck organization. The temporary lens reuses the existing `vic_house_lab` read identity. Do not create a second Vercel project, Neon project, Blob store, MotherDuck organization, auth estate, service account, or human seat.
 
-The VIC production rollback reference is commit `e10181b623e299f7dc550eeafe0dfd3c727cdc10`. Git rollback does not delete Neon rows, Blob objects, MotherDuck data, or Dives; use the retention runbook for those.
+The VIC production rollback reference is commit `e10181b623e299f7dc550eeafe0dfd3c727cdc10`. Git rollback does not alter Neon rows, Blob objects, MotherDuck data, or Dives. The retention record defines the current preservation boundary.
 
 ## Implementation map
 
@@ -38,7 +38,7 @@ The VIC production rollback reference is commit `e10181b623e299f7dc550eeafe0dfd3
 - Transactional staged promotion: `db/ducklake/load_vehicle_market_run.sql`
 - WA dataset authority: `src/lib/dataset-definitions/wa-vehicle-market.ts`
 - Starter Dives: `src/dives/vehicle-market-atlas.tsx`, `src/dives/market-movement.tsx`, `src/dives/vehicle-lens.tsx`, and `src/dives/data-observatory.tsx`
-- Retention and disposal: `docs/WA_VEHICLE_MARKET_RETENTION.md`
+- Retention authority and historical disposal procedure: `docs/WA_VEHICLE_MARKET_RETENTION.md`
 
 ## Commands
 

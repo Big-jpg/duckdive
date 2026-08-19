@@ -89,14 +89,14 @@ This package replaces stale operational instructions and establishes a clean bas
 
 Do not begin structural cleanup until all conditions pass:
 
-- [ ] Retention documentation records the superseding owner decision
-- [ ] No current instruction requires disposal by 18 August
-- [ ] No source acquisition or external mutation occurred
-- [ ] No tracked secret, credential, private share URL, raw vehicle payload, or absolute user path remains
+- [x] Retention documentation records the superseding owner decision
+- [x] No current instruction requires disposal by 18 August
+- [x] No source acquisition or external mutation occurred
+- [x] No tracked secret, credential, private share URL, raw vehicle payload, or absolute user path remains
 - [ ] A clean install resolves every declared dependency
 - [ ] All 57 test suites run and pass
 - [ ] Lint, type checking, production build, fixture replay, and `git diff --check` pass
-- [ ] Validation leaves the working tree clean apart from the intended changes
+- [x] Validation leaves the working tree clean apart from the intended changes
 
 ## Work package 2: Reduce repository noise
 

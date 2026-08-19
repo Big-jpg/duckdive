@@ -8,7 +8,9 @@ The repository has moved from temporary WA vehicle-market operation into an appr
 
 This handoff supersedes the 17 August disposal-first instruction. The owner has explicitly changed the retention authority: do not fully flatten or delete the WA data. No destructive cleanup is authorized by the review plan.
 
-The current task completed only the planning handoff. It did not implement the cleanup, alter external systems, copy screenshots into Git, or deploy anything.
+Work package 1 is in progress. The retention authority, public path portability, license status, artifact inventory, safety scans, acquisition-gate check, and fixture replay are complete. No external system changed, no screenshot entered Git, and no deployment occurred.
+
+Gate 1 remains open because workstation group policy blocks every available pnpm entry point before startup. The existing dependency tree lacks both `jszip` and `@neondatabase/auth`, despite their declarations in the manifest and lockfile. Continue the clean-install and validation gate on an approved Codespace or another host that can run pnpm. See [`docs/review/WORK_PACKAGE_1_EVIDENCE.md`](docs/review/WORK_PACKAGE_1_EVIDENCE.md).
 
 ## Review objective
 
@@ -51,15 +53,16 @@ Original screenshots are evidence inputs, not ready-to-publish assets. Public de
 
 ## Current repository truth
 
-- Branch `main` matched `origin/main` before the two planning-document edits
+- Branch `main` matched `origin/main` at commit `a9228d6` before the Work package 1 edits
 - The working tree contained no tracked raw WA evidence; `.env.local` was ignored
-- The repository tracks 578 files, including 307 files beneath `.agents`
+- The Work package 1 baseline tracks 579 files, including 307 files beneath `.agents`
 - Only five tracked skill files belong to the repository-specific platform operator; the other generic skills are reproducible from `skills-lock.json`
 - The README still presents a VIC housing application with three Dives, while the registered dataset is WA vehicle listings with four starters
-- The repository contains two documentation files and no GitHub Actions workflows
-- The latest commit is named `intentionally left blank` and adds the one-off `.codex-refresh-data-observatory.ts` operator script
+- The repository has no GitHub Actions workflows
+- Commit `a9228d6` canonized the review plan before Work package 1 began
 - The preserved repository contains cohort percentile machinery but not the original version 16 Dive source
-- Current local validation runs 56 of 57 suites and 191 tests; `semantic-model-archive.test.ts` cannot resolve `jszip` from the installed dependency tree even though the manifest and lockfile declare it
+- Current local validation runs 56 of 57 suites and passes all 191 collected tests; `semantic-model-archive.test.ts` cannot resolve `jszip`
+- Lint and sanitized fixture replay pass; type checking and production build remain blocked by the incomplete dependency tree
 
 The previous 17 August handoff remains historical evidence in Git history. Its live MotherDuck, Embedded Dives, deployment, and report-version claims are not current telemetry.
 
@@ -76,4 +79,4 @@ The previous 17 August handoff remains historical evidence in Git history. Its l
 
 Execute [`REPOSITORY_REVIEW_PLAN.md`](REPOSITORY_REVIEW_PLAN.md) in order. Each work package has an exit gate. Do not begin a dependent package or call a package complete until its gate passes and its evidence is recorded.
 
-Start with Work package 1: truth, retention, and reproducibility. Preserve unrelated user changes. Use forward commits only. Do not rewrite public history.
+Finish Gate 1 on a host that can run the pinned pnpm version. Do not begin Work package 2 until a clean install, all 57 suites, type checking, production build, and the remaining baseline commands pass. Preserve unrelated user changes. Use forward commits only. Do not rewrite public history.

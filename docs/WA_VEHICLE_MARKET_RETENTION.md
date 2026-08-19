@@ -1,45 +1,56 @@
-# WA vehicle-market retention and disposal
+# Preserve the WA vehicle-market evidence
 
-## Authority and deadline
+This record states the current retention authority and preserves the superseded disposal procedure as history. It does not authorize acquisition, external mutation, publication, or deletion.
 
-The WA Used Vehicle Listings dataset is temporary test evidence. Vehicle-market raw responses, operational facts, analytical tables, and temporary Dives must not persist beyond 2026-08-18 in Australia/Perth.
+## Current authority from 19 August 2026
 
-No scheduled deletion service is warranted for this one-off experiment. An operator performs and verifies cleanup under explicit approval. Do not run destructive steps early merely because this runbook exists.
+The owner directed the repository review to preserve the retained WA Used Vehicle Listings evidence. Do not fully flatten or delete that data. The former deadline of 18 August 2026 no longer requires disposal.
 
-## Inventory before deletion
+Apply these boundaries during the review:
 
-Capture a content-free disposal manifest containing only identifiers and counts:
+- Do not run another vehicle acquisition
+- Keep both live-source gates disabled
+- Do not delete or mutate MotherDuck, Neon, Vercel Blob, Embedded Dives, deployments, credentials, or other external state
+- Treat the ended MotherDuck Business trial as unavailable live state, not evidence that remote data was removed
+- Keep private raw responses, listing URLs, credentials, and unrestricted screenshots out of Git
+- Preserve the repository fixtures, contracts, governed analytical semantics, and content-free evidence needed for engineering review
 
-- Git commit and Vercel deployment IDs that served the WA branch;
-- vehicle-market run UUIDs and statuses;
-- count and total bytes beneath Blob prefix `vehicle-market/source=autotrader/market=wa-used/`;
-- `wa_vehicle_market` dimension/fact counts and share name;
-- WA starter Dive IDs and owner/workspace mapping IDs;
-- Neon row counts for the five `ops.vehicle_market_*` tables.
+Any future disposal requires a new owner decision that names the exact resources and approved operation. Repository cleanup alone does not grant that authority.
 
-Do not include listing data, descriptions, URLs, credentials, or raw payloads in the disposal manifest.
+## Superseded authority from 17 August 2026
 
-## Disposal order
+The original temporary-experiment authority required disposal by 18 August 2026 in Australia/Perth. The owner superseded that instruction on 19 August 2026 before this review cleanup began.
 
-1. Disable both live-source gates and confirm no acquisition process is running.
-2. Disable or remove WA-specific application access and deploy the approved post-experiment Git state.
-3. Revoke/delete WA Dive embed sessions and remove WA starter Dive mappings after verifying exact IDs.
+The following procedure remains historical context. Do not execute it under the current authority.
+
+### Historical inventory before deletion
+
+The former runbook required a content-free manifest with:
+
+- Git commit and Vercel deployment identifiers that served the WA branch
+- Vehicle-market run identifiers and statuses
+- Object count and total bytes beneath the dedicated private Blob prefix
+- `wa_vehicle_market` dimension and fact counts, plus its share name
+- WA starter Dive identifiers and owner or workspace mapping identifiers
+- Neon row counts for the five `ops.vehicle_market_*` tables
+
+The manifest excluded listing data, descriptions, URLs, credentials, and raw payloads.
+
+### Historical disposal sequence
+
+The inactive sequence was:
+
+1. Disable both live-source gates and confirm that no acquisition process is running.
+2. Disable WA-specific application access and deploy an approved post-experiment Git state.
+3. Revoke WA Dive embed sessions and remove exact WA starter mappings.
 4. Revoke the restricted `wa_vehicle_market` MotherDuck share.
 5. Drop the exact `wa_vehicle_market` database.
-6. Delete every object under the exact private Blob prefix `vehicle-market/source=autotrader/market=wa-used/`; do not target the store root or VIC prefixes.
-7. Remove vehicle-market operational data from Neon. Because raw-object metadata is deliberately immutable, use a reviewed cleanup transaction that targets only the `ops.vehicle_market_*` tables and their exact migration ledger entry after the application no longer depends on migration 019.
-8. Remove WA-only environment selectors that are no longer referenced. Do not rotate or delete shared Neon, Blob, MotherDuck, Auth, Resend, or AI credentials merely because the dataset was removed.
+6. Delete objects only beneath the dedicated WA vehicle-market Blob prefix.
+7. Remove exact vehicle-market operational records from Neon through a reviewed transaction.
+8. Remove unused WA-only environment selectors without changing shared credentials.
 
-## Verification
+### Historical verification
 
-After cleanup, prove:
+The inactive verification required proof that the dedicated Blob prefix, MotherDuck database and share, Neon records, workspace mappings, and authenticated WA Dive access were absent. It also required a content-free reconciliation record and confirmation that no secrets or extracted records entered Git, logs, screenshots, or the disposal manifest.
 
-- the Blob prefix lists zero objects;
-- MotherDuck no longer lists `wa_vehicle_market` or its share;
-- Neon contains no vehicle-market payload, request, validation, run, or publication records;
-- no workspace maps to the four WA starter keys;
-- authenticated and anonymous requests cannot open a WA Dive;
-- `duckdive.gold` serves the approved post-experiment commit;
-- no secrets or extracted records were written into Git, logs, screenshots, or the disposal manifest.
-
-Record completion time in Australia/Perth and retain only the content-free reconciliation and deletion evidence permitted by the experiment.
+These checks describe the superseded disposal procedure. They are not claims about current external state.
