@@ -1,10 +1,10 @@
 # Work package 1 baseline evidence
 
-This record captures the 19 August 2026 Gate 1 checks. It distinguishes completed repository checks from validation blocked by workstation policy.
+This record captures the 19 August 2026 Gate 1 checks. It distinguishes the blocked workstation baseline from the completed Codespace validation.
 
 ## Outcome
 
-Gate 1 remains open. Retention, path portability, safety scans, local acquisition gates, lint, fixture replay, and diff hygiene pass. A clean pnpm install, the complete test suite, type checking, and the production build still require an approved host that can run pnpm.
+Gate 1 is complete. An approved Codespace installed the frozen dependency graph and passed every required validation against commit `ee7135e`.
 
 No in-scope vehicle source, MotherDuck, Neon, Vercel Blob, Embedded Dive, deployment, or credential state was read or changed during these checks.
 
@@ -44,7 +44,24 @@ Both vehicle-market flags are false in `.env.example` and false or unset in the 
 
 No live acquisition command ran. The only vehicle-market command replayed repository fixtures without loading `.env.local`.
 
-## Validation baseline
+## Completed Codespace validation
+
+The repository owner confirmed these commands passed in an approved Codespace after selecting Node.js 22 and pnpm 10.28.0. The Codespace loaded no production credentials.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Clean install | Pass | `pnpm install --frozen-lockfile` resolves every declared dependency without changing the lockfile |
+| Unit tests | Pass | All 57 suites and 195 tests pass, including the four semantic-model archive tests |
+| Lint | Pass | Zero errors; existing warnings remain confined to vendored generic skill files |
+| Type check | Pass | Removing stale ignored `.next` output and regenerating route types resolves references to two previously removed pages |
+| Production build | Pass | The Next.js production build completes |
+| Sanitized fixture replay | Pass | Two source rows, two unique listings, zero duplicates, zero scope violations, one expected and fetched page, status `COMPLETE` |
+| `git diff --check` | Pass | No whitespace errors |
+| Working tree | Pass | Validation leaves no tracked or untracked repository changes |
+
+The stale route types referenced `src/app/datasets/csv/page.tsx` and `src/app/datasets/new/page.tsx`. Commit `696b6a4` removed both routes. Deleting the ignored `.next` directory and running `next typegen` regenerated the validator from the current source tree.
+
+## Blocked workstation baseline
 
 The host runs Node.js 22.16.0 and Git 2.50.0. Validation ran sequentially.
 
@@ -59,21 +76,8 @@ The host runs Node.js 22.16.0 and Git 2.50.0. Validation ran sequentially.
 | `git diff --check` | Pass | No whitespace errors |
 | Tracked working tree | Pass | Only intended Work package 1 documentation changes are present |
 
-Both missing packages are declared in `package.json` and resolved in `pnpm-lock.yaml`. Neither package has a workspace link or virtual-store entry in the incomplete local installation.
+Both missing packages are declared in `package.json` and resolved in `pnpm-lock.yaml`. Neither package had a workspace link or virtual-store entry in the incomplete local installation. The successful frozen Codespace install confirms that the repository dependency declarations are complete.
 
-## Required continuation on an approved host
+## Gate conclusion
 
-Use a clean checkout of the Work package 1 branch and run these commands sequentially:
-
-```powershell
-pnpm install --frozen-lockfile
-pnpm test
-pnpm lint
-pnpm typecheck
-pnpm build
-pnpm vehicle:replay -- --manifest fixtures/vehicle-market/replay/wa-used-sanitized.manifest.json
-git diff --check
-git status --short
-```
-
-Do not load production credentials for this continuation. If the clean install succeeds but a validation still fails, treat that failure as repository work rather than a workstation limitation. Keep Gate 1 open until every remaining condition passes.
+All Gate 1 conditions pass. Work package 2 may begin, but every structural change must preserve this baseline. Continue credential-free validation on a host that can run the pinned pnpm version.

@@ -8,9 +8,9 @@ The repository has moved from temporary WA vehicle-market operation into an appr
 
 This handoff supersedes the 17 August disposal-first instruction. The owner has explicitly changed the retention authority: do not fully flatten or delete the WA data. No destructive cleanup is authorized by the review plan.
 
-Work package 1 is in progress. The retention authority, public path portability, license status, artifact inventory, safety scans, acquisition-gate check, and fixture replay are complete. No external system changed, no screenshot entered Git, and no deployment occurred.
+Work package 1 is complete. Gate 1 now establishes the retention authority, public path portability, license status, artifact inventory, safety scans, acquisition boundary, and reproducible validation baseline. No external system changed, no screenshot entered Git, and no deployment occurred.
 
-Gate 1 remains open because workstation group policy blocks every available pnpm entry point before startup. The existing dependency tree lacks both `jszip` and `@neondatabase/auth`, despite their declarations in the manifest and lockfile. Continue the clean-install and validation gate on an approved Codespace or another host that can run pnpm. See [`docs/review/WORK_PACKAGE_1_EVIDENCE.md`](docs/review/WORK_PACKAGE_1_EVIDENCE.md).
+The work-laptop dependency tree was incomplete, and group policy blocked pnpm. An approved Codespace completed the frozen install and every Gate 1 validation command against commit `ee7135e`. See [`docs/review/WORK_PACKAGE_1_EVIDENCE.md`](docs/review/WORK_PACKAGE_1_EVIDENCE.md).
 
 ## Review objective
 
@@ -61,8 +61,10 @@ Original screenshots are evidence inputs, not ready-to-publish assets. Public de
 - The repository has no GitHub Actions workflows
 - Commit `a9228d6` canonized the review plan before Work package 1 began
 - The preserved repository contains cohort percentile machinery but not the original version 16 Dive source
-- Current local validation runs 56 of 57 suites and passes all 191 collected tests; `semantic-model-archive.test.ts` cannot resolve `jszip`
-- Lint and sanitized fixture replay pass; type checking and production build remain blocked by the incomplete dependency tree
+- The approved Codespace clean install resolves every declared dependency
+- All 57 test suites and 195 tests pass
+- Lint, type checking, production build, sanitized fixture replay, and `git diff --check` pass
+- The Codespace working tree remains clean after validation
 
 The previous 17 August handoff remains historical evidence in Git history. Its live MotherDuck, Embedded Dives, deployment, and report-version claims are not current telemetry.
 
@@ -79,4 +81,4 @@ The previous 17 August handoff remains historical evidence in Git history. Its l
 
 Execute [`REPOSITORY_REVIEW_PLAN.md`](REPOSITORY_REVIEW_PLAN.md) in order. Each work package has an exit gate. Do not begin a dependent package or call a package complete until its gate passes and its evidence is recorded.
 
-Finish Gate 1 on a host that can run the pinned pnpm version. Do not begin Work package 2 until a clean install, all 57 suites, type checking, production build, and the remaining baseline commands pass. Preserve unrelated user changes. Use forward commits only. Do not rewrite public history.
+Begin Work package 2: reduce repository noise. Preserve unrelated user changes, use forward commits, and do not rewrite public history. Keep the full Gate 1 baseline passing after structural changes.

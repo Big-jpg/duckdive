@@ -93,9 +93,9 @@ Do not begin structural cleanup until all conditions pass:
 - [x] No current instruction requires disposal by 18 August
 - [x] No source acquisition or external mutation occurred
 - [x] No tracked secret, credential, private share URL, raw vehicle payload, or absolute user path remains
-- [ ] A clean install resolves every declared dependency
-- [ ] All 57 test suites run and pass
-- [ ] Lint, type checking, production build, fixture replay, and `git diff --check` pass
+- [x] A clean install resolves every declared dependency
+- [x] All 57 test suites run and pass
+- [x] Lint, type checking, production build, fixture replay, and `git diff --check` pass
 - [x] Validation leaves the working tree clean apart from the intended changes
 
 ## Work package 2: Reduce repository noise
