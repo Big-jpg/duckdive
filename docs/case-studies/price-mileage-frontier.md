@@ -15,7 +15,7 @@ This page describes a historical session observed on 11 August 2026. It does not
 | --- | --- |
 | Observed artifacts | A supplied conversation transcript and review-safe derivatives of screenshots captured on 11 August 2026 |
 | Editorial composites | Assets 04, 05, 07, 08, and 09 combine observed screenshot fragments and identify themselves as composites |
-| Reference reconstruction | [Work package 5 specifies an offline reconstruction](../../REPOSITORY_REVIEW_PLAN.md#work-package-5-add-an-executable-reference-reconstruction); no analytical result has been reconstructed in this phase |
+| Reference reconstruction | [Executable SQL](../../db/case-studies/price-mileage-frontier.sql), a [synthetic fixture](../../fixtures/case-studies/price-mileage-frontier.json), and an [independent TypeScript verifier](../../scripts/verify-price-frontier.ts) recreate the documented method; no historical analytical result has been reconstructed |
 | Unavailable evidence | The original version 16 Dive source, its complete prompt history, its generated query or report source, and live MotherDuck access |
 
 Every displayed market value on this page belongs to the 11 August observation. Version numbers and cohort parameters describe the observed report logic. No value from a later observation appears here.
@@ -183,4 +183,4 @@ These are observed contract boundaries, not proof that semantic classification i
 
 The observed session shows a report evolving from presentation changes into governed analytical decision support. A concrete Ranger question produced a parameterized procedure that remained coherent across broader display states.
 
-The case study does not reproduce the original version 16 source or verify a live deployment. Work package 5 will add a credential-free reference reconstruction so reviewers can test the documented frontier semantics against synthetic cases.
+The case study does not reproduce the original version 16 source or verify a live deployment. The credential-free reference reconstruction runs the documented frontier semantics in DuckDB and in an independent TypeScript implementation against synthetic cases. `pnpm review:verify` requires no `.env.local` and compares every evaluation row before checking the named edge cases.

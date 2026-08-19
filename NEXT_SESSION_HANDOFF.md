@@ -14,7 +14,9 @@ Work package 2 is complete. It removes reproducible generic skills from Git trac
 
 Work package 3 is complete. Nine review-safe Price Frontier derivatives now preserve the observed progression, version panels, four-state generalization test, and contract boundaries. A content-free manifest records every source and derivative hash. The original 52-file source set remains outside Git. See [`docs/review/WORK_PACKAGE_3_EVIDENCE.md`](docs/review/WORK_PACKAGE_3_EVIDENCE.md).
 
-Work package 4 is complete. The primary conceptual case study now traces the observed report from a conventional scatterplot through versions 12 to 16, generalization, All/All scope, strict dominance, and the final contract boundaries. It separates observed artifacts, editorial composites, the planned reference reconstruction, and unavailable source evidence. See [`docs/case-studies/price-mileage-frontier.md`](docs/case-studies/price-mileage-frontier.md) and [`docs/review/WORK_PACKAGE_4_EVIDENCE.md`](docs/review/WORK_PACKAGE_4_EVIDENCE.md).
+Work package 4 is complete. The primary conceptual case study now traces the observed report from a conventional scatterplot through versions 12 to 16, generalization, All/All scope, strict dominance, and the final contract boundaries. It separates observed artifacts, editorial composites, the subsequent reference reconstruction, and unavailable source evidence. See [`docs/case-studies/price-mileage-frontier.md`](docs/case-studies/price-mileage-frontier.md) and [`docs/review/WORK_PACKAGE_4_EVIDENCE.md`](docs/review/WORK_PACKAGE_4_EVIDENCE.md).
+
+Work package 5 has an implementation candidate. It adds governed-view SQL, a wholly synthetic fixture, and an independent TypeScript implementation. `pnpm review:verify` runs both implementations against every fixture row in an in-memory DuckDB database, then checks the named strictness, scope, minimum-cohort, null, and display-union cases. The work laptop's application-control policy blocks the DuckDB native binary, so Gate 5 remains open pending execution after a frozen install in the Linux Codespace. Do not begin Work package 6 until that evidence is recorded.
 
 ## Review objective
 
@@ -85,4 +87,4 @@ The previous 17 August handoff remains historical evidence in Git history. Its l
 
 Execute [`REPOSITORY_REVIEW_PLAN.md`](REPOSITORY_REVIEW_PLAN.md) in order. Each work package has an exit gate. Do not begin a dependent package or call a package complete until its gate passes and its evidence is recorded.
 
-Work package 5 is now authorized. Add the credential-free reference reconstruction and verify its SQL and TypeScript behavior against synthetic cases. Preserve unrelated user changes, use forward commits, and do not rewrite public history.
+Finish the authorized Work package 5 gate in the Linux Codespace. Run a frozen install, `pnpm review:verify`, type checking, focused lint or full lint, and the repository test suite sequentially, then confirm that validation leaves the working tree clean. If the SQL/TypeScript comparison fails, fix it through a forward commit; do not weaken or remove the comparison. Work package 6 is not yet authorized.

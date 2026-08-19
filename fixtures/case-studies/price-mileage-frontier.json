@@ -1,0 +1,246 @@
+{
+  "schemaVersion": 1,
+  "evidenceClass": "reference reconstruction",
+  "description": "Synthetic current-listing cohorts for verifying strict price-mileage frontier semantics without credentials or historical vehicle data.",
+  "groups": [
+    {
+      "id": "strict",
+      "make": "Arden",
+      "model": "Strict",
+      "manufacturerYear": 2020,
+      "listings": [
+        { "listingId": "strict-target", "advertisedAskingPrice": 200, "odometerKm": 200 },
+        { "listingId": "strict-dominator", "advertisedAskingPrice": 100, "odometerKm": 100 },
+        { "listingId": "null-price", "advertisedAskingPrice": null, "odometerKm": 50 },
+        { "listingId": "null-odometer", "advertisedAskingPrice": 50, "odometerKm": null }
+      ],
+      "fillers": {
+        "count": 8,
+        "advertisedAskingPriceStart": 1000,
+        "advertisedAskingPriceStep": 100,
+        "odometerKmStart": 1000,
+        "odometerKmStep": 100
+      }
+    },
+    {
+      "id": "equal-price",
+      "make": "Arden",
+      "model": "Equal Price",
+      "manufacturerYear": 2020,
+      "listings": [
+        { "listingId": "equal-price-target", "advertisedAskingPrice": 200, "odometerKm": 200 },
+        { "listingId": "equal-price-peer", "advertisedAskingPrice": 200, "odometerKm": 100 }
+      ],
+      "fillers": {
+        "count": 8,
+        "advertisedAskingPriceStart": 1000,
+        "advertisedAskingPriceStep": 100,
+        "odometerKmStart": 1000,
+        "odometerKmStep": 100
+      }
+    },
+    {
+      "id": "equal-odometer",
+      "make": "Arden",
+      "model": "Equal Odometer",
+      "manufacturerYear": 2020,
+      "listings": [
+        { "listingId": "equal-odometer-target", "advertisedAskingPrice": 200, "odometerKm": 200 },
+        { "listingId": "equal-odometer-peer", "advertisedAskingPrice": 100, "odometerKm": 200 }
+      ],
+      "fillers": {
+        "count": 8,
+        "advertisedAskingPriceStart": 1000,
+        "advertisedAskingPriceStep": 100,
+        "odometerKmStart": 1000,
+        "odometerKmStep": 100
+      }
+    },
+    {
+      "id": "scope",
+      "make": "Scope",
+      "model": "Local",
+      "manufacturerYear": 2020,
+      "listings": [
+        { "listingId": "scope-target", "advertisedAskingPrice": 200, "odometerKm": 200 },
+        { "listingId": "scope-cheaper-peer", "manufacturerYear": 2019, "advertisedAskingPrice": 100, "odometerKm": 300 },
+        { "listingId": "scope-lower-mileage-peer", "manufacturerYear": 2021, "advertisedAskingPrice": 300, "odometerKm": 100 },
+        { "listingId": "scope-outside-year-peer", "manufacturerYear": 2023, "advertisedAskingPrice": 50, "odometerKm": 50 },
+        { "listingId": "scope-different-model-peer", "model": "Other", "advertisedAskingPrice": 40, "odometerKm": 40 }
+      ],
+      "fillers": {
+        "count": 7,
+        "advertisedAskingPriceStart": 1000,
+        "advertisedAskingPriceStep": 100,
+        "odometerKmStart": 1000,
+        "odometerKmStep": 100
+      }
+    },
+    {
+      "id": "sparse",
+      "make": "Sparse",
+      "model": "Nine",
+      "manufacturerYear": 2020,
+      "listings": [
+        { "listingId": "sparse-target", "advertisedAskingPrice": 100, "odometerKm": 100 }
+      ],
+      "fillers": {
+        "count": 8,
+        "advertisedAskingPriceStart": 1000,
+        "advertisedAskingPriceStep": 100,
+        "odometerKmStart": 1000,
+        "odometerKmStep": 100
+      }
+    },
+    {
+      "id": "union-one",
+      "make": "Union",
+      "model": "One",
+      "manufacturerYear": 2020,
+      "listings": [
+        { "listingId": "union-one-target", "advertisedAskingPrice": 100, "odometerKm": 100 }
+      ],
+      "fillers": {
+        "count": 9,
+        "advertisedAskingPriceStart": 1000,
+        "advertisedAskingPriceStep": 100,
+        "odometerKmStart": 1000,
+        "odometerKmStep": 100
+      }
+    },
+    {
+      "id": "union-two",
+      "make": "Union",
+      "model": "Two",
+      "manufacturerYear": 2020,
+      "listings": [
+        { "listingId": "union-two-target", "advertisedAskingPrice": 200, "odometerKm": 200 }
+      ],
+      "fillers": {
+        "count": 9,
+        "advertisedAskingPriceStart": 1000,
+        "advertisedAskingPriceStep": 100,
+        "odometerKmStart": 1000,
+        "odometerKmStep": 100
+      }
+    }
+  ],
+  "evaluationScenarios": [
+    {
+      "id": "strict-dominator-removes-candidate",
+      "kind": "evaluation",
+      "listingId": "strict-target",
+      "expected": {
+        "cohortSize": 11,
+        "cohortPriceP25": 600,
+        "priceGap": 400,
+        "candidateEligible": true,
+        "cheaperPeerCount": 1,
+        "lowerMileagePeerCount": 1,
+        "strictDominatorCount": 1,
+        "evaluationStatus": "REMOVED_STRICT_DOMINATOR",
+        "survivalReason": null
+      }
+    },
+    {
+      "id": "equal-asking-price-does-not-dominate",
+      "kind": "evaluation",
+      "listingId": "equal-price-target",
+      "expected": {
+        "candidateEligible": true,
+        "cheaperPeerCount": 0,
+        "lowerMileagePeerCount": 1,
+        "strictDominatorCount": 0,
+        "evaluationStatus": "SURVIVES_FRONTIER",
+        "survivalReason": "NO_CHEAPER_PEER"
+      }
+    },
+    {
+      "id": "equal-odometer-does-not-dominate",
+      "kind": "evaluation",
+      "listingId": "equal-odometer-target",
+      "expected": {
+        "candidateEligible": true,
+        "cheaperPeerCount": 1,
+        "lowerMileagePeerCount": 0,
+        "strictDominatorCount": 0,
+        "evaluationStatus": "SURVIVES_FRONTIER",
+        "survivalReason": "NO_LOWER_MILEAGE_PEER"
+      }
+    },
+    {
+      "id": "separate-cheaper-and-lower-mileage-peers-do-not-dominate",
+      "kind": "evaluation",
+      "listingId": "scope-target",
+      "expected": {
+        "cohortSize": 10,
+        "cohortPriceP25": 475,
+        "priceGap": 275,
+        "candidateEligible": true,
+        "cheaperPeerCount": 1,
+        "lowerMileagePeerCount": 1,
+        "strictDominatorCount": 0,
+        "evaluationStatus": "SURVIVES_FRONTIER",
+        "survivalReason": "CHEAPER_AND_LOWER_MILEAGE_ARE_DIFFERENT_LISTINGS"
+      }
+    },
+    {
+      "id": "different-model-cannot-dominate",
+      "kind": "ignored-strict-dominator",
+      "listingId": "scope-target",
+      "peerListingId": "scope-different-model-peer"
+    },
+    {
+      "id": "same-model-outside-year-window-cannot-dominate",
+      "kind": "ignored-strict-dominator",
+      "listingId": "scope-target",
+      "peerListingId": "scope-outside-year-peer"
+    },
+    {
+      "id": "cohort-below-ten-withholds-candidate-rule",
+      "kind": "evaluation",
+      "listingId": "sparse-target",
+      "expected": {
+        "cohortSize": 9,
+        "cohortPriceP25": null,
+        "priceGap": null,
+        "candidateEligible": false,
+        "cheaperPeerCount": null,
+        "lowerMileagePeerCount": null,
+        "strictDominatorCount": null,
+        "evaluationStatus": "WITHHELD_COHORT_BELOW_MINIMUM",
+        "survivalReason": null
+      }
+    },
+    {
+      "id": "null-price-cannot-enter-frontier",
+      "kind": "absent",
+      "listingId": "null-price"
+    },
+    {
+      "id": "null-odometer-cannot-enter-frontier",
+      "kind": "absent",
+      "listingId": "null-odometer"
+    },
+    {
+      "id": "cross-model-strictly-lower-listing-cannot-dominate",
+      "kind": "ignored-strict-dominator",
+      "listingId": "union-two-target",
+      "peerListingId": "union-one-target"
+    }
+  ],
+  "displayScenarios": [
+    {
+      "id": "make-all-unions-model-local-frontiers",
+      "make": "Union",
+      "model": null,
+      "expectedListingIds": ["union-one-target", "union-two-target"]
+    },
+    {
+      "id": "all-all-preserves-model-local-frontiers",
+      "make": null,
+      "model": null,
+      "expectedIncludedListingIds": ["union-one-target", "union-two-target"]
+    }
+  ]
+}

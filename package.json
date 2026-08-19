@@ -40,7 +40,8 @@
     "vehicle:publish": "tsx --env-file=.env.local scripts/vehicle-market.ts publish",
     "vehicle:status": "tsx scripts/vehicle-market.ts status",
     "review:assets": "node scripts/verify-price-frontier-assets.mjs",
-    "review:case-study": "node scripts/verify-price-frontier-case-study.mjs"
+    "review:case-study": "node scripts/verify-price-frontier-case-study.mjs",
+    "review:verify": "tsx scripts/verify-price-frontier.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.67",
@@ -65,6 +66,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@duckdb/node-api": "1.5.5-r.4",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
