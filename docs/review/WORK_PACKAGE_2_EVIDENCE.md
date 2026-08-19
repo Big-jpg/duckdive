@@ -1,10 +1,10 @@
 # Work package 2 repository-structure evidence
 
-This record captures the Work package 2 candidate prepared on 19 August 2026. It records completed structural checks and leaves the full Codespace validation gate open.
+This record captures Work package 2, completed on 19 August 2026.
 
 ## Outcome
 
-The repository now presents DuckDive and its active WA vehicle-market experiment without deleting retained engineering history. Gate 2 remains open until an approved Codespace passes the full Gate 1 baseline against this candidate.
+The repository now presents DuckDive and its active WA vehicle-market experiment without deleting retained engineering history. An approved Codespace passed the full Gate 1 baseline against the candidate, so Gate 2 is complete.
 
 No source acquisition, credential access, deployment, cloud mutation, or external-state verification occurred.
 
@@ -53,9 +53,9 @@ The work laptop completed the checks it supports:
 | Documentation review | Pass | New headings use sentence case; no banned filler, em dash, or untagged code block was introduced |
 | `git diff --check` | Pass | No whitespace errors |
 
-## Required Codespace validation
+## Codespace validation
 
-Use Node.js 22 and pnpm 10.28.0. Run these commands sequentially after pulling the candidate:
+The validation ran sequentially with Node.js 24.14.0 and pnpm 10.28.0. The repository declares Node.js 22.x, so pnpm emitted an engine warning; every command still passed. The environment difference is recorded here and is not evidence of a Node.js 22 failure.
 
 ```bash
 corepack pnpm install --frozen-lockfile
@@ -70,4 +70,16 @@ git diff --check
 git status --short
 ```
 
-The final status command must produce no output. Keep Gate 2 open if any command fails or changes the tracked working tree.
+Results:
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Frozen install | Pass | Lockfile was current and installation completed |
+| Next.js route type generation | Pass | Route types generated after removing the stale `.next` directory |
+| Test suite | Pass | 57 files and 198 tests passed |
+| Lint | Pass | ESLint completed without findings |
+| Type checking | Pass | TypeScript completed without errors |
+| Production build | Pass | Next.js compiled and generated 19 static pages |
+| Sanitized fixture replay | Pass | Two source records produced a complete run with no duplicates or scope violations |
+| Whitespace check | Pass | `git diff --check` produced no output |
+| Working-tree check | Pass | `main` matched `origin/main` with no changes |

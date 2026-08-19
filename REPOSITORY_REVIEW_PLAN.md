@@ -122,7 +122,7 @@ This package makes the actual application and analytical evidence visible withou
 - [x] Every top-level directory has a documented purpose
 - [x] Historical and prototype code is labelled accurately
 - [x] Package, product, README, and registered-dataset naming no longer contradict each other
-- [ ] Full validation from Gate 1 still passes
+- [x] Full validation from Gate 1 still passes
 
 ## Work package 3: Curate the screenshot evidence
 

@@ -10,7 +10,7 @@ This handoff supersedes the 17 August disposal-first instruction. The owner has 
 
 Work package 1 is complete. Gate 1 establishes the retention authority, public path portability, license status, artifact inventory, safety scans, acquisition boundary, and reproducible validation baseline. No external system changed, no screenshot entered Git, and no deployment occurred.
 
-Work package 2 has a review candidate. It removes reproducible generic skills from Git tracking, removes the one-off production operator script, renames the private package to `duckdive`, classifies retained experiments, maps every tracked top-level directory, and moves operator detail out of the README. Gate 2 remains open only for the full Codespace validation. See [`docs/review/WORK_PACKAGE_2_EVIDENCE.md`](docs/review/WORK_PACKAGE_2_EVIDENCE.md).
+Work package 2 is complete. It removes reproducible generic skills from Git tracking, removes the one-off production operator script, renames the private package to `duckdive`, classifies retained experiments, maps every tracked top-level directory, and moves operator detail out of the README. The full Codespace validation passed. See [`docs/review/WORK_PACKAGE_2_EVIDENCE.md`](docs/review/WORK_PACKAGE_2_EVIDENCE.md).
 
 ## Review objective
 
@@ -62,7 +62,7 @@ Original screenshots are evidence inputs, not ready-to-publish assets. Public de
 - `docs/REPOSITORY_MAP.md` classifies WA vehicles as current, VIC housing as historical, Fabric import as a tested prototype, and the WHO runtime as a fixture adapter
 - The preserved repository contains cohort percentile machinery but not the original version 16 Dive source
 - The approved Codespace clean install resolves every declared dependency
-- All 57 test suites and 195 tests pass
+- All 57 test suites and 198 tests pass
 - Lint, type checking, production build, sanitized fixture replay, and `git diff --check` pass
 - The Codespace working tree remains clean after validation
 
@@ -81,4 +81,4 @@ The previous 17 August handoff remains historical evidence in Git history. Its l
 
 Execute [`REPOSITORY_REVIEW_PLAN.md`](REPOSITORY_REVIEW_PLAN.md) in order. Each work package has an exit gate. Do not begin a dependent package or call a package complete until its gate passes and its evidence is recorded.
 
-Finish Gate 2 in the approved Codespace. Do not begin Work package 3 until the frozen install, all 57 suites, lint, type checking, production build, fixture replay, diff check, and clean status pass. Preserve unrelated user changes, use forward commits, and do not rewrite public history.
+Work package 3 is now authorized. Curate the supplied Price Frontier screenshots into review-safe derivatives without committing the source set. Preserve unrelated user changes, use forward commits, and do not rewrite public history.
