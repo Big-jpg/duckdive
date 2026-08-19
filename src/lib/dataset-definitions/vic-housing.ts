@@ -30,6 +30,7 @@ export const VIC_HOUSING_DATASET={
       {id:"bedroom-segments",label:"Compare bedroom segments",examples:["Compare four-bedroom homes","Show the most common bedroom count"]},
       {id:"land-statistics",label:"Compare land size and land signals",examples:["Compare median land size"]},
       {id:"sales-velocity",label:"Compare recent sales momentum",examples:["Which suburb has stronger sales momentum?"]},
+      {id:"report-presentation",label:"Change report presentation without changing governed semantics",examples:["Restyle charts and layout","Improve labels, contrast or accessibility"]},
     ],
     limitations:[
       {id:"no-valuations",label:"Current property valuations",reason:"The active contract contains completed sales history, not current valuations."},

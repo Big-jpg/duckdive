@@ -20,18 +20,19 @@ export function governedReadOnlyQuery(sql:string){
   return `SELECT * FROM (${statement}) AS duckdive_inspection LIMIT 200`;
 }
 
-export async function createDuckDiveTools(input:{client:MCPClient;runId:string;diveId:string;username:string;before:DiveSnapshot;dataset:DatasetRuntime;reportPolicy:DatasetReportPolicy;reportValidationEnabled?:boolean}){
+export async function createDuckDiveTools(input:{client:MCPClient;runId:string;diveId:string;username:string;before:DiveSnapshot;dataset:DatasetRuntime;reportPolicy:DatasetReportPolicy}){
   const mcp=await input.client.tools(),query=mcp.query,edit=mcp.edit_dive_content;
   if(!query?.execute||!edit?.execute)throw new Error("MotherDuck editing tools are unavailable");
-  const reportValidationEnabled=input.reportValidationEnabled!==false;
-  let mutation:VerifiedMutation|null=null,mutationAttempted=false,plan:ReportUpdatePlan|null=null;
+  let mutation:VerifiedMutation|null=null,preparationAttempted=false,mutationAttempted=false,inspectionAttempted=false,plan:ReportUpdatePlan|null=null;
   const tools:ToolSet={
     prepare_report_update:tool({
-      description:reportValidationEnabled?"Before editing, convert the request into the required structured intent and change manifest fields. Use only capability IDs from the supplied contract. If the request is unsupported or materially ambiguous, set unsupportedRequests or materialClarification and do not attempt a save.":"Before editing, convert the request into the required structured intent and change manifest fields. Report policy validation is temporarily disabled, so capability IDs and validation results will be recorded but will not reject the plan. Still identify genuinely unsupported requests or material ambiguity.",
+      description:"Before editing, convert the request into the required structured intent and change manifest fields. Use only capability IDs from the supplied contract. If the request is unsupported or materially ambiguous, set unsupportedRequests or materialClarification and do not attempt a save.",
       inputSchema:reportUpdatePlanSchema,
       execute:async(value)=>{
+        if(preparationAttempted)throw new Error("A report update has already been prepared in this run");
         if(!await duckDiveRunIsActive(input.runId))throw new Error("DuckDive run is no longer active");
-        const checked=validateReportUpdatePlan(value,input.reportPolicy,{validationEnabled:reportValidationEnabled});if(!checked.ok){plan=null;return {accepted:false,error:checked.error};}
+        preparationAttempted=true;
+        const checked=validateReportUpdatePlan(value,input.reportPolicy);if(!checked.ok){plan=null;return {accepted:false,error:checked.error};}
         plan=checked.plan;return {accepted:!plan.unsupportedRequests.length&&!plan.materialClarification,unsupportedRequests:plan.unsupportedRequests,materialClarification:plan.materialClarification,capabilityIds:plan.capabilityIds};
       },
     }),
@@ -39,7 +40,9 @@ export async function createDuckDiveTools(input:{client:MCPClient;runId:string;d
       description:`Run one bounded read-only query against the governed ${input.dataset.title} dataset when the supplied semantic contract and current Dive source are insufficient. Do not use this for schema discovery.`,
       inputSchema:z.object({purpose:z.string().trim().min(1).max(240),sql:z.string().trim().min(1).max(4_000)}),
       execute:async({purpose,sql},options)=>{
+        if(inspectionAttempted)throw new Error("Data inspection has already been attempted in this run");
         if(!await duckDiveRunIsActive(input.runId))throw new Error("DuckDive run is no longer active");
+        inspectionAttempted=true;
         const result=await query.execute!({database:input.dataset.motherduckDatabase,sql:governedReadOnlyQuery(sql)},options);
         return {purpose,result:boundedDuckDiveResult(result)};
       },

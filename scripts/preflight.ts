@@ -8,8 +8,6 @@ try{runtime=resolveDatasetRuntime(dataset);}catch(error){errors.push(error insta
 if(dataset.key!=="wa-vehicle-market")errors.push("The WA branch must have wa-vehicle-market as its only active default dataset");
 if(runtime?.motherduckDatabase!=="wa_vehicle_market")errors.push("WA_VEHICLE_MARKET_MOTHERDUCK_DATABASE must be wa_vehicle_market for this deployment");
 for(const key of ["VEHICLE_MARKET_SOURCE_ENABLED","VEHICLE_MARKET_ALLOW_FULL_WA_COLLECTION"] as const)if(process.env[key]&&!/^(?:true|false)$/.test(process.env[key]))errors.push(`${key} must be exactly true or false`);
-if(process.env.DUCKDIVE_REPORT_VALIDATION_ENABLED&&!/^(?:true|false)$/.test(process.env.DUCKDIVE_REPORT_VALIDATION_ENABLED))errors.push("DUCKDIVE_REPORT_VALIDATION_ENABLED must be exactly true or false");
-if(process.env.DUCKDIVE_REPORT_VALIDATION_ENABLED==="false")warnings.push("DuckDive report policy validation is disabled; use only for bounded report-edit testing");
 if(process.env.VEHICLE_MARKET_ALLOW_FULL_WA_COLLECTION==="true"&&process.env.VEHICLE_MARKET_SOURCE_ENABLED!=="true")errors.push("VEHICLE_MARKET_ALLOW_FULL_WA_COLLECTION cannot be true while VEHICLE_MARKET_SOURCE_ENABLED is false");
 if(process.env.VEHICLE_MARKET_SOURCE_ENABLED==="true")warnings.push("Live source access is enabled; application startup still cannot initiate acquisition, but confirm this is intentional");
 if(process.env.VEHICLE_MARKET_ALLOW_FULL_WA_COLLECTION==="true")warnings.push("Full WA collection is enabled; confirm current licensing approval before invoking the explicit CLI command");

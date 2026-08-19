@@ -7,11 +7,11 @@ import {aiLimits} from "@/lib/ai-limits";
 import {aiModel} from "@/lib/ai-provider";
 import {getAiGatewayModelSetting} from "@/lib/ai-gateway-settings-db";
 import {DuckDiveBusyError,finishDuckDiveRun,saveChatMessages,startDuckDiveRun} from "@/lib/duckdive-db";
-import {readDiveSnapshot} from "@/lib/duckdive-runtime";
+import {diveVersionConflict,readDiveSnapshot} from "@/lib/duckdive-runtime";
 import {createDuckDiveTools} from "@/lib/duckdive-tools";
 import {duckDiveRequestSchema,validateDuckDiveBrief} from "@/lib/duckdive-request";
 import {datasetContextForWorkspaceDiveRecord,datasetContractPrompt,datasetReportPolicyPrompt} from "@/lib/datasets";
-import {duckDiveReportValidationEnabled,manifestForPlan} from "@/lib/duckdive-report";
+import {manifestForPlan} from "@/lib/duckdive-report";
 import {saveDiveReportVersion} from "@/lib/duckdive-report-db";
 
 export const maxDuration=300;
@@ -27,15 +27,14 @@ export async function POST(request:Request){
   const datasetContext=datasetContextForWorkspaceDiveRecord(workspaceDive),starter=datasetContext?.dataset.starters.find(item=>item.key===datasetContext.starterKey);
   if(!datasetContext||!starter||!datasetContext.dataset.capabilities.editing)return Response.json({error:"This Dive is not editable"},{status:400});
   const before=await readDiveSnapshot(body.activeDiveId,workspaceDive.motherduck_username);
-  if(before.version!==body.expectedVersion)return Response.json({error:`This Dive advanced to v${before.version}. Refresh before editing.`,currentVersion:before.version},{status:409});
+  const conflict=diveVersionConflict(before.version,body.expectedVersion);if(conflict)return Response.json(conflict,{status:409});
   const limits=aiLimits();if(!await consumeAiQuota(user.user_id,limits.perUserHourly,limits.globalHourly))return Response.json({error:"Hourly DuckDive capacity reached"},{status:429,headers:{"Retry-After":"3600"}});
   const chatId=await ensureChat(workspaceDive.workspace_id,body.chatId,body.activeDiveId,latestText),model=(await getAiGatewayModelSetting()).model;
   try{await startDuckDiveRun({runId:body.runId,workspaceId:workspaceDive.workspace_id,userId:user.user_id,chatId,diveId:body.activeDiveId,requestText:latestText,beforeVersion:before.version,beforeHash:before.hash,model});}
   catch(error){if(error instanceof DuckDiveBusyError)return Response.json({error:error.message},{status:409});throw error;}
   try{
     await saveChatMessages(chatId,body.messages);
-    const reportValidationEnabled=duckDiveReportValidationEnabled();
-    const client=await motherduckMcp(workspaceDive.motherduck_username),control=await createDuckDiveTools({client,runId:body.runId,diveId:body.activeDiveId,username:workspaceDive.motherduck_username,before,dataset:datasetContext.runtime,reportPolicy:datasetContext.dataset.reportPolicy,reportValidationEnabled});
+    const client=await motherduckMcp(workspaceDive.motherduck_username),control=await createDuckDiveTools({client,runId:body.runId,diveId:body.activeDiveId,username:workspaceDive.motherduck_username,before,dataset:datasetContext.runtime,reportPolicy:datasetContext.dataset.reportPolicy});
     const result=streamText({
       model:aiModel("gateway",model),
       system:`You are DuckDive, a verified report-editing agent. You edit exactly one active MotherDuck Dive.
@@ -44,7 +43,7 @@ The application has already supplied the authoritative semantic contract and cur
 
 Apply a request automatically when it names an analytical, control, layout, chart, copy, or styling change that can be implemented safely. Style-only requests are valid. If the goal is genuinely ambiguous (for example, "make it better") or requires an unsupported measure, make no edit and ask exactly one focused clarification question.
 
-Always call prepare_report_update first. It is the authoritative structured intent and change-record step. ${reportValidationEnabled?"Report policy validation is enabled: use only capability IDs from the active dataset policy and do not invent outputs that the contract or policy does not support.":"Report policy validation is temporarily disabled for testing: do not reject an otherwise safe styling, layout, chart, copy, or accessibility edit solely because a capability ID or plan validation falls outside the report policy. Preserve the semantic contract and record the plan truthfully."} Never call save_dive_revision unless the preparation result explicitly accepts the update.
+Always call prepare_report_update first. It is the authoritative structured intent and change-record step. Use only capability IDs from the active dataset policy and do not invent outputs that the contract or policy does not support. Use report-presentation for safe styling, layout, chart, copy or accessibility changes that preserve governed semantics. Never call save_dive_revision unless the preparation result explicitly accepts the update.
 
 Use inspect_data only when actual values are required to design the requested view. Preserve metric definitions, valid-sample caveats, REQUIRED_DATABASES, and DD_THEME_CSS. Use save_dive_revision once with the complete minimal edit. After it succeeds, give a concrete summary under 60 words. Never claim a save unless the tool reports a verified new version.
 

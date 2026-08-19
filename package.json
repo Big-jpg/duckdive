@@ -41,7 +41,8 @@
     "vehicle:status": "tsx scripts/vehicle-market.ts status",
     "review:assets": "node scripts/verify-price-frontier-assets.mjs",
     "review:case-study": "node scripts/verify-price-frontier-case-study.mjs",
-    "review:verify": "tsx scripts/verify-price-frontier.ts"
+    "review:verify": "tsx scripts/verify-price-frontier.ts",
+    "review:architecture": "node scripts/verify-bounded-agent-docs.mjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.67",

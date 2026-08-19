@@ -12,6 +12,11 @@ export function assertDiveRevisionChanged(before:DiveSnapshot,after:DiveSnapshot
   if(after.hash===before.hash)throw new Error("Dive source did not change");
 }
 
+export function diveVersionConflict(currentVersion:number,expectedVersion:number){
+  if(currentVersion===expectedVersion)return null;
+  return {error:`This Dive advanced to v${currentVersion}. Refresh before editing.`,currentVersion};
+}
+
 export async function readDiveSnapshot(diveId:string,username:string):Promise<DiveSnapshot>{
   for(let attempt=0;attempt<2;attempt++){
     const sql=await motherduckServiceSql(username);

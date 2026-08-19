@@ -18,6 +18,8 @@ Work package 4 is complete. The primary conceptual case study now traces the obs
 
 Work package 5 is complete. It adds governed-view SQL, a wholly synthetic fixture, and an independent TypeScript implementation. After a frozen Codespace install, `pnpm review:verify` passed all 12 scenarios and matched all 71 SQL and TypeScript evaluation rows, including 9 frontier survivors. Type checking, lint, all 57 test files and 198 tests, and the final clean-status check also passed. See [`docs/review/WORK_PACKAGE_5_EVIDENCE.md`](docs/review/WORK_PACKAGE_5_EVIDENCE.md).
 
+Work package 6 has an implementation candidate. It removes the production configuration path that disabled report-policy validation, adds an allowlisted `report-presentation` capability, and limits each run to one preparation, one inspection attempt, and one mutation attempt. The two new architecture documents map eight implemented arrows, all trust boundaries, deterministic controls, model-mediated judgment, and all 11 required scenarios. Local direct-Node validation passed 57 test files and 205 tests, type checking, lint with only pre-existing ignored-skill warnings, production build, and `pnpm review:architecture` equivalent execution. The work laptop blocks pnpm's executable runner, so Gate 6 remains open pending the exact package commands in the Linux Codespace.
+
 ## Review objective
 
 Present DuckDive as an engineering case study in bounded agentic business intelligence. The central evidence is no longer a generic vehicle dashboard. A short conversation evolved a Ford Ranger question into a reusable price-mileage frontier that generalised across make, model, make-wide, and All/All display states while retaining local cohort semantics.
@@ -68,7 +70,7 @@ Original screenshots remain private evidence inputs. The nine published derivati
 - `docs/REPOSITORY_MAP.md` classifies WA vehicles as current, VIC housing as historical, Fabric import as a tested prototype, and the WHO runtime as a fixture adapter
 - The preserved repository contains cohort percentile machinery but not the original version 16 Dive source
 - The approved Codespace clean install resolves every declared dependency
-- All 57 test suites and 198 tests pass
+- The Phase 6 candidate passes all 57 test suites and 205 tests locally; Codespace package-command confirmation is pending
 - Lint, type checking, production build, sanitized fixture replay, and `git diff --check` pass
 - The credential-free Price Frontier reconstruction passes 12 synthetic scenarios, with SQL and TypeScript agreeing on all 71 evaluation rows
 - The Codespace working tree remains clean after validation
@@ -88,4 +90,4 @@ The previous 17 August handoff remains historical evidence in Git history. Its l
 
 Execute [`REPOSITORY_REVIEW_PLAN.md`](REPOSITORY_REVIEW_PLAN.md) in order. Each work package has an exit gate. Do not begin a dependent package or call a package complete until its gate passes and its evidence is recorded.
 
-Work package 5 is closed. Work package 6 is next in the authoritative plan but is not yet authorized. Obtain explicit owner approval before changing the bounded-agent control loop, report-policy enforcement, presentation capability, or architecture documentation.
+Finish the authorized Work package 6 gate in the Linux Codespace. Run a frozen install, `pnpm review:architecture`, the full test suite, lint, type checking, production build, the Price Frontier verifier, and a final clean-status check sequentially. If a check fails, fix it through a forward commit and do not weaken the control-loop assertions. Work package 7 is not yet authorized.

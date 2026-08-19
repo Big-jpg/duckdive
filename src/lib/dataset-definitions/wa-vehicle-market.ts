@@ -29,6 +29,7 @@ export const WA_VEHICLE_MARKET_DATASET={
       {id:"observed-movement",label:"Compare matched listings across observations",examples:["Count asking-price changes","Show odometer or content changes among repeated listing IDs"]},
       {id:"cohort-comparison",label:"Compare transparent vehicle cohorts",examples:["Compare an Outback with the same model within two years"]},
       {id:"capture-quality",label:"Inspect reconciliation and lineage",examples:["Show the latest run status and source totals"]},
+      {id:"report-presentation",label:"Change report presentation without changing governed semantics",examples:["Restyle charts and layout","Improve labels, contrast or accessibility"]},
     ],
     limitations:[
       {id:"no-sale-inference",label:"Sales or sell-through claims",reason:"A source listing disappearing does not establish a sale."},
