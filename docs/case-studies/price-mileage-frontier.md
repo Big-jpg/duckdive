@@ -1,11 +1,19 @@
 ---
+title: From a Ranger question to a governed market-wide frontier
+description: An observed DuckDive experiment showing how conversation produced a reusable analytical method while preserving comparability, provenance, and refusal boundaries.
 meta:
-  contentType: Conceptual
+  contentType: CaseStudy
+  evidenceDate: 2026-08-11
+  maturity: Ongoing experiment
 ---
 
-# Trace a Ranger question to a market-wide frontier
+# From one Ranger question to a market-wide frontier
 
-This case study explains how a conversation changed an ordinary vehicle report into a reusable price-mileage frontier. The result preserves price and odometer as separate measures, evaluates each listing within a governed peer group, and stops short of valuation or purchase advice.
+One practical question changed the shape of the analysis: **how can price and mileage both matter without pretending to know what one is worth in terms of the other?**
+
+This case study traces how a conversation changed an ordinary vehicle report into a reusable price-mileage frontier. The result preserves price and odometer as separate measures, evaluates each listing within a governed peer group, generalizes from Ford Ranger to market-wide display states, and stops short of valuation or purchase advice.
+
+Its significance is not the vehicle market alone. It is evidence for a broader DuckDive hypothesis: a person can progressively make a decision problem explicit, an agent can help translate it into an audience-ready report, and governed contracts can preserve what the data means and what the report must not claim.
 
 ## Read the evidence boundary first
 
@@ -177,10 +185,12 @@ The observed contract identifies nearby requests that the report cannot support:
 | Tell the reader which vehicle to buy | The source does not establish condition, suitability, finance, accident history, or mechanical quality | Present transparent candidates and survival reasons for human investigation |
 | Identify vehicles that sold | A missing source listing does not establish a sale or transaction outcome | Describe a listing as no longer observed when the evidence supports that state |
 
-These are observed contract boundaries, not proof that semantic classification is deterministic. The agent still interprets requests through a model-mediated step. [Work package 6](../../REPOSITORY_REVIEW_PLAN.md#work-package-6-document-and-harden-the-bounded-agent-claim) will test the enforcement path separately.
+These are observed contract boundaries, not proof that semantic classification is deterministic. The agent still interprets requests through a model-mediated step. The separate [bounded control-loop evidence](../agent-control-loop.md) tests how deterministic enforcement constrains the consequences of that interpretation.
 
 ## State what the case study establishes
 
 The observed session shows a report evolving from presentation changes into governed analytical decision support. A concrete Ranger question produced a parameterized procedure that remained coherent across broader display states.
 
 The case study does not reproduce the original version 16 source or verify a live deployment. The credential-free reference reconstruction runs the documented frontier semantics in DuckDB and in an independent TypeScript implementation against synthetic cases. `pnpm review:verify` requires no `.env.local` and compares every evaluation row before checking the named edge cases.
+
+This establishes a reusable pattern, not an industry-agnostic product: progressively define a decision view, keep comparisons local to legitimate cohorts, preserve the source and analytical limits, and refuse conclusions the evidence cannot support. Repeating that pattern with materially different datasets is the next test.

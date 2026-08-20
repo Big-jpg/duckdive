@@ -45,10 +45,14 @@ if (missingDirectories.length > 0 || staleDirectories.length > 0) {
 const readme = await readFile(path.join(rootDir, "README.md"), "utf8");
 const requiredHeadings = [
   "Why DuckDive exists",
+  "The product thesis",
+  "The case study: one question became a reusable analytical method",
+  "What this could make practical",
   "Responsibility-based architecture",
-  "90-second reviewer walkthrough",
   "What the experiment discovered",
   "How the agent is bounded",
+  "What comes next",
+  "90-second reviewer walkthrough",
   "Evidence map",
   "Credential-free validation",
   "Current boundaries",
@@ -77,6 +81,10 @@ if (!readme.includes("Semantic request classification remains model-mediated")) 
 }
 if (!readme.includes("No live MotherDuck, Neon, Blob, Vercel, or deployment state is claimed")) {
   fail("README does not state the unavailable live-state boundary");
+}
+if (!readme.includes("Status: ongoing experiment")) fail("README does not state its experimental status");
+if (!readme.includes("BYO Dataset is a planned experiment")) {
+  fail("README does not distinguish planned BYO Dataset work from current capability");
 }
 if (!readme.includes("No license is currently granted")) fail("README does not state license status");
 if (/production[- ]ready/i.test(readme)) fail("README implies production readiness");

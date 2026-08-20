@@ -19,6 +19,8 @@ const slugifyHeading = (heading) => heading
   .replace(/\s+/g, "-");
 
 const requiredPhrases = [
+  "contentType: CaseStudy",
+  "maturity: Ongoing experiment",
   "11 August 2026",
   "Version 12",
   "Version 13",
