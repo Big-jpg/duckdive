@@ -10,6 +10,8 @@ The current repository proves one substantial experiment and preserves earlier d
 
 The repository can be reviewed without credentials, live customer data, MotherDuck access, or a deployment.
 
+For reuse in another vehicle-data project, [the standalone Autotrader client](packages/autotrader-client/README.md) provides the existing HTTP endpoint and pagination strategy as a dependency-free Node library and command-line exporter. It streams full source records to caller-owned storage and can be packaged locally without enabling DuckDive's acquisition gates.
+
 ## Why DuckDive exists
 
 Organizations often collect far more data than they can make useful. The missing piece is not always another warehouse or dashboard. It is the work required to establish grain, meaning, comparability, quality, lineage, and an explanation appropriate to the person making a decision.

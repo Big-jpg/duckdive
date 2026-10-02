@@ -34,6 +34,7 @@ Every tracked top-level directory has one review purpose:
 | `db/` | Additive Neon migrations plus DuckLake definition, staging, and publication Structured Query Language (SQL) | Mixed current and historical infrastructure evidence |
 | `docs/` | Review plans, operating boundaries, retention authority, and recorded validation evidence | Current documentation |
 | `fixtures/` | Sanitized vehicle-market responses, probes, expected results, scopes, and replay manifests | Current deterministic evidence |
+| `packages/` | Standalone Autotrader acquisition library and exporter for reuse in other projects | Locally packaged extraction; offline verification |
 | `public/` | DuckDive brand and favicon assets | Current application assets |
 | `rea-data-modelling/` | VIC housing raw-load, cleaning, and curation notebooks | Historical experiment |
 | `rea-sold-scraper/` | Browser extension and headless runner for historical property-sales collection | Historical experiment |
